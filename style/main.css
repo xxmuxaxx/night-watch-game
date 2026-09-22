@@ -121,6 +121,9 @@ body {
   min-height: 200px;
   border-bottom: solid 1px;
 }
+.text span {
+  white-space: pre-line;
+}
 .menu {
   position: absolute;
   width: 100%;
