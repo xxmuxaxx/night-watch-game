@@ -1,4 +1,4 @@
-let flag = true;  //  выбор внешности и класса строится один раз
+let pickersBuilt = false;  //  выбор внешности и класса строится один раз
 
 //  «30%» ИЗ 0.3
 function percent (value) {
@@ -16,7 +16,7 @@ function classStatsText (heroClass) {
 function newGame () {
   newGameWindow.style.display = "none";
 
-  if (flag) {
+  if (!pickersBuilt) {
     //  Внешность: радиокнопки heroSelector с портретами из heroFacesArray
     let faces = document.querySelector("#hero-faces");
     for (let i = 0; i < heroFacesArray.length; i++) {
@@ -53,7 +53,7 @@ function newGame () {
       label.appendChild(card);
       classes.appendChild(label);
     });
-    flag = false;
+    pickersBuilt = true;
   }
   createHeroWindow.style.display = "block";
 }
@@ -97,6 +97,8 @@ function createNewHero () {
   hero.currentHp = hero.hp;
   hero.weapon = weapons[0];  //  Без оружия
 
+  gameStatus.currentStage = 'st0';  //  новая игра всегда с начала
+  gameStatus.flags = {};            //  и решения прошлого героя не в счёт
   renderHeroStatus();
   createHeroWindow.style.display = "none";
   updateGameField ();

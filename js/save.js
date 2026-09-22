@@ -1,7 +1,8 @@
 //  СОХРАНЕНИЕ ИГРЫ
 //
 //  Автосохранение в localStorage браузера: при создании героя и при каждом переходе
-//  в новую сцену (goTo). Сохраняются герой и текущая сцена. Сцены смерти (где в меню
+//  в новую сцену (goTo). Сохраняются герой, текущая сцена и решения игрока (flags;
+//  в сохранениях, сделанных до их появления, решений нет — считаем, что их не было). Сцены смерти (где в меню
 //  есть gameOver) не сохраняются, а сама смерть стирает сохранение.
 
 const SAVE_KEY = 'nightwatch-save';
@@ -13,7 +14,8 @@ function saveGame () {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       version: 2,
       stage: gameStatus.currentStage,
-      hero: hero
+      hero: hero,
+      flags: gameStatus.flags
     }));
   } catch (e) {}  //  хранилище недоступно (приватный режим и т.п.) — играем без сохранения
   updateLoadButton();
@@ -43,6 +45,7 @@ function loadGame () {
   Object.assign(hero, save.hero);
   hero.weapon = weapons.find(function (w) { return w.name === hero.weapon.name; }) || weapons[0];
   gameStatus.currentStage = save.stage;
+  gameStatus.flags = save.flags || {};
   renderHeroStatus();
   updateGameField();
   newGameWindow.style.display = "none";

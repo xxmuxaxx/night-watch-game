@@ -9,8 +9,19 @@ let newGameWindow = document.querySelector("#new-game");
 
 var gameStatus = {
   currentStage: 'st0',
-  stages: chapter1  //  СЦЕНЫ ГЛАВЫ, СМ. js/chapter1.js
+  stages: chapter1,  //  СЦЕНЫ ГЛАВЫ, СМ. js/chapter1.js
+  flags: {}          //  ЗАПОМНЕННЫЕ РЕШЕНИЯ ИГРОКА (set / if / ifNot в пунктах меню)
 };
+
+//  ПРИНЯЛ ЛИ ИГРОК РЕШЕНИЕ name; удобно в текстах-функциях: () => flag('vasyaFriend') ? '...' : '...'
+function flag (name) {
+  return !!gameStatus.flags[name];
+}
+
+//  ПОКАЗЫВАТЬ ЛИ ПУНКТ МЕНЮ: if — только если решение принято, ifNot — только если нет
+function isAvailable (option) {
+  return (!option.if || flag(option.if)) && (!option.ifNot || !flag(option.ifNot));
+}
 
 //  ВРАГ: hp, урон { min, max } и windup (шанс замахнуться вместо удара) необязательны
 function enemy(name, src, hp, damage, windup) {
@@ -196,6 +207,9 @@ function gameOver () {
 
 //  ВЫПОЛНИТЬ ДЕЙСТВИЕ ВЫБРАННОГО ПУНКТА МЕНЮ (формат пунктов — см. js/chapter1.js)
 function choose (option) {
+  if (option.set) {
+    Object.assign(gameStatus.flags, option.set);
+  }
   if (option.heal) {
     hero.currentHp = Math.min(hero.hp, hero.currentHp + option.heal);
     renderHeroHp();
@@ -218,7 +232,7 @@ function textOf (value) {
 function newMenu (options) {
   let ul = document.getElementById('select');
   ul.innerHTML = null;
-  options.forEach(function (option) {
+  options.filter(isAvailable).forEach(function (option) {
     let li = document.createElement('li');
     let button = document.createElement('button');
     button.className = 'choice';
