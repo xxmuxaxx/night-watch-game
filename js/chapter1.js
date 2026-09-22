@@ -11,7 +11,7 @@
 
 let chapter1 = {
   st0: {
-    img: 'img/img-1.jpg',
+    img: 'img/scene-arrival.jpg',
     actorImg: '',
     eTitle: 'Вот и всё..',
     description: 'Ваша жизнь скоро закончится. И начнется новая...',
@@ -19,28 +19,28 @@ let chapter1 = {
       { text: 'Подойти к воротам', next: 'st1' },
       { text: 'Попытаться убежать', next: 'st1_1' }]},
   st1: {
-    img: 'img/img-2.jpg',
+    img: 'img/scene-gate-guard.jpg',
     actorImg: '',
     eTitle: 'Стражник у ворот взглянул на вас',
     description: 'Стражник: Свежее мясо?! Открывай ворота, Стенли!',
     menu: [
       { text: 'Ждать...', next: 'st2' }]},
   st1_1: {
-    img: 'img/img-3.jpg',
+    img: 'img/scene-death.jpg',
     actorImg: '',
     eTitle: 'Вы ринулись, сломя голову, в сторону леса',
     description: 'очевидно, что это был не лучший выбор. Лучники на стенах не просто так получают свой пай. Вас пронзило 3 стрелы и вы упали на колени. В глазах темнело, дух покидал ваше тело...',
     menu: [
       { text: 'GameOver', gameOver: true }]},
   st2: {
-    img: 'img/blackCastle.jpg',
-    actorImg: 'img/enemy-1.jpg',
+    img: 'img/scene-outside-gate.jpg',
+    actorImg: 'img/portrait-vasya.jpg',
     eTitle: 'К вам подошел агрессивно настроеный молодой человек...',
     description: 'МЧ: Слыш, ты что тут стоишь? ГГ: А, что? МЧ: Ах ты, щельмец! Сейчас ты у меня получишь!',
     menu: [
-      { text: 'Приготовиться к драке', fight: { name: 'Вася', img: 'img/enemy-1.jpg', hp: 10, damage: { min: 0, max: 2 } }, next: 'st3' }]},
+      { text: 'Приготовиться к драке', fight: { name: 'Вася', img: 'img/portrait-vasya.jpg', hp: 10, damage: { min: 0, max: 2 } }, next: 'st3' }]},
   st3: {
-    img: 'img/blackCastle.jpg',
+    img: 'img/scene-outside-gate.jpg',
     actorImg: '',
     eTitle: 'Молодой человек повалился на земь',
     description: 'Вы неплохо показали себя в этой драке, возможно будет круто всем люле давать. А-ХИ-ХИ-ХА-ХИ. Вы видите, что ворота открываются',
@@ -48,8 +48,8 @@ let chapter1 = {
       { text: 'Направится к воротам', next: 'st4' },
       { text: 'Пук', next: 'st1_1' }]},
   st4: {
-    img: 'img/blackCastleOutdoors.jpg',
-    actorImg: 'img/actor-sam.jpg',
+    img: 'img/scene-courtyard.jpg',
+    actorImg: 'img/portrait-mentor.jpg',
     eTitle: 'Вы проходите ворота и попадаете во внутренний двор.',
     description: 'К вам подходит мужчина, с виду лет 30-35, в черном плаще и, добро улыбаясь, спрашивает: "Привет! Как тебя зовут?"',
     menu: [

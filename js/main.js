@@ -1,8 +1,8 @@
 // array hero face image
 
 let heroFacesArray = [
-	'img/heroFaces/h1.jpg', 'img/heroFaces/h2.jpg', 'img/heroFaces/h3.jpg',
-	'img/heroFaces/h4.jpg', 'img/heroFaces/h5.jpg', 'img/heroFaces/h6.jpg'
+	'img/hero-1.jpg', 'img/hero-2.jpg', 'img/hero-3.jpg',
+	'img/hero-4.jpg', 'img/hero-5.jpg', 'img/hero-6.jpg'
 ]
 
 //  Create our Hero
@@ -60,4 +60,4 @@ var npc = function (_name, _class, _index) {
 
 // Массив с лицами
 
-let faceArr = ['img/actor-sam.jpg']
+let faceArr = ['img/portrait-mentor.jpg']

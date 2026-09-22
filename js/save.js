@@ -11,7 +11,7 @@ function saveGame () {
   if (stage.menu.some(function (option) { return option.gameOver; })) return;
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      version: 1,
+      version: 2,
       stage: gameStatus.currentStage,
       hero: hero
     }));
@@ -23,7 +23,7 @@ function readSave () {
   try {
     let save = JSON.parse(localStorage.getItem(SAVE_KEY));
     //  сохранение от старой версии, где такой сцены или класса уже нет, не загружаем
-    if (save && save.version === 1 && gameStatus.stages[save.stage] && heroClasses[save.hero.class]) {
+    if (save && save.version === 2 && gameStatus.stages[save.stage] && heroClasses[save.hero.class]) {
       return save;
     }
   } catch (e) {}
