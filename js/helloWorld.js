@@ -118,6 +118,10 @@ function gameOver () {
 
 //  ВЫПОЛНИТЬ ДЕЙСТВИЕ ВЫБРАННОГО ПУНКТА МЕНЮ (формат пунктов — см. js/chapter1.js)
 function choose (option) {
+  if (option.heal) {
+    hero.currentHp = Math.min(hero.hp, hero.currentHp + option.heal);
+    document.querySelector("#hero-status_hp").innerHTML = hpText(hero);
+  }
   if (option.fight) {
     let f = option.fight;
     fight (new enemy(f.name, f.img, f.hp, f.damage), option.next);
@@ -128,12 +132,17 @@ function choose (option) {
   }
 }
 
+//  ТЕКСТ СЦЕНЫ ИЛИ ПУНКТА: СТРОКА ИЛИ ФУНКЦИЯ, ВОЗВРАЩАЮЩАЯ СТРОКУ
+function textOf (value) {
+  return typeof value === 'function' ? value() : value;
+}
+
 function newMenu (options) {
   let ul = document.getElementById('select');
   ul.innerHTML = null;
   options.forEach(function (option) {
     let li = document.createElement('li');
-    li.innerHTML = typeof option.text === 'function' ? option.text() : option.text;
+    li.innerHTML = textOf(option.text);
     li.onclick = function() {
       choose (option);
     }
@@ -143,7 +152,11 @@ function newMenu (options) {
 
 function updateGameField () {
   let stage = gameStatus.stages[gameStatus.currentStage];  //  ТЕКУЩАЯ СЦЕНА
-  img.src = stage.img;  //  ВСТАВЛЯЕМ КАРТИНКУ ТЕКУЩЕЙ СЦЕНЫ
+  img.onerror = function() { img.style.display = 'none'; };  //  картинки ещё нет — просто не показываем
+  if (img.getAttribute('src') !== stage.img) {  //  при той же картинке оставляем как есть: браузер не перезагрузит её и не вызовет onerror
+    img.style.display = '';
+    img.src = stage.img;  //  ВСТАВЛЯЕМ КАРТИНКУ ТЕКУЩЕЙ СЦЕНЫ
+  }
   image.appendChild(img);
   if (stage.actorImg) {
     actorImage.firstElementChild.src = stage.actorImg;
@@ -152,7 +165,7 @@ function updateGameField () {
     actorImage.firstElementChild.style.display = 'none';
   }
   text.querySelector('h1').textContent = stage.eTitle;
-  text.querySelector('span').textContent = stage.description;
+  text.querySelector('span').textContent = textOf(stage.description);
   newMenu (stage.menu);
 }
 

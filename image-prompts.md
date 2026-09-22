@@ -73,6 +73,32 @@ muddy snow-covered yard in front of the closed gate of a dark stone fortress, wo
 inner courtyard of a grim stone fortress seen from a high wall, wooden stairs and galleries along dark stone buildings, recruits training with wooden swords in the trampled snow, men in black cloaks watching, smoke from chimneys, braziers, overcast sky, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
 ```
 
+## Сцена «Трапезная» (st6, st6_1, st6_2) — `scene-hall.jpg` (16:9)
+
+Длинный зал с низким закопчённым потолком, грубые столы, очаг в дальнем конце. В st6_1 и st6_2 поверх показывается портрет Васи, поэтому левый верхний угол лучше оставить спокойным.
+
+```
+long low-ceilinged mess hall inside a stone fortress, soot-blackened wooden beams, rough wooden tables and benches, tired recruits in shabby clothes eating from wooden bowls, a large roaring hearth at the far end, steam rising from a cauldron of stew, warm firelight against cold blue shadows, cozy but grim atmosphere, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
+```
+
+## Сцена «Келья» (st7) — `scene-cell.jpg` (16:9)
+
+Крошечная комната под крышей: соломенный тюфяк, одеяло, сундук, узкое окно на лес.
+
+```
+tiny cramped attic cell in a stone fortress at night, straw mattress on the floor with a rough wool blanket, an old wooden chest, a single candle, a narrow arrow-slit window showing a dark snowy forest under a pale moon, bare stone walls, sloped wooden roof beams, lonely and quiet mood, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
+```
+
+## Сцена «Огни в лесу» (st7_1) — `scene-forest-lights.jpg` (16:9)
+
+Вид из окна кельи: за крепостной стеной в тёмном лесу движутся огни и один за другим гаснут.
+
+```
+view from a high fortress window at night over a snow-covered stone wall to a vast dark pine forest, a dozen small pale bluish lights moving between the trees in a line toward a mountain pass, some of the lights fading out, eerie and ominous, cold moonlight, falling snow, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
+```
+
+Финал главы (st8, «Три сигнала») пока использует `background.jpg`: ночная крепость в горах подходит к сцене.
+
 ---
 
 ## Портреты
