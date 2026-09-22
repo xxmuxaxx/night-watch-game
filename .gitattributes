@@ -1,0 +1,5 @@
+# Везде LF: Prettier проверяет окончания строк, а core.autocrlf на Windows иначе превращает их в CRLF
+* text=auto eol=lf
+*.jpg binary
+*.png binary
+*.docx binary

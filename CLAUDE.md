@@ -4,32 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Night Watch is an unfinished browser text RPG set in an original low-fantasy north: a border fortress in snowy mountains. It began around 2019–2020 as a Game of Thrones fan game, and direct references to the show have since been removed (images, names, the Black Castle); keep new content free of them. It is written in plain HTML/CSS/JavaScript with no framework, build step, package manager, linter or tests. All in-game text and code comments are in Russian. Keep new player-facing text in Russian.
+Night Watch is a browser text RPG set in an original low-fantasy north: a border fortress in snowy mountains. It began around 2019–2020 as a Game of Thrones fan game, and direct references to the show have since been removed (images, names, the Black Castle); keep new content free of them. All in-game text and code comments are in Russian; keep new player-facing text in Russian.
 
-## Running
+Stack: Vite, TypeScript (strict), Preact, Vitest, ESLint (typescript-eslint strict) and Prettier.
 
-Nothing needs to be installed or built. Serve the folder with a static server; `.claude/launch.json` defines one. The game can also be opened as `index.html` directly, but some tools render `file://` pages without running the scripts.
+## Commands
 
 ```bash
-python -m http.server 8000
+npm run dev          # dev server at http://localhost:5173 (also defined in .claude/launch.json)
+npm run build        # typecheck + production build into dist/
+npm run check        # typecheck, lint, format check and tests: run before committing
+npm test             # all tests once
+npx vitest run tests/combat.test.ts   # one test file
+npx vitest run -t "подлый удар"       # tests whose name matches
+npm run format       # apply Prettier
 ```
+
+TypeScript is pinned to 6.0 because typescript-eslint doesn't support TypeScript 7 yet.
 
 ## Architecture
 
-Scripts are plain `<script>` tags that share one global scope. They load in this order: `main.js`, `chapter1.js`, `helloWorld.js`, `newGame_newHero.js`, `save.js`. Functions and variables are passed between files as globals (for example `hero` from `main.js`, `chapter1` from `chapter1.js`, `newGameWindow` from `helloWorld.js`), and many are implicit globals. That makes load order significant: `chapter1.js` must load before `helloWorld.js`, which reads `chapter1` at load time.
+Three layers, each depending only on the ones before it:
 
-- **Screens.** `index.html` holds every screen: the story view (`.event-container`), the hero panel (`.right-column`), and three `.menu` overlays: `#new-game`, `#create-hero-menu` and `#fightWrapper`. Overlays start with the `hidden` attribute and are shown or hidden by setting `style.display` from JS, so CSS must not set `display` on `.menu` itself (it would override `hidden`); layout goes on the inner `.menu__inner` / `.fight-wrapper`.
-- **Game flow.** Start → `newGame()` builds the portrait picker from `heroFacesArray` → `createNewHero()` fills the global `hero` object from `heroClasses` in `main.js` and calls `updateGameField()`. `heroClasses` is keyed by class id (`Warrior`, `Rogue`) and holds `title`, `description`, `hp`, the check stats `strength`, `agility` and `wits` (display names in `statNames`; `strength` also adds to combat damage), `crit` (chance of double damage) and `dodge` (chance to avoid the enemy's hit). The portrait picker and the class cards on the hero creation screen are generated from `heroFacesArray` and `heroClasses`, so a new class or portrait needs only a data entry.
-- **Scenes are pure data (`js/chapter1.js`).** The `chapter1` object maps stage keys (`st0`, `st1`, `st1_1`, ...) to scenes with `img`, `actorImg`, `eTitle`, `description` and `menu`. Like option `text`, `description` may be a function (for example, to insert the hero's name). Each menu option has `text` (a string, or a function for text computed at render time, such as the hero's name) plus an action: `next: 'stX'`, `fight: { name, img, hp, damage, windup }` together with `next`, or `gameOver: true`. `heal: N` restores up to N HP (capped at max) and is combined with `next`. Player decisions are flags in `gameStatus.flags`: an option's `set: { name: true }` records one, and `if: 'name'` / `ifNot: 'name'` show an option only when a flag is or isn't set. Text functions read flags with `flag('name')`. A stat check is `check: { stat, difficulty, set }` with `next` (success) and `fail` stages; the chance is 50% + 15% per point of the stat above `difficulty`, clamped to 5–95% (`checkChance()`), and is shown on the button. `check.set` flags are recorded only on success, and the result appears above the next scene's text (`#check-result`). The flags used in chapter 1 are listed at the top of `chapter1.js`. `createNewHero()` resets both the flags and the stage to `st0`. An option with no action does nothing. A `\n` in `description` renders as a line break (`.text span` uses `white-space: pre-line`), which is how dialogue lines are separated. The format is documented at the top of `chapter1.js`. To add story content, edit only the data; engine changes are needed only for a new kind of action.
-- **Scene engine (`js/helloWorld.js`).** `gameStatus.stages` points at `chapter1`. `updateGameField()` renders `gameStatus.currentStage`, and `newMenu()` renders each option as a `<button class="choice">` inside `#select` that calls `choose(option)`. Keys 1–9 pick options, and in a fight 1/Enter/Space attack, 2 defends, 3 uses the class special, and the same keys continue after the result; the handler ignores keys while the main menu or hero creation is open. `choose()` dispatches on the option's action, and `goTo(stage)` switches scenes and re-renders. If a scene image file is missing, the image is hidden instead of shown broken, so scenes can be written before their art exists; `actorImg` portraits are positioned over the scene image and collapse without it.
-- **Combat.** `fight(enemy, nextStage)` opens the fight overlay and runs a turn-based fight with no timers. Each round the player picks an action (buttons `#push`, `#defend`, `#special`, or keys 1/2/3), then the enemy answers. Attack deals `hero.strength` plus a roll in `hero.weapon.min`–`max` (weapons come from the `weapons` array), doubled on a `hero.crit` roll. Defend halves the enemy's damage and doubles `hero.dodge` for that round. Special is the class ability from `heroClasses[class].special` (`damage` multiplier, `stun` to skip the enemy's answer, `crit` for a guaranteed crit) with a `cooldown` in rounds. Enemies (`new enemy(name, src, hp, damage, windup)`) wind up instead of striking with chance `windup`; the next strike is doubled and `#enemyIntent` warns the player, and a stun cancels it. Both HP checks use `<= 0`. Messages go to `#fightLog`. On victory, `goTo(nextStage)` runs; on defeat, `gameOver()` runs, in both cases after the player closes the result window (`endFight()`). The hero's HP carries over after a fight; the only way to restore it is a `heal` option.
-- **Saving (`js/save.js`).** The game autosaves `{ version, stage, hero, flags }` to `localStorage` under `nightwatch-save` on hero creation and on every `goTo()`. Scenes whose menu contains a `gameOver` option are never saved, and `gameOver()` deletes the save. `readSave()` rejects saves whose `version` (currently 2), stage key or hero class no longer exists, so renaming a stage or class invalidates old saves; bump `version` if the save format changes. `loadGame()` clears `hero` before restoring it, so fields from the hero that was loaded before don't leak in, and fills stats missing in older saves from the class. `hero` is stored as plain JSON, so `loadGame()` re-links `hero.weapon` to the matching `weapons` entry. Saves made before flags existed have no `flags` and load with none set. Any new hero field that holds a function or an object shared with game data needs the same treatment. `hero.src` is a relative path so saves don't depend on the site's address. The "Загрузить игру" button is shown only when a valid save exists.
-- **Unused code.** `js/notebook.js` is fully commented out. `npc`, `locations` and `faceArr` in `main.js` are unused stubs.
+- **`src/content/`: data.** The story (`chapters/*.ts`, merged in `story.ts` with `START_SCENE`), hero classes, weapons, stat names, portraits and the registry of decision flags (`flags.ts`). Ids for flags, classes and weapons are derived from these registries (`keyof typeof …`), so a typo in a flag or class id is a compile error. A new flag must be added to `FLAGS` before use.
+- **`src/game/`: pure logic, no DOM.** `types.ts` holds all shared types. `engine.ts` holds state transitions (`choose`, `fightAction`, `closeFight`, `startNewGame`, …) that take a `GameState` and return a new one without mutating it. `combat.ts` (`playRound`), `checks.ts` and `hero.ts` do the same for their parts, and `save.ts` holds the versioned save format. Anything random takes an `Rng` (`() => number`) parameter instead of calling `Math.random`, which is how tests pin outcomes.
+- **`src/ui/`: Preact.** `store.ts` wraps the engine: it holds the `GameState`, applies transitions and performs side effects (autosave when entering a new scene or starting a game, deleting the save when the game returns to the menu after death). Components read state with `useGameState()` and call store methods; they never mutate state. `App.tsx` renders the scene and hero panel with overlays for the menu, hero creation and the fight. `useKeyboard.ts` maps 1–9 to choices and 1/2/3, Enter and Space to fight actions.
 
-## Design notes
+### Scenes
 
-The UI is a dark theme matching the art: colors and fonts are CSS variables on `:root` in `style/main.css` (fonts Cormorant SC and PT Serif from Google Fonts, with Georgia as fallback). Below 760px the layout switches to one column with the hero panel as a compact bar on top. HP is shown as a bar via `hpHtml(unit)` in `helloWorld.js`; use it (or `renderHeroHp()`) instead of writing HP text directly.
+A scene is `{ image, actor?, title, text, choices }`. `text` and choice `text` are a string or a function of `{ hero, flag }`; `\n` renders as a line break. Choices are a union discriminated by which key is present (engine checks with `in`):
 
-Images are AI-generated from the prompts in `image-prompts.md`, which also defines the shared style suffix and negative prompt. Keep new images consistent with it: scenes 16:9 (1344×768), portraits 1:1. The game uses JPG files in `img/`; the user's full-size PNG originals live in `img-source/`, which is git-ignored. Portraits are downscaled to 512×512 on conversion.
+- `{ next }`: go to a scene.
+- `{ fight: EnemyDef, next }`: fight; winning goes to `next`, losing is game over. `EnemyDef` has `hp` (default 10), `damage` (default 0–2) and `windup` (the chance the enemy winds up instead of striking; the next strike is doubled).
+- `{ check: { stat, difficulty, set? }, next, fail }`: a stat check. The chance is 50% + 15% per point above `difficulty`, clamped to 5–95%, and is shown on the button. `check.set` flags are recorded only on success. The result is shown above the next scene's text.
+- `{ gameOver: true }`: game over. A scene containing one is a death scene and is never saved.
+- No action: the choice does nothing (for example, the end of written content).
 
-`1 глава.txt` holds the chapter 1 premise: a hero with no backstory arrives at a border fortress under guard. `Структура.docx` plans this sequence of locations: outside the fortress → inner courtyard → room 1 → chamber.
+Any choice may also have `set` (flags recorded on pick), `if` / `ifNot` (show only when a flag is or isn't set) and `heal: N` (restore up to N HP, capped at max). Scene ids are plain strings unique across chapters; `tests/story.test.ts` checks that every link target exists, every scene is reachable, every image file exists in `public/` and every flag used in `if` / `ifNot` is set somewhere.
+
+### Combat
+
+Each round the player attacks, defends (halves incoming damage, doubles dodge) or uses the class special (`HeroClass.special`: a `damage` multiplier, `stun` so the enemy skips its answer and loses its wind-up, `crit` for a guaranteed crit, and a `cooldown`). Hero damage is strength plus a weapon roll, doubled on a crit. Hero HP carries over between fights; only `heal` choices restore it.
+
+### Saves
+
+`localStorage` key `nightwatch-save`, format version 3: `{ version, sceneId, hero, flags }`. `migrate()` converts version 2 saves (the pre-TypeScript game: `stage`, `class: 'Warrior'`, `src`, `hp`/`currentHp`) into the current format; saves with an unknown scene, class or weapon are ignored. When the save format changes, bump `SAVE_VERSION` and add a migration step instead of breaking old saves.
+
+## Assets and design
+
+Images live in `public/img/` and are referenced by relative paths such as `'img/scene-hall.jpg'`; hero portraits are stored in saves this way. Images are AI-generated from the prompts in `docs/image-prompts.md`, which also defines the shared style suffix and negative prompt; keep new art consistent with it (scenes 16:9 at 1344×768, portraits 1:1). The user's full-size PNG originals are in `img-source/`, which is git-ignored. The game uses JPG copies, with portraits downscaled to 512×512. A missing image is hidden rather than shown broken (`Picture` component), so scenes can be written before their art exists.
+
+The UI is a dark theme matching the art. Colors and fonts are CSS variables on `:root` in `src/styles/main.css` (Cormorant SC and PT Serif from Google Fonts, with Georgia as fallback). Below 760px the layout switches to one column with the hero panel as a compact bar on top.
+
+`docs/1 глава.txt` holds the chapter 1 premise, and `docs/Структура.docx` plans the chapter's locations (outside the fortress → inner courtyard → room 1 → chamber).

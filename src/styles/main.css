@@ -22,15 +22,17 @@
 }
 body {
   margin: 0;
-  padding: 24px 0;  /*  отступ здесь, а не margin у .wrapper: тот схлопывается с body и даёт лишнюю прокрутку  */
+  padding: 24px 0; /*  отступ здесь, а не margin у .wrapper: тот схлопывается с body и даёт лишнюю прокрутку  */
   min-height: 100vh;
-  background: var(--bg) url('../img/background.jpg') center / cover fixed;
+  background: var(--bg) url('/img/background.jpg') center / cover fixed;
   color: var(--text);
   font-family: var(--font-text);
   font-size: 17px;
   line-height: 1.55;
 }
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-title);
   font-weight: 700;
   line-height: 1.15;
@@ -52,7 +54,10 @@ img {
   border: 1px solid var(--accent);
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
 }
 .button:hover,
 .button:focus-visible {
@@ -88,13 +93,13 @@ img {
 .image-container {
   position: relative;
   aspect-ratio: 16 / 9;
-  max-height: 46vh;  /*  на низких экранах картинка обрезается сверху и снизу, чтобы текст и ответы помещались  */
+  max-height: 46vh; /*  на низких экранах картинка обрезается сверху и снизу, чтобы текст и ответы помещались  */
   background: #07090c;
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;
 }
-.image-container > img {
+.scene-image {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -125,7 +130,8 @@ img {
   font-size: 2rem;
   color: var(--accent-2);
 }
-.text span {
+.scene-text {
+  margin: 0;
   white-space: pre-line;
 }
 
@@ -153,7 +159,9 @@ img {
   border-left: 3px solid var(--line);
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .choice::before {
   content: counter(choice);
@@ -179,9 +187,6 @@ img {
   font-weight: 700;
   border-radius: 4px;
 }
-.check-result[hidden] {
-  display: none;
-}
 .check-result--success {
   color: #9fd08a;
   background: rgba(111, 154, 90, 0.18);
@@ -203,20 +208,17 @@ img {
   background: rgba(0, 0, 0, 0.25);
   border-left: 1px solid var(--line);
 }
-.hero-status__name h3 {
+.hero-status__name {
   font-size: 1.8rem;
   text-align: center;
   margin: 12px 0 0;
 }
-#hero-status_img img {
+.hero-status__portrait {
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
   border: 1px solid var(--line);
   border-radius: 6px;
-}
-#hero-status_img img[src=""] {
-  visibility: hidden;
 }
 .hero-status__class {
   text-align: center;
@@ -287,8 +289,9 @@ img {
 
 /*  ГЛАВНОЕ МЕНЮ  */
 .main-menu {
-  background: linear-gradient(rgba(9, 11, 15, 0.35), rgba(9, 11, 15, 0.92)),
-              url('../img/scene-arrival.jpg') center / cover;
+  background:
+    linear-gradient(rgba(9, 11, 15, 0.35), rgba(9, 11, 15, 0.92)),
+    url('/img/scene-arrival.jpg') center / cover;
 }
 .ng-title {
   font-size: clamp(3rem, 9vw, 5.5rem);
@@ -320,7 +323,7 @@ img {
   font-size: 1.3rem;
   color: var(--accent-2);
 }
-.create-hero-wrapper input[type="text"] {
+.create-hero-wrapper input[type='text'] {
   width: min(320px, 100%);
   padding: 8px 12px;
   font: 1.1rem var(--font-text);
@@ -330,7 +333,7 @@ img {
   border: 1px solid var(--line);
   border-radius: 4px;
 }
-.create-hero-wrapper input[type="text"]:focus {
+.create-hero-wrapper input[type='text']:focus {
   border-color: var(--accent);
   outline: none;
 }
@@ -356,7 +359,9 @@ img {
   border: 2px solid var(--line);
   border-radius: 6px;
   opacity: 0.6;
-  transition: opacity 0.15s, border-color 0.15s;
+  transition:
+    opacity 0.15s,
+    border-color 0.15s;
 }
 .hero-faces label:hover img {
   opacity: 0.9;
@@ -418,21 +423,28 @@ img {
 
 /*  БОЙ  */
 .fight {
-  background: linear-gradient(rgba(9, 11, 15, 0.8), rgba(9, 11, 15, 0.95)),
-              url('../img/scene-outside-gate.jpg') center / cover;
+  background:
+    linear-gradient(rgba(9, 11, 15, 0.8), rgba(9, 11, 15, 0.95)),
+    url('/img/scene-outside-gate.jpg') center / cover;
 }
 .fight-wrapper {
   display: grid;
   grid-template-columns: 1fr 1.6fr 1fr;
-  grid-template-areas: "hero center enemy";
+  grid-template-areas: 'hero center enemy';
   gap: 24px;
   align-items: start;
   padding: 32px 24px;
   text-align: center;
 }
-#fightHero { grid-area: hero; }
-#fightEnemy { grid-area: enemy; }
-.fight-menu-column { grid-area: center; }
+.fighter--hero {
+  grid-area: hero;
+}
+.fighter--enemy {
+  grid-area: enemy;
+}
+.fight-center {
+  grid-area: center;
+}
 .fighter img {
   width: 100%;
   aspect-ratio: 1;
@@ -467,7 +479,9 @@ img {
   border: 1px solid var(--line);
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .action small {
   font-weight: 400;
@@ -500,7 +514,7 @@ img {
   font-weight: 700;
   color: var(--hp-low);
 }
-#fightLog {
+.fight-log {
   max-height: 280px;
   overflow-y: auto;
   margin: 16px 0;
@@ -511,13 +525,13 @@ img {
   border: 1px solid var(--line);
   border-radius: 4px;
 }
-#fightLog:empty {
+.fight-log:empty {
   display: none;
 }
-#fightLog p {
+.fight-log p {
   margin: 4px 0;
 }
-#fightResult {
+.fight-result {
   font: 700 1.8rem var(--font-title);
   color: var(--accent-2);
   margin: 0 0 12px;
@@ -549,10 +563,10 @@ img {
     gap: 4px 12px;
     align-items: center;
   }
-  #hero-status_img {
+  .hero-status__portrait {
     grid-row: span 3;
   }
-  .hero-status__name h3 {
+  .hero-status__name {
     font-size: 1.3rem;
     text-align: left;
     margin: 0;
@@ -575,7 +589,7 @@ img {
   }
   .fight-wrapper {
     grid-template-columns: 1fr 1fr;
-    grid-template-areas: "hero enemy" "center center";
+    grid-template-areas: 'hero enemy' 'center center';
     gap: 16px;
     padding: 20px 16px;
   }

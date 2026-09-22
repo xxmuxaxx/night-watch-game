@@ -1,105 +1,22 @@
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Night Watch</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏰</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@500;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap">
-  <link rel="stylesheet" type="text/css" href="style/main.css">
-</head>
-<body>
-  <div class="wrapper">
-
-    <!-- ПРОИСХОДЯЩЕЕ И ВЫБОР -->
-    <main class="event-container">
-      <div class="image-container">
-        <div class="actor-image"><img src="" alt=""></div>
-      </div>
-      <div class="text">
-        <p id="check-result" class="check-result" hidden></p>
-        <h1></h1>
-        <span></span>
-      </div>
-      <ul id="select" class="select"></ul>
-    </main>
-
-    <!-- ПРАВАЯ КОЛОНКА, СОСТОЯНИЕ ГЕРОЯ -->
-    <aside class="right-column">
-      <div class="hero-status">
-        <div id="hero-status_img"><img src="" alt=""></div>
-        <div class="hero-status__name"><h3></h3></div>
-        <div id="hero-status_class" class="hero-status__class"></div>
-        <div id="hero-status_hp"></div>
-        <dl id="hero-status_stats" class="stats"></dl>
-      </div>
-    </aside>
-
-    <!-- НОВАЯ ИГРА -->
-    <div class="menu main-menu" id="new-game">
-      <div class="menu__inner">
-        <h1 class="ng-title">Night Watch</h1>
-        <p class="ng-subtitle">Северный рубеж</p>
-        <div class="buttons-wrapper">
-          <button id="new-game-button" class="button" onclick="newGame()">Начать новую игру</button>
-          <button id="load-game-button" class="button button--secondary" onclick="loadGame()">Загрузить игру</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- СОЗДАНИЕ ПЕРСОНАЖА -->
-    <div class="menu create-hero-wrapper" id="create-hero-menu" hidden>
-      <div class="menu__inner">
-        <h1>Создайте своего героя</h1>
-        <h3><label for="hero-name">Имя</label></h3>
-        <input type="text" id="hero-name" name="setHeroName" value="Ивар" maxlength="24">
-        <h3>Внешний вид</h3>
-        <div id="hero-faces" class="hero-faces"></div>
-        <h3>Класс</h3>
-        <div id="hero-classes" class="hero-classes"></div>
-        <p id="name-error" class="error" hidden>Введите имя героя!</p>
-        <button id="start-button" class="button" onclick="createNewHero()">Начать</button>
-      </div>
-    </div>
-
-    <!-- БОЙ С ВРАГОМ -->
-    <div class="menu fight" id="fightWrapper" hidden>
-      <div class="fight-wrapper">
-        <div class="fighter" id="fightHero">
-          <div id="fightHeroImg"><img src="" alt=""></div>
-          <h2 id="heroFightName"></h2>
-          <div id="heroFightHP"></div>
-        </div>
-        <div class="fight-menu-column">
-          <div class="vs">VS</div>
-          <div class="fight-actions">
-            <button id="push" class="action"><span class="action__key">1</span>Ударить<small>обычный удар</small></button>
-            <button id="defend" class="action"><span class="action__key">2</span>Защищаться<small>вдвое меньше урона</small></button>
-            <button id="special" class="action action--special"><span class="action__key">3</span><span id="special-name"></span><small id="special-note"></small></button>
-          </div>
-          <div id="fightLog"></div>
-          <div id="winAlert" hidden>
-            <p id="fightResult"></p>
-            <button id="closeFight" class="button">Продолжить</button>
-          </div>
-        </div>
-        <div class="fighter" id="fightEnemy">
-          <div id="fightEnemyImg"><img src="" alt=""></div>
-          <h2 id="enemyFightName"></h2>
-          <div id="enemyFightHP"></div>
-          <p id="enemyIntent" class="intent"></p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="js/main.js"></script>
-  <script src="js/chapter1.js"></script>
-  <script src="js/helloWorld.js"></script>
-  <script src="js/newGame_newHero.js"></script>
-  <script src="js/save.js"></script>
-
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Night Watch</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏰</text></svg>"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@500;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap"
+    />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

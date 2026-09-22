@@ -1,0 +1,6 @@
+dist
+node_modules
+img-source
+public
+package-lock.json
+*.md
