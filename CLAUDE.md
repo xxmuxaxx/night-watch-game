@@ -26,10 +26,6 @@ Scripts are plain `<script>` tags that share one global scope. They load in this
 - **Saving (`js/save.js`).** The game autosaves `{ version, stage, hero }` to `localStorage` under `nightwatch-save` on hero creation and on every `goTo()`. Scenes whose menu contains a `gameOver` option are never saved, and `gameOver()` deletes the save. `readSave()` rejects saves whose `version` (currently 2), stage key or hero class no longer exists, so renaming a stage or class invalidates old saves; bump `version` if the save format changes. `hero` is stored as plain JSON, so `loadGame()` re-links `hero.weapon` to the matching `weapons` entry. Any new hero field that holds a function or an object shared with game data needs the same treatment. `hero.src` is a relative path so saves don't depend on the site's address. The "Загрузить игру" button is shown only when a valid save exists.
 - **Unused code.** `js/notebook.js` is fully commented out. `npc`, `locations` and `faceArr` in `main.js` are unused stubs.
 
-## Known issues
-
-- The "Скрыть\Отобразить" debug button in the hero panel has no real function.
-
 ## Design notes
 
 Images are AI-generated from the prompts in `image-prompts.md`, which also defines the shared style suffix and negative prompt. Keep new images consistent with it: scenes 16:9 (1344×768), portraits 1:1. The game uses JPG files in `img/`; the user's full-size PNG originals live in `img-source/`, which is git-ignored. Portraits are downscaled to 512×512 on conversion.

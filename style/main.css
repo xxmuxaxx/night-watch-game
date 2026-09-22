@@ -27,16 +27,6 @@ body {
   /*float: right;*/
   /*height: 100%;*/
 }
-.new-menu {
-  height: 100%;
-  background: #faa;
-  padding: 15px;
-}
-#visiable {
-  display: inline-block;
-  margin-left: 15px;
-  background: #aaf;
-}
 .hero-status {
   margin: 15px;
 }

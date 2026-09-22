@@ -156,16 +156,6 @@ function updateGameField () {
   newMenu (stage.menu);
 }
 
-// СКРЫТЬ ИЛИ ОТОБРАЗИТЬ ЭЛЕМЕНТ
-function showHide(id, display) {
-  elem = document.getElementById(id);
-  if (elem.style.display == display || elem.style.display == '' ) {
-    elem.style.display = 'none';
-  } else {
-    elem.style.display = display;
-  }
-}
-
 
 //  weapons
 
