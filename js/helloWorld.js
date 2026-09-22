@@ -23,6 +23,13 @@ function isAvailable (option) {
   return (!option.if || flag(option.if)) && (!option.ifNot || !flag(option.ifNot));
 }
 
+//  ШАНС ПРОВЕРКИ { stat, difficulty }: 50% + 15% за каждое очко характеристики сверх сложности, от 5% до 95%
+function checkChance (check) {
+  return Math.min(0.95, Math.max(0.05, 0.5 + 0.15 * (hero[check.stat] - check.difficulty)));
+}
+
+let checkNotice = null;  //  итог последней проверки, показывается над текстом следующей сцены
+
 //  ВРАГ: hp, урон { min, max } и windup (шанс замахнуться вместо удара) необязательны
 function enemy(name, src, hp, damage, windup) {
   this.name = name;
@@ -214,7 +221,13 @@ function choose (option) {
     hero.currentHp = Math.min(hero.hp, hero.currentHp + option.heal);
     renderHeroHp();
   }
-  if (option.fight) {
+  if (option.check) {
+    let check = option.check;
+    let success = Math.random() < checkChance(check);
+    if (success && check.set) Object.assign(gameStatus.flags, check.set);
+    checkNotice = { success: success, text: 'Проверка: ' + statNames[check.stat] + ' — ' + (success ? 'успех' : 'провал') };
+    goTo (success ? option.next : option.fail);
+  } else if (option.fight) {
     let f = option.fight;
     fight (new enemy(f.name, f.img, f.hp, f.damage, f.windup), option.next);
   } else if (option.gameOver) {
@@ -237,6 +250,10 @@ function newMenu (options) {
     let button = document.createElement('button');
     button.className = 'choice';
     button.innerHTML = textOf(option.text);
+    if (option.check) {
+      button.innerHTML = '<span class="check-tag">' + statNames[option.check.stat] + ' ' +
+        Math.round(checkChance(option.check) * 100) + '%</span> ' + button.innerHTML;
+    }
     button.onclick = function() {
       choose (option);
     }
@@ -289,6 +306,13 @@ function updateGameField () {
     actorImage.firstElementChild.style.display = 'block';
   } else {
     actorImage.firstElementChild.style.display = 'none';
+  }
+  let notice = document.getElementById('check-result');
+  notice.hidden = !checkNotice;
+  if (checkNotice) {
+    notice.textContent = checkNotice.text;
+    notice.className = 'check-result ' + (checkNotice.success ? 'check-result--success' : 'check-result--fail');
+    checkNotice = null;  //  итог виден только в сцене сразу после проверки
   }
   text.querySelector('h1').textContent = stage.eTitle;
   text.querySelector('span').textContent = textOf(stage.description);

@@ -7,7 +7,9 @@ function percent (value) {
 
 //  СТРОКА ХАРАКТЕРИСТИК ДЛЯ КАРТОЧКИ КЛАССА
 function classStatsText (heroClass) {
-  let stats = ['Здоровье ' + heroClass.hp, 'Сила ' + heroClass.strength];
+  let stats = ['Здоровье ' + heroClass.hp].concat(Object.keys(statNames).map(function (stat) {
+    return statNames[stat] + ' ' + heroClass[stat];
+  }));
   if (heroClass.crit) stats.push('Точный удар ' + percent(heroClass.crit));
   if (heroClass.dodge) stats.push('Уклонение ' + percent(heroClass.dodge));
   return stats.join(' · ');
@@ -64,13 +66,14 @@ function renderHeroStatus () {
   document.querySelector("#hero-status_img").firstElementChild.src = hero.src;
   document.querySelector("#hero-status_class").textContent = heroClasses[hero.class].title;
   renderHeroHp();
-  let stats = [
-    ['Сила', hero.strength],
+  let stats = Object.keys(statNames).map(function (stat) {
+    return [statNames[stat], hero[stat]];
+  }).concat([
     ['Оружие', hero.weapon.name + ' (' + hero.weapon.min + '–' + hero.weapon.max + ')'],
     ['Точный удар', percent(hero.crit)],
     ['Уклонение', percent(hero.dodge)],
     ['Приём', heroClasses[hero.class].special.name]
-  ];
+  ]);
   document.querySelector("#hero-status_stats").innerHTML = stats.map(function (row) {
     return '<dt>' + row[0] + '</dt><dd>' + row[1] + '</dd>';
   }).join('');
@@ -91,6 +94,8 @@ function createNewHero () {
 
   let heroClass = heroClasses[hero.class];
   hero.strength = heroClass.strength;
+  hero.agility = heroClass.agility;
+  hero.wits = heroClass.wits;
   hero.hp = heroClass.hp;
   hero.crit = heroClass.crit;
   hero.dodge = heroClass.dodge;

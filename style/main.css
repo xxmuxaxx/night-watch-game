@@ -160,6 +160,36 @@ img {
   color: var(--accent);
   font-weight: 700;
 }
+.check-tag {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 1px 8px;
+  font-size: 0.8rem;
+  color: var(--accent-2);
+  border: 1px solid rgba(217, 146, 59, 0.5);
+  border-radius: 10px;
+}
+
+/*  ИТОГ ПРОВЕРКИ НАД ТЕКСТОМ СЦЕНЫ  */
+.check-result {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 2px 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 4px;
+}
+.check-result[hidden] {
+  display: none;
+}
+.check-result--success {
+  color: #9fd08a;
+  background: rgba(111, 154, 90, 0.18);
+}
+.check-result--fail {
+  color: var(--danger);
+  background: rgba(208, 88, 76, 0.15);
+}
 .choice:hover,
 .choice:focus-visible {
   background: rgba(217, 146, 59, 0.12);

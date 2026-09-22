@@ -42,8 +42,13 @@ function deleteSave () {
 function loadGame () {
   let save = readSave();
   if (!save) return;
+  Object.keys(hero).forEach(function (key) { delete hero[key]; });  //  без полей героя, который был до загрузки
   Object.assign(hero, save.hero);
   hero.weapon = weapons.find(function (w) { return w.name === hero.weapon.name; }) || weapons[0];
+  //  в сохранениях до появления ловкости и чутья этих характеристик нет — берём их у класса
+  Object.keys(statNames).forEach(function (stat) {
+    if (hero[stat] === undefined) hero[stat] = heroClasses[hero.class][stat];
+  });
   gameStatus.currentStage = save.stage;
   gameStatus.flags = save.flags || {};
   renderHeroStatus();

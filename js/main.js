@@ -9,16 +9,24 @@ let heroFacesArray = [
 
 let hero = {}
 
+//  Характеристики для проверок (check в пунктах меню). strength ещё и прибавляется к урону в бою
+let statNames = {
+	strength: 'Сила',
+	agility:  'Ловкость',
+	wits:     'Чутьё'
+}
+
 //  Классы героя. Ключ совпадает с id радиокнопки в меню создания героя.
+//  strength, agility, wits — характеристики (см. statNames)
 //  crit — шанс двойного урона, dodge — шанс увернуться от удара врага
 //  special — приём класса в бою: name, description, cooldown (сколько ходов ждать после использования)
 //  и эффекты: damage — множитель урона, stun — враг пропускает ответный удар, crit — гарантированный точный удар
 let heroClasses = {
-	Warrior: { title: 'Воин',      hp: 10, strength: 2, crit: 0,   dodge: 0,
+	Warrior: { title: 'Воин',      hp: 10, strength: 2, agility: 1, wits: 1, crit: 0,   dodge: 0,
 	           description: 'Крепкий и сильный. Бьёт стабильно и держит удар.',
 	           special: { name: 'Мощный удар', description: 'двойной урон, враг пропускает ответный удар',
 	                      cooldown: 3, damage: 2, stun: true } },
-	Rogue:   { title: 'Разбойник', hp: 8,  strength: 1, crit: 0.3, dodge: 0.25,
+	Rogue:   { title: 'Разбойник', hp: 8,  strength: 1, agility: 3, wits: 2, crit: 0.3, dodge: 0.25,
 	           description: 'Хрупкий, но ловкий: бьёт точно и уходит от ударов.',
 	           special: { name: 'Подлый удар', description: 'гарантированный точный удар',
 	                      cooldown: 2, crit: true } }
