@@ -1,0 +1,57 @@
+//  СОХРАНЕНИЕ ИГРЫ
+//
+//  Автосохранение в localStorage браузера: при создании героя и при каждом переходе
+//  в новую сцену (goTo). Сохраняются герой и текущая сцена. Сцены смерти (где в меню
+//  есть gameOver) не сохраняются, а сама смерть стирает сохранение.
+
+const SAVE_KEY = 'nightwatch-save';
+
+function saveGame () {
+  let stage = gameStatus.stages[gameStatus.currentStage];
+  if (stage.menu.some(function (option) { return option.gameOver; })) return;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      version: 1,
+      stage: gameStatus.currentStage,
+      hero: hero
+    }));
+  } catch (e) {}  //  хранилище недоступно (приватный режим и т.п.) — играем без сохранения
+  updateLoadButton();
+}
+
+function readSave () {
+  try {
+    let save = JSON.parse(localStorage.getItem(SAVE_KEY));
+    //  сохранение от старой версии, где такой сцены или класса уже нет, не загружаем
+    if (save && save.version === 1 && gameStatus.stages[save.stage] && heroClasses[save.hero.class]) {
+      return save;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function deleteSave () {
+  try {
+    localStorage.removeItem(SAVE_KEY);
+  } catch (e) {}
+  updateLoadButton();
+}
+
+function loadGame () {
+  let save = readSave();
+  if (!save) return;
+  Object.assign(hero, save.hero);
+  hero.weapon = weapons.find(function (w) { return w.name === hero.weapon.name; }) || weapons[0];
+  gameStatus.currentStage = save.stage;
+  renderHeroStatus();
+  updateGameField();
+  newGameWindow.style.display = "none";
+  createHeroWindow.style.display = "none";
+}
+
+//  КНОПКА «ЗАГРУЗИТЬ ИГРУ» ВИДНА, ТОЛЬКО ЕСЛИ ЕСТЬ СОХРАНЕНИЕ
+function updateLoadButton () {
+  document.getElementById('load-game-button').style.display = readSave() ? "block" : "none";
+}
+
+updateLoadButton();

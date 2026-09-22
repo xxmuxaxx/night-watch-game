@@ -28,11 +28,19 @@ function newGame () {
   document.querySelector("#create-hero-menu").style.display = "block";
 }
 
+//  Отрисовываем меню героя
+function renderHeroStatus () {
+    document.querySelector(".hero-status__name").firstElementChild.innerHTML = hero.name;
+    document.querySelector("#hero-status_img").firstElementChild.src = hero.src;
+    document.querySelector("#hero-status_hp").innerHTML = hpText(hero);
+    document.querySelector("#hero-status_class").innerHTML = 'Класс: ' + heroClasses[hero.class].title;
+}
+
 function createNewHero () {
     //  Устанавливаем для нашего героя характеристики
     hero.name = document.querySelector("input[name='setHeroName']").value;
     hero.class = isCheck("class-select").id;
-    hero.src = isCheck("heroSelector").parentElement.lastChild.src;
+    hero.src = isCheck("heroSelector").parentElement.lastChild.getAttribute('src');  //  относительный путь, чтобы сохранение не зависело от адреса сайта
 
     let heroClass = heroClasses[hero.class];
     hero.strength = heroClass.strength;
@@ -42,15 +50,12 @@ function createNewHero () {
     hero.currentHp = hero.hp;
     hero.weapon = weapons[0];  //  Без оружия
 
-    //  Отрисовываем меню героя
-    document.querySelector(".hero-status__name").firstElementChild.innerHTML = hero.name;
-    document.querySelector("#hero-status_img").firstElementChild.src = hero.src;
-    document.querySelector("#hero-status_hp").innerHTML = 'Здоровье: ' + hero.currentHp + '/' + hero.hp;
-    document.querySelector("#hero-status_class").innerHTML = 'Класс: ' + heroClass.title;
+    renderHeroStatus();
 
     if (hero.name) {
         createHeroWindow.style.display = "none";
         updateGameField ();
+        saveGame();
     } else if (!hero.name) {
         document.querySelector("#create-hero-menu").lastElementChild.style.display = "block";
     }

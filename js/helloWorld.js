@@ -106,10 +106,12 @@ function fight (enemy, stage) {
 function goTo (stage) {
   gameStatus.currentStage = stage;
   updateGameField ();
+  saveGame ();
 }
 
 //  КОНЕЦ ИГРЫ: ВОЗВРАТ В ГЛАВНОЕ МЕНЮ
 function gameOver () {
+  deleteSave ();
   gameStatus.currentStage = 'st0';
   newGameWindow.style.display = "block";
 }
