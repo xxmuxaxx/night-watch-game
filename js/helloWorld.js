@@ -12,11 +12,13 @@ var gameStatus = {
   stages: chapter1  //  СЦЕНЫ ГЛАВЫ, СМ. js/chapter1.js
 };
 
-function enemy(name, src) {
+//  ВРАГ: hp и урон { min, max } необязательны
+function enemy(name, src, hp, damage) {
   this.name = name;
   this.src = src;
-  this.hp = 10;
-  this.currentHp = 10;
+  this.hp = hp || 10;
+  this.currentHp = this.hp;
+  this.damage = damage || { min: 0, max: 2 };
 }
 
 
@@ -24,30 +26,73 @@ function isCheck (name) {
   return document.querySelector('input[name="' + name + '"]:checked');
 }
 
+//  БОЙ
+
+function randomInt (min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function hpText (unit) {
+  return 'Здоровье: ' + Math.max(unit.currentHp, 0) + '/' + unit.hp;
+}
+
+function fightLog (message) {
+  let p = document.createElement('p');
+  p.textContent = message;
+  let log = document.querySelector("#fightLog");
+  log.appendChild(p);
+  log.scrollTop = log.scrollHeight;
+}
+
+function renderFightHp (enemy) {
+  document.querySelector("#heroFightHP").innerHTML = hpText(hero);
+  document.querySelector("#enemyFightHP").innerHTML = hpText(enemy);
+  document.querySelector("#hero-status_hp").innerHTML = hpText(hero);
+}
+
+//  ЗАКОНЧИТЬ БОЙ: показать итог, по кнопке закрыть окно боя и вызвать then
+function endFight (message, then) {
+  document.getElementById('push').style.display = "none";
+  document.querySelector("#fightResult").textContent = message;
+  document.querySelector("#winAlert").style.display = "block";
+  document.getElementById('closeFight').onclick = function() {
+    document.querySelector("#fightWrapper").style.display = "none";
+    then();
+  }
+}
+
+//  ПОШАГОВЫЙ БОЙ: герой бьёт первым, враг отвечает. Победа — переход в stage, поражение — конец игры
 function fight (enemy, stage) {
   document.querySelector("#fightWrapper").style.display = "block";
   document.querySelector("#winAlert").style.display = "none";
+  document.querySelector("#fightLog").innerHTML = null;
   document.querySelector("#fightHeroImg").firstElementChild.src = hero.src;
   document.querySelector("#heroFightName").innerHTML = hero.name;
-  document.querySelector("#heroFightHP").innerHTML = 'Здоровье: ' + hero.currentHp + '/' + hero.hp;
   document.querySelector("#enemyFightName").innerHTML = enemy.name;
   document.querySelector("#fightEnemyImg").firstElementChild.src = enemy.src;
-  document.querySelector("#enemyFightHP").innerHTML = 'Здоровье: ' + enemy.currentHp + '/' + enemy.hp;
+  renderFightHp(enemy);
 
-  document.getElementById('push').onclick = function() {
-    if (enemy.currentHp) {
-      enemy.currentHp = enemy.currentHp - hero.strength;
-      document.querySelector("#enemyFightHP").innerHTML = 'Здоровье: ' + enemy.currentHp + '/' + enemy.hp;
+  let push = document.getElementById('push');
+  push.style.display = "inline-block";
+  push.onclick = function() {
+    let heroDmg = hero.strength + randomInt(hero.weapon.min, hero.weapon.max);
+    enemy.currentHp -= heroDmg;
+    fightLog('Вы бьёте: ' + enemy.name + ' теряет ' + heroDmg + ' здоровья');
+    renderFightHp(enemy);
+    if (enemy.currentHp <= 0) {
+      endFight('Вы победили', function() { goTo (stage); });
+      return;
     }
-    let checkHealthEnemy = setInterval(function() {
-      if (!enemy.currentHp) {
-      document.querySelector("#winAlert").style.display = "block";
-      document.getElementById('closeFight').onclick = function() {
-      document.querySelector("#fightWrapper").style.display = "none";
-      clearInterval(checkHealthEnemy);
-      goTo (stage);
-    }}}, 100);
-  }}
+
+    let enemyDmg = randomInt(enemy.damage.min, enemy.damage.max);
+    hero.currentHp -= enemyDmg;
+    fightLog(enemyDmg ? enemy.name + ' бьёт в ответ: вы теряете ' + enemyDmg + ' здоровья' : enemy.name + ' промахивается');
+    renderFightHp(enemy);
+    if (hero.currentHp <= 0) {
+      endFight('Вы проиграли', gameOver);
+    }
+  }
+}
 
 //  ДВИЖОК СЦЕН
 
@@ -57,13 +102,19 @@ function goTo (stage) {
   updateGameField ();
 }
 
+//  КОНЕЦ ИГРЫ: ВОЗВРАТ В ГЛАВНОЕ МЕНЮ
+function gameOver () {
+  gameStatus.currentStage = 'st0';
+  newGameWindow.style.display = "block";
+}
+
 //  ВЫПОЛНИТЬ ДЕЙСТВИЕ ВЫБРАННОГО ПУНКТА МЕНЮ (формат пунктов — см. js/chapter1.js)
 function choose (option) {
   if (option.fight) {
-    fight (new enemy(option.fight.name, option.fight.img), option.next);
+    let f = option.fight;
+    fight (new enemy(f.name, f.img, f.hp, f.damage), option.next);
   } else if (option.gameOver) {
-    gameStatus.currentStage = 'st0';
-    newGameWindow.style.display = "block";
+    gameOver ();
   } else if (option.next) {
     goTo (option.next);
   }
@@ -107,13 +158,6 @@ function showHide(id, display) {
   }
 }
 
-
-//  abilities
-
-let punch = (weapon, enemy) => {
-  let dmg = Math.floor(Math.random() * (weapon.max - weapon.min + 1)) + weapon.min
-
-}
 
 //  weapons
 

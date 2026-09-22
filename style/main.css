@@ -197,6 +197,15 @@ body {
 .fight-menu-column {
   width: 60%;
 }
+#fightLog {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 15px;
+  text-align: left;
+}
+#fightLog p {
+  margin: 4px 0;
+}
 #heroFight,
 .fight-wrapper {
   height: 100%;

@@ -41,10 +41,7 @@ function createNewHero () {
       else return false;
     
     hero.currentHp = hero.hp;
-    hero.weapon = {
-        name: 'none',
-        damage: 1
-    }
+    hero.weapon = weapons[0];  //  Без оружия
 
     //  Отрисовываем меню героя
     document.querySelector(".hero-status__name").firstElementChild.innerHTML = hero.name;
