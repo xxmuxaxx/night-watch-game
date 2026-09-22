@@ -1,225 +1,499 @@
 @charset "utf-8";
 
-body {
-  /*font-family: monospace;*/
-  background-image: url('../img/background.jpg');
-  background-position: 50% 0;
+/*  ЦВЕТА И ШРИФТЫ  */
+:root {
+  --bg: #0c0f13;
+  --panel: rgba(17, 21, 27, 0.94);
+  --panel-2: #1b212a;
+  --line: #343c48;
+  --text: #e2dccd;
+  --muted: #9aa0a8;
+  --accent: #d9923b;
+  --accent-2: #f0b35e;
+  --danger: #d0584c;
+  --hp: #b8433a;
+  --hp-low: #e0663a;
+  --font-title: 'Cormorant SC', Georgia, serif;
+  --font-text: 'PT Serif', Georgia, serif;
 }
-.wrapper {
-  min-height: 800px;
-  width: 1000px;
-  margin: 25px auto;
-  background: white;
-  /*border: solid 1px #0000005c;*/
-  border-radius: 18px;
-  box-shadow: 0 0 5px 5px #00000085;
-  position: relative;
-  display: flex;
-  overflow: auto;
-}
-/*ПРАВАЯ КОЛОНКА*/
-.right-column {
-  background: #cccccc;
-  width: 30%;
-  border-left: solid 1px black;
-  /*border-radius: 0 8px 8px 0;*/
-  /*padding: 15px;*/
-  /*float: right;*/
-  /*height: 100%;*/
-}
-.hero-status {
-  margin: 15px;
-}
-.hero-status__name {
-  text-align: center;
-  font-size: 2em;
-  pointer-events: none;
-}
-#hp-vi,
-#class-vi {
-  padding-left: 35px;
-}
-.hero-status > div img {
-  width: 100%;
-  margin: auto;
-  display: block;
-  border: solid #ff934140;
-  box-shadow: 0 0 5px 1px #949494;
+
+* {
   box-sizing: border-box;
 }
-.event-container {
-  width: 70%;
-  display: inline-flex;
+body {
+  margin: 0;
+  padding: 24px 0;  /*  отступ здесь, а не margin у .wrapper: тот схлопывается с body и даёт лишнюю прокрутку  */
+  min-height: 100vh;
+  background: var(--bg) url('../img/background.jpg') center / cover fixed;
+  color: var(--text);
+  font-family: var(--font-text);
+  font-size: 17px;
+  line-height: 1.55;
 }
-.actor-image > img {
-  position: absolute;
-  top: 25px;
-  left: 25px;
-  max-height: calc(100% - 50px);
-  max-width: 150px;
-  border: solid 1px white;
-  box-shadow: 0 0 5px 3px #00000075;
+h1, h2, h3 {
+  font-family: var(--font-title);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 0.5em;
 }
-.select li {
-  list-style: none;
-  margin: 5px;
-  background-color: aqua;
-  border-bottom: dotted 1px;  
-}
-.select li:hover {
-  background-color: blue;
-  color: aliceblue;
-  cursor: pointer;
-}
-
-.buttons-wrapper {
-  margin-top: 250px; 
-}
-.button {
-  background: yellow;
-  width: 200px;
-  padding: 5px;
-  text-align: center;
-  margin: auto;
-  margin-top: 5px;
-  border: solid 1px red;
-  color: #000;
-}
-.button:hover {
-  background: green;
-  color: white;
-  cursor: pointer;
-}
-.left-clumn {
-  padding-right: 30%;
-}
-
-
-/*.right-column:after {
-  content: '';
+img {
   display: block;
-  height: 100%;
-}*/
+  max-width: 100%;
+}
 
+/*  КНОПКИ  */
+.button {
+  display: inline-block;
+  min-width: 220px;
+  padding: 10px 24px;
+  font: 600 1.05rem var(--font-text);
+  color: var(--text);
+  background: linear-gradient(#262d38, #1a1f27);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.button:hover,
+.button:focus-visible {
+  color: #16110a;
+  background: var(--accent);
+  box-shadow: 0 0 16px rgba(217, 146, 59, 0.45);
+  outline: none;
+}
+.button--secondary {
+  border-color: var(--line);
+}
 
-.top-content {
-  width: 100%;
-  height: 60%;
-  padding: 15px;
+/*  ОСНОВНОЕ ОКНО  */
+.wrapper {
+  position: relative;
+  width: min(1100px, 100% - 32px);
+  min-height: max(640px, 100vh - 48px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+/*  СЦЕНА  */
+.event-container {
+  padding: 20px 24px 24px;
+  min-width: 0;
 }
 .image-container {
   position: relative;
+  aspect-ratio: 16 / 9;
+  max-height: 46vh;  /*  на низких экранах картинка обрезается сверху и снизу, чтобы текст и ответы помещались  */
+  background: #07090c;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
 }
 .image-container > img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  min-height: 200px;
-  border: solid 1px black;
-  box-shadow: 0px 0px 10px #ccc;
+  height: 100%;
+  object-fit: cover;
+}
+.actor-image {
+  position: absolute;
+  z-index: 1;
+  top: 5%;
+  left: 3%;
+  width: 22%;
+}
+.actor-image > img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid rgba(226, 220, 205, 0.7);
+  border-radius: 4px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.8);
 }
 .text {
-  margin-top: 15px;
-  min-height: 200px;
-  border-bottom: solid 1px;
+  margin-top: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.text h1 {
+  font-size: 2rem;
+  color: var(--accent-2);
 }
 .text span {
   white-space: pre-line;
 }
+
+/*  ВАРИАНТЫ ОТВЕТА: нумеруются, выбираются кликом или клавишами 1–9  */
+.select {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  counter-reset: choice;
+}
+.select li {
+  counter-increment: choice;
+  margin-bottom: 8px;
+}
+.choice {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  font: 1rem var(--font-text);
+  color: var(--text);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.choice::before {
+  content: counter(choice);
+  color: var(--accent);
+  font-weight: 700;
+}
+.choice:hover,
+.choice:focus-visible {
+  background: rgba(217, 146, 59, 0.12);
+  border-color: var(--accent);
+  outline: none;
+}
+
+/*  ПАНЕЛЬ ГЕРОЯ  */
+.right-column {
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 1px solid var(--line);
+}
+.hero-status__name h3 {
+  font-size: 1.8rem;
+  text-align: center;
+  margin: 12px 0 0;
+}
+#hero-status_img img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+#hero-status_img img[src=""] {
+  visibility: hidden;
+}
+.hero-status__class {
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 12px;
+}
+.stats {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 12px;
+  margin: 14px 0 0;
+  font-size: 0.92rem;
+}
+.stats dt {
+  color: var(--muted);
+}
+.stats dd {
+  margin: 0;
+  text-align: right;
+}
+
+/*  ПОЛОСА ЗДОРОВЬЯ  */
+.hp {
+  position: relative;
+  height: 24px;
+  background: #0a0c0f;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hp__fill {
+  height: 100%;
+  background: linear-gradient(#cf5448, var(--hp));
+  transition: width 0.3s;
+}
+.hp--low .hp__fill {
+  background: linear-gradient(#f0864f, var(--hp-low));
+}
+.hp__text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  text-shadow: 0 1px 2px #000;
+}
+
+/*  ОКНА ПОВЕРХ ИГРЫ: меню, создание героя, бой  */
 .menu {
   position: absolute;
-  width: 100%;
-  background: linear-gradient(0.25turn ,rgb(204, 204, 204), #000 70%);
-  height: 100%;
-  top: 0;
-  color: white;
+  z-index: 10;
+  inset: 0;
+  overflow-y: auto;
+  background: var(--bg);
 }
-/*МЕНЮ СОЗДАНИЯ ГЕРОЯ*/
-.create-hero-wrapper {
+.menu__inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 20px;
   text-align: center;
 }
-[name='heroSelector'] {
-  display: none;
+
+/*  ГЛАВНОЕ МЕНЮ  */
+.main-menu {
+  background: linear-gradient(rgba(9, 11, 15, 0.35), rgba(9, 11, 15, 0.92)),
+              url('../img/scene-arrival.jpg') center / cover;
 }
-.create-hero-wrapper label {
-  display: inline-flex;
+.ng-title {
+  font-size: clamp(3rem, 9vw, 5.5rem);
+  letter-spacing: 0.06em;
+  margin: 0;
+  color: var(--text);
+  text-shadow: 0 4px 24px #000;
+}
+.ng-subtitle {
+  margin: -8px 0 32px;
+  font-family: var(--font-title);
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  color: var(--accent-2);
+}
+.buttons-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/*  СОЗДАНИЕ ГЕРОЯ  */
+.create-hero-wrapper h1 {
+  font-size: 2.4rem;
+  margin: 0;
+}
+.create-hero-wrapper h3 {
+  margin: 12px 0 0;
+  font-size: 1.3rem;
+  color: var(--accent-2);
+}
+.create-hero-wrapper input[type="text"] {
+  width: min(320px, 100%);
+  padding: 8px 12px;
+  font: 1.1rem var(--font-text);
+  color: var(--text);
+  text-align: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.create-hero-wrapper input[type="text"]:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.hero-faces {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  width: min(760px, 100%);
+}
+.hero-faces input,
+.hero-classes input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.hero-faces label {
   cursor: pointer;
 }
-[name="heroSelector"]:checked + img {
-  border: solid 2px red;
+.hero-faces img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  opacity: 0.6;
+  transition: opacity 0.15s, border-color 0.15s;
 }
-.create-hero-wrapper img {
-  border: solid 2px aqua;
-  width: 150px;
-  height: 150px;
-  margin: 5px;
+.hero-faces label:hover img {
+  opacity: 0.9;
 }
-.create-hero-wrapper button {
-  margin: 15px 0;
-  padding: 0 15px;
-  font-size: 1.6em;
+.hero-faces input:checked + img {
+  opacity: 1;
+  border-color: var(--accent);
+  box-shadow: 0 0 14px rgba(217, 146, 59, 0.5);
 }
-.create-hero-wrapper button + span {
-  color: red;
-  font-size: 1.6em;
-  text-decoration: underline;
-  display: none;
+.hero-faces input:focus-visible + img,
+.hero-classes input:focus-visible + .class-card {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+.hero-classes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  width: min(760px, 100%);
+}
+.hero-classes label {
+  cursor: pointer;
+}
+.class-card {
+  height: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--panel-2);
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  transition: border-color 0.15s;
+}
+.class-card h4 {
+  margin: 0 0 4px;
+  font: 700 1.3rem var(--font-title);
+}
+.class-card p {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+.class-card__stats {
+  font-size: 0.85rem;
+  color: var(--accent-2);
+}
+.hero-classes input:checked + .class-card {
+  border-color: var(--accent);
+  box-shadow: 0 0 14px rgba(217, 146, 59, 0.35);
+}
+.error {
+  margin: 0;
+  color: var(--danger);
 }
 
-/*ОКНО ВВЕДЕНИЯ БОЯ*/
-
+/*  БОЙ  */
+.fight {
+  background: linear-gradient(rgba(9, 11, 15, 0.8), rgba(9, 11, 15, 0.95)),
+              url('../img/scene-outside-gate.jpg') center / cover;
+}
 .fight-wrapper {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1fr;
+  grid-template-areas: "hero center enemy";
+  gap: 24px;
+  align-items: start;
+  padding: 32px 24px;
   text-align: center;
 }
-.fight-wrapper h2 {
-  font-size: 2em;
+#fightHero { grid-area: hero; }
+#fightEnemy { grid-area: enemy; }
+.fight-menu-column { grid-area: center; }
+.fighter img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin-bottom: 12px;
 }
-.hero-column,
-.enemy-column {
-  height: 100%;
-  width: 20%;
-  background: #555;
+.fighter h2 {
+  font-size: 1.6rem;
 }
-.hero-column div img,
-.enemy-column div img {
-  width: 80%;
-  margin: 15px auto;
-  display: block;
-  border: solid #ff934140;
-  box-shadow: 0 0 5px 1px #949494;
-}
-.fight-menu-column {
-  width: 60%;
+.vs {
+  font: 700 2.4rem var(--font-title);
+  color: var(--accent);
+  margin-bottom: 12px;
 }
 #fightLog {
-  max-height: 300px;
+  max-height: 280px;
   overflow-y: auto;
-  margin: 15px;
+  margin: 16px 0;
+  padding: 8px 12px;
   text-align: left;
+  font-size: 0.95rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+#fightLog:empty {
+  display: none;
 }
 #fightLog p {
   margin: 4px 0;
 }
-#heroFight,
-.fight-wrapper {
-  height: 100%;
+#fightResult {
+  font: 700 1.8rem var(--font-title);
+  color: var(--accent-2);
+  margin: 0 0 12px;
 }
 
-#button-with-animation:hover {
-  animation-name: pulse;
-  animation-duration: 1s;
-  animation-iteration-count: infinite;
-}
-@keyframes pulse {
-  50% {
-    padding: 0em 1.1em;
-    color: red;
-    background: #fcc;
+/*  ТЕЛЕФОН: панель героя сверху компактной полосой, бой в две колонки  */
+@media (max-width: 760px) {
+  body {
+    padding: 0;
+    font-size: 16px;
   }
-}
-
-
-/* Без сортировки от января 2020 */
-.ng-title {
-  text-align: center;
-  font-size: 2.5em;
+  .wrapper {
+    width: 100%;
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .right-column {
+    order: -1;
+    padding: 10px 16px;
+    border-left: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-status {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 4px 12px;
+    align-items: center;
+  }
+  #hero-status_img {
+    grid-row: span 3;
+  }
+  .hero-status__name h3 {
+    font-size: 1.3rem;
+    text-align: left;
+    margin: 0;
+  }
+  .hero-status__class {
+    text-align: left;
+    margin: 0;
+  }
+  .stats {
+    display: none;
+  }
+  .event-container {
+    padding: 16px;
+  }
+  .text h1 {
+    font-size: 1.6rem;
+  }
+  .hero-faces {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .fight-wrapper {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "hero enemy" "center center";
+    gap: 16px;
+    padding: 20px 16px;
+  }
+  .fighter h2 {
+    font-size: 1.3rem;
+  }
 }

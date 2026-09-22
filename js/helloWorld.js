@@ -36,6 +36,18 @@ function hpText (unit) {
   return 'Здоровье: ' + Math.max(unit.currentHp, 0) + '/' + unit.hp;
 }
 
+//  ПОЛОСА ЗДОРОВЬЯ С ТЕКСТОМ; при трети здоровья и меньше полоса краснеет сильнее
+function hpHtml (unit) {
+  let share = Math.max(unit.currentHp, 0) / unit.hp;
+  return '<div class="hp' + (share <= 0.34 ? ' hp--low' : '') + '">' +
+    '<div class="hp__fill" style="width: ' + Math.round(share * 100) + '%"></div>' +
+    '<span class="hp__text">' + hpText(unit) + '</span></div>';
+}
+
+function renderHeroHp () {
+  document.querySelector("#hero-status_hp").innerHTML = hpHtml(hero);
+}
+
 function fightLog (message) {
   let p = document.createElement('p');
   p.textContent = message;
@@ -45,9 +57,9 @@ function fightLog (message) {
 }
 
 function renderFightHp (enemy) {
-  document.querySelector("#heroFightHP").innerHTML = hpText(hero);
-  document.querySelector("#enemyFightHP").innerHTML = hpText(enemy);
-  document.querySelector("#hero-status_hp").innerHTML = hpText(hero);
+  document.querySelector("#heroFightHP").innerHTML = hpHtml(hero);
+  document.querySelector("#enemyFightHP").innerHTML = hpHtml(enemy);
+  renderHeroHp();
 }
 
 //  ЗАКОНЧИТЬ БОЙ: показать итог, по кнопке закрыть окно боя и вызвать then
@@ -120,7 +132,7 @@ function gameOver () {
 function choose (option) {
   if (option.heal) {
     hero.currentHp = Math.min(hero.hp, hero.currentHp + option.heal);
-    document.querySelector("#hero-status_hp").innerHTML = hpText(hero);
+    renderHeroHp();
   }
   if (option.fight) {
     let f = option.fight;
@@ -142,13 +154,42 @@ function newMenu (options) {
   ul.innerHTML = null;
   options.forEach(function (option) {
     let li = document.createElement('li');
-    li.innerHTML = textOf(option.text);
-    li.onclick = function() {
+    let button = document.createElement('button');
+    button.className = 'choice';
+    button.innerHTML = textOf(option.text);
+    button.onclick = function() {
       choose (option);
     }
+    li.appendChild(button);
     ul.appendChild(li);
   });
 }
+
+function isShown (element) {
+  return getComputedStyle(element).display !== 'none';
+}
+
+//  КЛАВИАТУРА: 1–9 — варианты ответа; в бою Enter/пробел/1 — удар или «Продолжить»
+document.addEventListener('keydown', function (e) {
+  if (e.target.tagName === 'INPUT' || e.ctrlKey || e.altKey || e.metaKey) return;
+  if (e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;  //  кнопку в фокусе браузер нажмёт сам
+  if (isShown(newGameWindow) || isShown(createHeroWindow)) return;
+
+  if (isShown(document.querySelector("#fightWrapper"))) {
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== '1') return;
+    e.preventDefault();
+    let push = document.getElementById('push');
+    (isShown(push) ? push : document.getElementById('closeFight')).click();
+    return;
+  }
+
+  let n = parseInt(e.key, 10);
+  let choices = document.querySelectorAll('#select .choice');
+  if (n >= 1 && n <= choices.length) {
+    e.preventDefault();
+    choices[n - 1].click();
+  }
+});
 
 function updateGameField () {
   let stage = gameStatus.stages[gameStatus.currentStage];  //  ТЕКУЩАЯ СЦЕНА

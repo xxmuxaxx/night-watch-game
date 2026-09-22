@@ -12,8 +12,10 @@ let hero = {}
 //  Классы героя. Ключ совпадает с id радиокнопки в меню создания героя.
 //  crit — шанс двойного урона, dodge — шанс увернуться от удара врага
 let heroClasses = {
-	Warrior: { title: 'Воин',      hp: 10, strength: 2, crit: 0,   dodge: 0 },
-	Rogue:   { title: 'Разбойник', hp: 8,  strength: 1, crit: 0.3, dodge: 0.25 }
+	Warrior: { title: 'Воин',      hp: 10, strength: 2, crit: 0,   dodge: 0,
+	           description: 'Крепкий и сильный. Бьёт стабильно и держит удар.' },
+	Rogue:   { title: 'Разбойник', hp: 8,  strength: 1, crit: 0.3, dodge: 0.25,
+	           description: 'Хрупкий, но ловкий: бьёт точно и уходит от ударов.' }
 }
 
 
