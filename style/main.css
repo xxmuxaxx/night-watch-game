@@ -1,0 +1,223 @@
+@charset "utf-8";
+
+body {
+  /*font-family: monospace;*/
+  background-image: url('../img/background.jpg');
+  background-position: 50% 0;
+}
+.wrapper {
+  min-height: 800px;
+  width: 1000px;
+  margin: 25px auto;
+  background: white;
+  /*border: solid 1px #0000005c;*/
+  border-radius: 18px;
+  box-shadow: 0 0 5px 5px #00000085;
+  position: relative;
+  display: flex;
+  overflow: auto;
+}
+/*ПРАВАЯ КОЛОНКА*/
+.right-column {
+  background: #cccccc;
+  width: 30%;
+  border-left: solid 1px black;
+  /*border-radius: 0 8px 8px 0;*/
+  /*padding: 15px;*/
+  /*float: right;*/
+  /*height: 100%;*/
+}
+.new-menu {
+  height: 100%;
+  background: #faa;
+  padding: 15px;
+}
+#visiable {
+  display: inline-block;
+  margin-left: 15px;
+  background: #aaf;
+}
+.hero-status {
+  margin: 15px;
+}
+.hero-status__name {
+  text-align: center;
+  font-size: 2em;
+  pointer-events: none;
+}
+#hp-vi,
+#class-vi {
+  padding-left: 35px;
+}
+.hero-status > div img {
+  width: 100%;
+  margin: auto;
+  display: block;
+  border: solid #ff934140;
+  box-shadow: 0 0 5px 1px #949494;
+  box-sizing: border-box;
+}
+.event-container {
+  width: 70%;
+  display: inline-flex;
+}
+.actor-image > img {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  max-height: calc(100% - 50px);
+  max-width: 150px;
+  border: solid 1px white;
+  box-shadow: 0 0 5px 3px #00000075;
+}
+.select li {
+  list-style: none;
+  margin: 5px;
+  background-color: aqua;
+  border-bottom: dotted 1px;  
+}
+.select li:hover {
+  background-color: blue;
+  color: aliceblue;
+  cursor: pointer;
+}
+
+.buttons-wrapper {
+  margin-top: 250px; 
+}
+.button {
+  background: yellow;
+  width: 200px;
+  padding: 5px;
+  text-align: center;
+  margin: auto;
+  margin-top: 5px;
+  border: solid 1px red;
+  color: #000;
+}
+.button:hover {
+  background: green;
+  color: white;
+  cursor: pointer;
+}
+.left-clumn {
+  padding-right: 30%;
+}
+
+
+/*.right-column:after {
+  content: '';
+  display: block;
+  height: 100%;
+}*/
+
+
+.top-content {
+  width: 100%;
+  height: 60%;
+  padding: 15px;
+}
+.image-container {
+  position: relative;
+}
+.image-container > img {
+  width: 100%;
+  min-height: 200px;
+  border: solid 1px black;
+  box-shadow: 0px 0px 10px #ccc;
+}
+.text {
+  margin-top: 15px;
+  min-height: 200px;
+  border-bottom: solid 1px;
+}
+.menu {
+  position: absolute;
+  width: 100%;
+  background: linear-gradient(0.25turn ,rgb(204, 204, 204), #000 70%);
+  height: 100%;
+  top: 0;
+  color: white;
+}
+/*МЕНЮ СОЗДАНИЯ ГЕРОЯ*/
+.create-hero-wrapper {
+  text-align: center;
+}
+[name='heroSelector'] {
+  display: none;
+}
+.create-hero-wrapper label {
+  display: inline-flex;
+  cursor: pointer;
+}
+[name="heroSelector"]:checked + img {
+  border: solid 2px red;
+}
+.create-hero-wrapper img {
+  border: solid 2px aqua;
+  width: 150px;
+  height: 150px;
+  margin: 5px;
+}
+.create-hero-wrapper button {
+  margin: 15px 0;
+  padding: 0 15px;
+  font-size: 1.6em;
+}
+.create-hero-wrapper button + span {
+  color: red;
+  font-size: 1.6em;
+  text-decoration: underline;
+  display: none;
+}
+
+/*ОКНО ВВЕДЕНИЯ БОЯ*/
+
+.fight-wrapper {
+  display: flex;
+  text-align: center;
+}
+.fight-wrapper h2 {
+  font-size: 2em;
+}
+.hero-column,
+.enemy-column {
+  height: 100%;
+  width: 20%;
+  background: #555;
+}
+.hero-column div img,
+.enemy-column div img {
+  width: 80%;
+  margin: 15px auto;
+  display: block;
+  border: solid #ff934140;
+  box-shadow: 0 0 5px 1px #949494;
+}
+.fight-menu-column {
+  width: 60%;
+}
+#heroFight,
+.fight-wrapper {
+  height: 100%;
+}
+
+#button-with-animation:hover {
+  animation-name: pulse;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+@keyframes pulse {
+  50% {
+    padding: 0em 1.1em;
+    color: red;
+    background: #fcc;
+  }
+}
+
+
+/* Без сортировки от января 2020 */
+.ng-title {
+  text-align: center;
+  font-size: 2.5em;
+}

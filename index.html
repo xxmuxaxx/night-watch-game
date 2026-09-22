@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Night Watch</title>
+  <link rel="stylesheet" type="text/css" href="style/main.css">
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- ПРОИСХОДЯЩЕЕ И ВЫБОР -->
+    <div class="event-container">
+      <div class="top-content">
+        <div class="image-container">
+          <div class="actor-image"><img src=""></div>
+        </div>
+        <div class="text">
+          <h1>[[Основное событие]]</h1>
+          <span>[[Описание события]]</span>
+        </div>
+        <div class="select">
+          <ul id="select">
+            <li>[[Меню действий]]
+          </ul>
+        </div>
+      </div>
+      <div class="bot-content">
+      </div>
+    </div>
+
+    <!-- ПРАВАЯ КОЛОНКА, СОСТОЯНИЕ ГЕРОЯ -->
+    <div class="right-column">
+      <div class="hero-status">
+        <div class="hero-status__name"><h3>[[Имя героя]]</h3></div>
+        <div id="hero-status_img"><img src=""></div>
+        <br>
+        <!-- system block -->
+        <div class="new-menu">
+          <button onclick="showHide('visiable', 'inline-block')">Скрыть\Отобразить</button><div id='visiable'>кнопка работает</div>
+        </div>
+        <!-- <button onclick="updateGameField()">NEWGAME</button> -->
+        <br>
+        <div id="hero-status_hp"></div>
+        <div id="hero-status_class"></div>
+      </div>
+    </div>
+    <!-- КОНЕЦ ПРАВОЙ КОЛОНКИ -->
+
+    <!-- НОВАЯ ИГРА -->
+    <div class="menu" id="new-game">
+      <div class="ng-title">
+        <h1>Night Watch</h1>
+      </div>
+      <div class="buttons-wrapper">
+        <div id="new-game-button" class="button" onclick="newGame()">
+          <p> Начать новую игру</p>
+        </div>
+        <div class="button"> Загрузить игру </div>
+      </div>
+    </div>
+
+    <!-- СОЗДАНИЕ ПЕРСОНАЖА -->
+    <div class="menu create-hero-wrapper" id="create-hero-menu" hidden>
+      <H1>Создайте своего героя!</H1>
+      <h3>Имя вашего героя:</h3>
+      <input type="text" name="setHeroName" value="Джон Сноу">
+      <h3>Внешний вид</h3>
+      <div id="tempN1" style="display: inline-table; width: 500px;">
+        <!-- Тут будут шкурки для героя -->
+      </div>
+      <h3>Класс героя</h3>
+      <div class="character-class-container">
+        <input type="radio" name="class-select" id="Warrior" checked>Воин
+        <input type="radio" name="class-select" id="Rogue">Разбойник
+        </div>
+      <button id="button-with-animation"onclick="createNewHero()">Начать</button>
+      <span>Введите имя героя!</span>
+    </div>
+
+    <!-- БОЙ С ВРАГОМ -->
+    <div class='menu' id='fightWrapper' hidden>
+     <div id='heroFight'>
+      <div class="fight-wrapper">
+        <div class="hero-column">
+          <div id="fightHeroImg">
+            <img src="">
+          </div>
+          <h2 id="heroFightName"></h2>
+          <p id="heroFightHP"></p>
+        </div>
+        <div class="fight-menu-column">
+          <h3>VS</h3>
+          <button id='push'>Ударить</button>
+          <div id='winAlert' hidden>
+            <p>Вы победили</p>
+            <button id="closeFight">выйти из боя</button>
+          </div>
+        </div>
+        <div class="enemy-column">
+          <div id="fightEnemyImg">
+            <img src="">
+          </div>
+          <h2 id="enemyFightName"></h2>
+          <p id="enemyFightHP"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <script language="javascript" src="js/main.js"></script>
+  <script language="javascript" src="js/helloWorld.js"></script>  
+  <script language="javascript" src="js/newGame_newHero.js"></script>
+  <script language="javascript" src="js/chapter1.js"></script>
+
+</body>
+</html>
