@@ -76,14 +76,20 @@ function fight (enemy, stage) {
   push.style.display = "inline-block";
   push.onclick = function() {
     let heroDmg = hero.strength + randomInt(hero.weapon.min, hero.weapon.max);
+    let isCrit = Math.random() < hero.crit;
+    if (isCrit) heroDmg *= 2;
     enemy.currentHp -= heroDmg;
-    fightLog('Вы бьёте: ' + enemy.name + ' теряет ' + heroDmg + ' здоровья');
+    fightLog((isCrit ? 'Точный удар! ' : 'Вы бьёте: ') + enemy.name + ' теряет ' + heroDmg + ' здоровья');
     renderFightHp(enemy);
     if (enemy.currentHp <= 0) {
       endFight('Вы победили', function() { goTo (stage); });
       return;
     }
 
+    if (Math.random() < hero.dodge) {
+      fightLog('Вы уворачиваетесь от удара');
+      return;
+    }
     let enemyDmg = randomInt(enemy.damage.min, enemy.damage.max);
     hero.currentHp -= enemyDmg;
     fightLog(enemyDmg ? enemy.name + ' бьёт в ответ: вы теряете ' + enemyDmg + ' здоровья' : enemy.name + ' промахивается');

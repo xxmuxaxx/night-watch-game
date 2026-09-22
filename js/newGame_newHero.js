@@ -34,12 +34,11 @@ function createNewHero () {
     hero.class = isCheck("class-select").id;
     hero.src = isCheck("heroSelector").parentElement.lastChild.src;
 
-    if (hero.class == 'Warrior') {
-        hero.strength = 2;
-        hero.hp = 10;
-    }
-      else return false;
-    
+    let heroClass = heroClasses[hero.class];
+    hero.strength = heroClass.strength;
+    hero.hp = heroClass.hp;
+    hero.crit = heroClass.crit;
+    hero.dodge = heroClass.dodge;
     hero.currentHp = hero.hp;
     hero.weapon = weapons[0];  //  Без оружия
 
@@ -47,7 +46,7 @@ function createNewHero () {
     document.querySelector(".hero-status__name").firstElementChild.innerHTML = hero.name;
     document.querySelector("#hero-status_img").firstElementChild.src = hero.src;
     document.querySelector("#hero-status_hp").innerHTML = 'Здоровье: ' + hero.currentHp + '/' + hero.hp;
-    document.querySelector("#hero-status_class").innerHTML = 'Класс: ' + hero.class;
+    document.querySelector("#hero-status_class").innerHTML = 'Класс: ' + heroClass.title;
 
     if (hero.name) {
         createHeroWindow.style.display = "none";
