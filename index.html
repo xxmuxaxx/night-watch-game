@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Night Watch</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏰</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@500;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap">
@@ -72,7 +73,11 @@
         </div>
         <div class="fight-menu-column">
           <div class="vs">VS</div>
-          <button id="push" class="button">Ударить</button>
+          <div class="fight-actions">
+            <button id="push" class="action"><span class="action__key">1</span>Ударить<small>обычный удар</small></button>
+            <button id="defend" class="action"><span class="action__key">2</span>Защищаться<small>вдвое меньше урона</small></button>
+            <button id="special" class="action action--special"><span class="action__key">3</span><span id="special-name"></span><small id="special-note"></small></button>
+          </div>
           <div id="fightLog"></div>
           <div id="winAlert" hidden>
             <p id="fightResult"></p>
@@ -83,6 +88,7 @@
           <div id="fightEnemyImg"><img src="" alt=""></div>
           <h2 id="enemyFightName"></h2>
           <div id="enemyFightHP"></div>
+          <p id="enemyIntent" class="intent"></p>
         </div>
       </div>
     </div>

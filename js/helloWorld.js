@@ -12,13 +12,15 @@ var gameStatus = {
   stages: chapter1  //  СЦЕНЫ ГЛАВЫ, СМ. js/chapter1.js
 };
 
-//  ВРАГ: hp и урон { min, max } необязательны
-function enemy(name, src, hp, damage) {
+//  ВРАГ: hp, урон { min, max } и windup (шанс замахнуться вместо удара) необязательны
+function enemy(name, src, hp, damage, windup) {
   this.name = name;
   this.src = src;
   this.hp = hp || 10;
   this.currentHp = this.hp;
   this.damage = damage || { min: 0, max: 2 };
+  this.windup = windup || 0;
+  this.windingUp = false;  //  замахнулся: следующий удар двойной
 }
 
 
@@ -64,7 +66,8 @@ function renderFightHp (enemy) {
 
 //  ЗАКОНЧИТЬ БОЙ: показать итог, по кнопке закрыть окно боя и вызвать then
 function endFight (message, then) {
-  document.getElementById('push').style.display = "none";
+  document.querySelector(".fight-actions").style.display = "none";
+  document.querySelector("#enemyIntent").textContent = '';
   document.querySelector("#fightResult").textContent = message;
   document.querySelector("#winAlert").style.display = "block";
   document.getElementById('closeFight').onclick = function() {
@@ -73,43 +76,106 @@ function endFight (message, then) {
   }
 }
 
-//  ПОШАГОВЫЙ БОЙ: герой бьёт первым, враг отвечает. Победа — переход в stage, поражение — конец игры
+//  ПОШАГОВЫЙ БОЙ. Раунд: действие героя, затем ответ врага.
+//  Действия: attack — обычный удар; defend — урон врага вдвое меньше, шанс уворота вдвое выше;
+//  special — приём класса (heroClasses[..].special), после него ждать cooldown ходов.
+//  Враг с шансом enemy.windup замахивается вместо удара, и следующий его удар двойной.
+//  Победа — переход в stage, поражение — конец игры.
 function fight (enemy, stage) {
+  let special = heroClasses[hero.class].special;
+  let cooldown = 0;  //  сколько ходов осталось до приёма
+
   document.querySelector("#fightWrapper").style.display = "block";
   document.querySelector("#winAlert").style.display = "none";
+  document.querySelector(".fight-actions").style.display = "";
   document.querySelector("#fightLog").innerHTML = null;
   document.querySelector("#fightHeroImg").firstElementChild.src = hero.src;
-  document.querySelector("#heroFightName").innerHTML = hero.name;
-  document.querySelector("#enemyFightName").innerHTML = enemy.name;
+  document.querySelector("#heroFightName").textContent = hero.name;
+  document.querySelector("#enemyFightName").textContent = enemy.name;
   document.querySelector("#fightEnemyImg").firstElementChild.src = enemy.src;
-  renderFightHp(enemy);
+  document.querySelector("#special-name").textContent = special.name;
+  document.getElementById('special').title = special.name + ': ' + special.description;
+  renderFightState();
 
-  let push = document.getElementById('push');
-  push.style.display = "inline-block";
-  push.onclick = function() {
-    let heroDmg = hero.strength + randomInt(hero.weapon.min, hero.weapon.max);
-    let isCrit = Math.random() < hero.crit;
-    if (isCrit) heroDmg *= 2;
-    enemy.currentHp -= heroDmg;
-    fightLog((isCrit ? 'Точный удар! ' : 'Вы бьёте: ') + enemy.name + ' теряет ' + heroDmg + ' здоровья');
+  function renderFightState () {
     renderFightHp(enemy);
-    if (enemy.currentHp <= 0) {
-      endFight('Вы победили', function() { goTo (stage); });
+    let button = document.getElementById('special');
+    button.disabled = cooldown > 0;
+    document.querySelector("#special-note").textContent = cooldown > 0
+      ? 'через ' + cooldown + (cooldown == 1 ? ' ход' : cooldown < 5 ? ' хода' : ' ходов')
+      : special.description;
+    document.querySelector("#enemyIntent").textContent = enemy.windingUp ? 'Готовит сильный удар!' : '';
+  }
+
+  function enemyTurn (defending) {
+    let heavy = enemy.windingUp;
+    if (!heavy && Math.random() < enemy.windup) {
+      enemy.windingUp = true;
+      fightLog(enemy.name + ' замахивается для сильного удара!');
       return;
     }
-
-    if (Math.random() < hero.dodge) {
-      fightLog('Вы уворачиваетесь от удара');
+    enemy.windingUp = false;
+    let dodge = defending ? hero.dodge * 2 : hero.dodge;
+    if (Math.random() < dodge) {
+      fightLog(heavy ? 'Вы уворачиваетесь от сильного удара!' : 'Вы уворачиваетесь от удара');
       return;
     }
-    let enemyDmg = randomInt(enemy.damage.min, enemy.damage.max);
-    hero.currentHp -= enemyDmg;
-    fightLog(enemyDmg ? enemy.name + ' бьёт в ответ: вы теряете ' + enemyDmg + ' здоровья' : enemy.name + ' промахивается');
-    renderFightHp(enemy);
+    let dmg = randomInt(enemy.damage.min, enemy.damage.max) * (heavy ? 2 : 1);
+    if (defending) dmg = Math.floor(dmg / 2);
+    hero.currentHp -= dmg;
+    if (dmg) {
+      fightLog((heavy ? enemy.name + ' обрушивает сильный удар' : enemy.name + ' бьёт в ответ') +
+        (defending ? ' по вашей защите' : '') + ': вы теряете ' + dmg + ' здоровья');
+    } else {
+      fightLog(defending ? 'Вы принимаете удар на защиту и не теряете здоровья' : enemy.name + ' промахивается');
+    }
+  }
+
+  function round (action) {
+    let stun = false;
+    if (action === 'defend') {
+      fightLog('Вы встаёте в защиту');
+    } else {
+      let dmg = hero.strength + randomInt(hero.weapon.min, hero.weapon.max);
+      let isCrit = Math.random() < hero.crit;
+      let label = 'Вы бьёте: ';
+      if (action === 'special') {
+        cooldown = special.cooldown + 1;  //  +1: этот ход тоже вычтется в конце раунда
+        dmg *= special.damage || 1;
+        if (special.crit) isCrit = true;
+        stun = !!special.stun;
+        label = special.name + '! ';
+      }
+      if (isCrit) {
+        dmg *= 2;
+        if (action !== 'special') label = 'Точный удар! ';
+      }
+      enemy.currentHp -= dmg;
+      fightLog(label + enemy.name + ' теряет ' + dmg + ' здоровья');
+      if (enemy.currentHp <= 0) {
+        renderFightState();
+        endFight('Вы победили', function() { goTo (stage); });
+        return;
+      }
+    }
+
+    if (stun) {
+      fightLog(enemy.windingUp ? 'Вы сбиваете замах: ' + enemy.name + ' оглушён и пропускает удар'
+                               : enemy.name + ' оглушён и пропускает удар');
+      enemy.windingUp = false;
+    } else {
+      enemyTurn(action === 'defend');
+    }
+    if (cooldown > 0) cooldown--;
+    renderFightState();
     if (hero.currentHp <= 0) {
       endFight('Вы проиграли', gameOver);
     }
   }
+
+  document.getElementById('push').onclick = function() { round('attack'); };
+  document.getElementById('defend').onclick = function() { round('defend'); };
+  document.getElementById('special').onclick = function() { if (cooldown == 0) round('special'); };
 }
 
 //  ДВИЖОК СЦЕН
@@ -136,7 +202,7 @@ function choose (option) {
   }
   if (option.fight) {
     let f = option.fight;
-    fight (new enemy(f.name, f.img, f.hp, f.damage), option.next);
+    fight (new enemy(f.name, f.img, f.hp, f.damage, f.windup), option.next);
   } else if (option.gameOver) {
     gameOver ();
   } else if (option.next) {
@@ -169,17 +235,22 @@ function isShown (element) {
   return getComputedStyle(element).display !== 'none';
 }
 
-//  КЛАВИАТУРА: 1–9 — варианты ответа; в бою Enter/пробел/1 — удар или «Продолжить»
+//  КЛАВИАТУРА: 1–9 — варианты ответа.
+//  В бою: 1/Enter/пробел — удар, 2 — защита, 3 — приём; после боя Enter/пробел/1 — «Продолжить»
 document.addEventListener('keydown', function (e) {
   if (e.target.tagName === 'INPUT' || e.ctrlKey || e.altKey || e.metaKey) return;
   if (e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;  //  кнопку в фокусе браузер нажмёт сам
   if (isShown(newGameWindow) || isShown(createHeroWindow)) return;
 
   if (isShown(document.querySelector("#fightWrapper"))) {
-    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== '1') return;
+    let fighting = isShown(document.querySelector(".fight-actions"));
+    let keys = fighting
+      ? { 'Enter': 'push', ' ': 'push', '1': 'push', '2': 'defend', '3': 'special' }
+      : { 'Enter': 'closeFight', ' ': 'closeFight', '1': 'closeFight' };
+    if (!keys[e.key]) return;
     e.preventDefault();
-    let push = document.getElementById('push');
-    (isShown(push) ? push : document.getElementById('closeFight')).click();
+    let button = document.getElementById(keys[e.key]);
+    if (!button.disabled) button.click();
     return;
   }
 

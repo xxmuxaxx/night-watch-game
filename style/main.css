@@ -372,6 +372,11 @@ img {
   font-size: 0.85rem;
   color: var(--accent-2);
 }
+.class-card__special {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--text);
+}
 .hero-classes input:checked + .class-card {
   border-color: var(--accent);
   box-shadow: 0 0 14px rgba(217, 146, 59, 0.35);
@@ -413,6 +418,57 @@ img {
   font: 700 2.4rem var(--font-title);
   color: var(--accent);
   margin-bottom: 12px;
+}
+.fight-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.action {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px 8px;
+  font: 600 1rem var(--font-text);
+  color: var(--text);
+  background: linear-gradient(#262d38, #1a1f27);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.action small {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.action__key {
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+.action:hover:not(:disabled),
+.action:focus-visible {
+  border-color: var(--accent);
+  background: linear-gradient(#303845, #20262f);
+  outline: none;
+}
+.action--special {
+  border-color: var(--accent);
+}
+.action:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.intent {
+  min-height: 1.5em;
+  margin: 8px 0 0;
+  font-weight: 700;
+  color: var(--hp-low);
 }
 #fightLog {
   max-height: 280px;

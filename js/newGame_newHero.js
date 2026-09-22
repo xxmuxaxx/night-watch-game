@@ -47,7 +47,8 @@ function newGame () {
       input.checked = i == 0;
       card.className = 'class-card';
       card.innerHTML = '<h4>' + heroClass.title + '</h4><p>' + heroClass.description + '</p>' +
-        '<div class="class-card__stats">' + classStatsText(heroClass) + '</div>';
+        '<div class="class-card__stats">' + classStatsText(heroClass) + '</div>' +
+        '<div class="class-card__special">Приём «' + heroClass.special.name + '»: ' + heroClass.special.description + '</div>';
       label.appendChild(input);
       label.appendChild(card);
       classes.appendChild(label);
@@ -67,7 +68,8 @@ function renderHeroStatus () {
     ['Сила', hero.strength],
     ['Оружие', hero.weapon.name + ' (' + hero.weapon.min + '–' + hero.weapon.max + ')'],
     ['Точный удар', percent(hero.crit)],
-    ['Уклонение', percent(hero.dodge)]
+    ['Уклонение', percent(hero.dodge)],
+    ['Приём', heroClasses[hero.class].special.name]
   ];
   document.querySelector("#hero-status_stats").innerHTML = stats.map(function (row) {
     return '<dt>' + row[0] + '</dt><dd>' + row[1] + '</dd>';

@@ -3,9 +3,10 @@
 // Сцена: img, actorImg (портрет собеседника, '' — нет), eTitle, description, menu.
 // Пункт меню: text (строка или функция, возвращающая строку) и действие:
 //   next: 'stX'                      — перейти в сцену stX
-//   fight: { name, img, hp, damage: { min, max } }, next: 'stX'
+//   fight: { name, img, hp, damage: { min, max }, windup }, next: 'stX'
 //                                    — бой, после победы переход в stX, поражение — конец игры
-//                                      (hp и damage необязательны: по умолчанию 10 и 0–2)
+//                                      (hp, damage и windup необязательны: по умолчанию 10, 0–2 и 0;
+//                                       windup — шанс, что враг замахнётся и следующим ходом ударит вдвое сильнее)
 //   gameOver: true                   — конец игры, возврат в главное меню
 //   heal: N                          — восстановить герою до N здоровья (обычно вместе с next)
 // Пункт без действия ничего не делает (например, конец написанного сюжета).
@@ -41,7 +42,7 @@ let chapter1 = {
     eTitle: 'К вам подошел агрессивно настроенный молодой человек...',
     description: '— Слышь, ты чего тут стоишь?\n— А? Что?\n— Ах ты, шельмец! Сейчас ты у меня получишь!',
     menu: [
-      { text: 'Приготовиться к драке', fight: { name: 'Вася', img: 'img/portrait-vasya.jpg', hp: 10, damage: { min: 0, max: 2 } }, next: 'st3' }]},
+      { text: 'Приготовиться к драке', fight: { name: 'Вася', img: 'img/portrait-vasya.jpg', hp: 10, damage: { min: 0, max: 2 }, windup: 0.3 }, next: 'st3' }]},
   st3: {
     img: 'img/scene-outside-gate.jpg',
     actorImg: '',
