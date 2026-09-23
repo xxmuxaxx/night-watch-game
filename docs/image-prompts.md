@@ -29,6 +29,10 @@ python tools/comfy.py portrait-recruit --pick 202  # выбранный — в p
 - **Без противоречий.** Не смешивай общий фон портретов со своим («snowy drill yard behind»):
   модель выберет одно из двух. Если нужен другой фон, напиши компоновку портрета целиком сам,
   начав с «Head and shoulders portrait», — тогда общее начало не добавляется.
+- **Слова тянут за собой образ.** «Sword» модель рисует стальным, даже если рядом написано
+  «wooden»; учебное оружие вышло только как «thick brown wooden sticks». Гербовые накидки
+  появляются, если не сказать «plain jackets with no emblems». Если деталь не выходит, опиши
+  предмет другими словами, а не повторяй запрет.
 - LoRA не нужна: она меняет стиль, а не послушность, и новая картинка выбьется из набора.
 
 ## Общий стиль
@@ -166,6 +170,107 @@ interior of a fortress smithy at evening, a glowing stone forge with leather bel
 top of a snow-covered stone fortress wall at night, battlements in the foreground, strong wind blowing snow, below a vast black pine forest stretching to a distant mountain pass, a dark corner tower to the left with a faint light in its window, a tiny answering light far away at the pass, a huge copper-bound horn on an iron stand, cold moonlight, tense and secret mood, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
 ```
 
+## Ситуации в крепости
+
+Картинки отдельных занятий, точек интереса и происшествий, чтобы не показывать всюду общий вид
+места. Все 16:9, 1344×768, промпты — связными фразами.
+
+### Плац, учебный бой — `scene-drill.jpg` (16:9)
+
+Учебные бои, тренировка, точка «Плац».
+
+```
+A trampled, snowy drill yard inside a grim stone fortress on a grey winter morning. In the foreground two young recruits in padded gambesons spar with battered round shields and thick brown wooden sticks, each stick as long as an arm, blunt, chipped and dull, like a rough club. Nobody holds anything made of metal. Behind them more recruits drill in pairs with the same wooden sticks, and a rack by the wall is full of splintered wooden sticks. An older man in a heavy black wool cloak watches with his arms folded. Breath steams in the cold air, wet snow falls lightly.
+```
+
+### Кухня — `scene-kitchen.jpg` (16:9)
+
+Помощь на кухне, дрова по наряду, кот с колбасой, точка «Кухня».
+
+```
+A cramped, smoky fortress kitchen lit by a roaring hearth fire. Huge blackened cauldrons hang over the flames, sacks of turnips and onions are piled against the stone walls, strings of sausages and dried herbs hang from the low beams, and a heap of split firewood lies by the door. A chopping block with a cleaver stands in the foreground. Warm orange firelight, steam and smoke, cold blue daylight from a small window.
+```
+
+### Кот с колбасой — `scene-cat.jpg` (16:9)
+
+Происшествие на кухне: кот удирает с колбасой, повар гонится за ним.
+
+```
+A scrawny ginger cat is running away with a stolen sausage in its mouth: a long red sausage dangles from its jaws on both sides. It is a chaotic moment in a smoky fortress kitchen; the cat bolts across the stone floor straight towards the viewer, ears flat, mid-leap. Right behind it a stout, red-faced, red-bearded cook with rolled-up sleeves and a stained apron charges after it, shouting, a big wooden ladle raised high. A knocked-over bowl and scattered onions lie on the floor; cauldrons steam over the hearth fire and strings of sausages hang from the low beams. Warm orange firelight, a sense of motion.
+```
+
+### Искры в кузнице — `scene-sparks.jpg` (16:9)
+
+Происшествие в кузнице: раскалённая полоса выскальзывает из клещей и летит в ветошь.
+
+```
+A glowing red-hot iron bar is flying through the air, just slipped out of a pair of blacksmith's tongs, trailing sparks, about to land in a heap of oily rags on the floor. A broad-shouldered blacksmith with a singed reddish-grey beard and a heavy leather apron lunges after it with open tongs, his face tense. A dark smithy lit by the orange glow of the forge, a water tub nearby, an anvil, tools on the walls, sparks and smoke everywhere, a sense of sudden danger.
+```
+
+### Жаровня у ворот — `scene-brazier.jpg` (16:9)
+
+Вечер у жаровни, спор часовых, точка «Жаровня у ворот».
+
+```
+Night in a narrow snowy yard by a massive fortress gate. Three sentries in dark cloaks and iron caps huddle around an iron brazier full of glowing coals, holding their hands to the heat, spears leaning against the wall. The warm orange glow lights their tired faces from below, while the gate arch behind them is lost in blue darkness and falling snow.
+```
+
+### Караулка у ворот — `scene-guardhouse.jpg` (16:9)
+
+Разговор со Стенли, смена у ворот по наряду, точка «Караулка».
+
+```
+Inside a small cramped guardhouse built into a fortress gate. A low stone vault, a narrow bench, a heavy wooden winch with a thick chain that raises the gate, a lantern on a hook, a spear and a round shield propped in the corner, a pair of dice and a tin mug on a barrel used as a table. Through a small barred window snow and grey daylight are visible. Cold, dim and lived-in.
+```
+
+### Доска нарядов — `scene-duty-board.jpg` (16:9)
+
+Доска нарядов у ворот, сцены нарядов.
+
+```
+Close view of a weathered wooden notice board under a small snow-covered lean-to roof, nailed to a stone wall by a fortress gate. Several sheets of rough paper and wooden tablets are pinned to it, covered with dense lines of illegible charcoal scribbles, some crossed out; a stub of charcoal hangs on a string. Snowflakes drift past, grey morning light.
+```
+
+### Следы у калитки — `scene-tracks.jpg` (16:9)
+
+Происшествие: утренние следы от угловой башни к калитке.
+
+```
+Early morning in a fortress yard after fresh snowfall. A single line of boot prints crosses the untouched snow, running along the foot of a tall dark stone wall from a distant corner tower to a small wooden wicket door set beside the main gate. The low sun casts long blue shadows into each footprint. Quiet, cold and suspicious.
+```
+
+### Ворон у окна — `scene-raven.jpg` (16:9)
+
+Происшествие: ворон стучит в окно кельи.
+
+```
+Seen from inside a tiny attic cell under a sloping roof, a narrow window of cloudy mica panes. On the outer sill sits a huge black raven, head cocked, one eye staring into the room; a scrap of red thread is tied around its leg. Beyond it a snowy pine forest stretches to distant mountains in cold dawn light. The dark cell interior frames the window.
+```
+
+### Фонарь на верстаке — `scene-lantern.jpg` (16:9)
+
+Фонарь со шторкой у кузнеца, точка «Верстак».
+
+```
+Close view of a cluttered blacksmith's workbench lit by the orange glow of a forge. In the centre stands an iron signal lantern with thick glass and a hinged metal shutter over its window, a small lever on its side. Around it lie tongs, chisels, files and scraps of iron. Sparks and soft smoke drift in the background.
+```
+
+### Записка из-под нар — `scene-note.jpg` (16:9)
+
+Находка в казарме: клочок бумаги с рисунком стены, башни и леса.
+
+```
+Close view of a crumpled scrap of old paper lying on rough wooden planks in dim candlelight. On it is a crude charcoal sketch without any writing: a line of fortress wall, a tall corner tower, a row of small pine trees, and three little star-shaped marks drawn between the tower and the trees. Dust and straw around it.
+```
+
+### Драка новобранцев — `scene-brawl.jpg` (16:9)
+
+Происшествие: двое новобранцев дерутся в снегу.
+
+```
+Two scruffy young recruits wrestle in the trampled snow by a wooden barracks wall, clutching each other's collars; one of them has lost a boot and fights in a grey wool sock. They wear plain, patched, faded grey padded jackets with no emblems, no heraldry and no colours, and neither carries any weapon. A small ring of other shabby recruits in the same plain grey jackets watches, some laughing, some shouting. Grey daylight inside a grim stone fortress, light snow falling.
+```
+
 ---
 
 ## Портреты
@@ -223,6 +328,22 @@ broad-shouldered blacksmith in his fifties, singed reddish-grey beard, soot-stre
 
 ```
 Head and shoulders portrait of a lanky, freckled nineteen-year-old recruit, centered and facing the viewer. He grins widely, showing a gap between his front teeth; his cheeks are flushed from the cold and messy straw-coloured hair sticks out over his big ears. He wears a patched grey padded gambeson and rests a crude, chipped wooden training sword on his shoulder: plain pale wood, no metal at all. Behind him is a plain dark stone wall, lit by soft torchlight from one side.
+```
+
+### Повар — `portrait-cook.jpg`
+
+Красный от жара, злой, но хлебом не обидит.
+
+```
+Head and shoulders portrait of a stout, red-faced fortress cook in his forties, centered and facing the viewer. He scowls under bushy eyebrows, his cheeks flushed from the heat of the hearth; his sleeves are rolled up over thick forearms and a stained apron hangs from his neck. He holds a big wooden ladle. Behind him is a plain dark stone wall, lit by warm firelight from one side.
+```
+
+### Стенли, привратник — `portrait-stanley.jpg`
+
+Скучающий стражник у ворот, насмешливый, но честный.
+
+```
+Head and shoulders portrait of a weathered gate guard in his late forties, centered and facing the viewer. He has a lean face, a crooked grey stubble, a mocking half-smile and tired, watchful eyes; he wears a dented iron cap and a heavy dark cloak over a padded coat, a spear shaft resting against his shoulder. Behind him is a plain dark stone wall, lit by soft torchlight from one side.
 ```
 
 ### Лица героя — `hero-1.jpg` … `hero-6.jpg`

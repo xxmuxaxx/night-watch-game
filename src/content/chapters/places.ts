@@ -9,13 +9,14 @@ const SMITH = 'img/portrait-smith.jpg';
 export const places: Record<string, Scene> = {
   // --- Двор у ворот ---
   gate_stanley: {
-    image: 'img/scene-gateyard.jpg',
+    image: 'img/scene-guardhouse.jpg',
+    actor: 'img/portrait-stanley.jpg',
     title: 'Стенли',
     text: '— А, свежее мясо, — Стенли поднимает на вас глаза и хмыкает. — Прижился?\nНа ваш вопрос он пожимает плечами.\n— Ночью ворота заперты. Открываем только дозору, и только по слову старшего. На той неделе вон открывали — Торвин сам провожал ребят до перевала. — Он отворачивается и добавляет тише: — Назад я их не впускал.',
     choices: [{ text: 'Поблагодарить и отойти', leave: true }],
   },
   gate_board: {
-    image: 'img/scene-gateyard.jpg',
+    image: 'img/scene-duty-board.jpg',
     title: 'Наряды',
     text: ({ flag }) =>
       'Караулы, работы, дозоры — всё расписано углём по дням. Неделю назад: «Дозор на перевал — Эрик, Мартин». Оба имени зачёркнуты, и ниже другой рукой, мелко: «бежали».\n' +
@@ -27,7 +28,7 @@ export const places: Record<string, Scene> = {
 
   // --- Казарма: нары пропавших, проверка чутья ---
   barracks_note: {
-    image: 'img/scene-barracks.jpg',
+    image: 'img/scene-note.jpg',
     title: 'Клочок бумаги',
     text: 'Вы простукиваете доски нар, и одна отходит. Под ней — сложенный клочок бумаги. Углём нарисованы стена, угловая башня и лес, а сбоку приписано: «третья стража — три вспышки».\nВы прячете находку за пазуху.',
     choices: [{ text: 'Отойти от нар', leave: true }],
@@ -41,7 +42,7 @@ export const places: Record<string, Scene> = {
 
   // --- Кузница: фонарь на верстаке и кузнец Хальвар ---
   smithy_lantern: {
-    image: 'img/scene-smithy.jpg',
+    image: 'img/scene-lantern.jpg',
     title: 'Фонарь со шторкой',
     text: 'Железный фонарь с толстым стеклом и подвижной шторкой: дёрнешь за рычажок — и свет мигнёт. Чтобы освещать дорогу, такое ни к чему. Так подают знаки.',
     choices: [{ text: 'Положить фонарь на место', leave: true }],

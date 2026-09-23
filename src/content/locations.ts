@@ -74,6 +74,7 @@ export const LOCATIONS: Record<LocationId, Location> = {
     spots: {
       drill: {
         name: 'Плац',
+        image: 'img/scene-drill.jpg',
         text: ({ time }) =>
           'Утоптанная площадка у казармы. На стойке — щиты и деревянные мечи, иссечённые до щепы.' +
           (time.hour >= 8 && time.hour < 17
@@ -127,6 +128,7 @@ export const LOCATIONS: Record<LocationId, Location> = {
     spots: {
       guardhouse: {
         name: 'Караулка',
+        image: 'img/scene-guardhouse.jpg',
         text: 'Низкая дверь рядом со сводом ворот. На лавке у ворота сидит Стенли — тот, кто открывал вам ворота.',
         actions: [
           {
@@ -149,6 +151,7 @@ export const LOCATIONS: Record<LocationId, Location> = {
       },
       board: {
         name: 'Доска нарядов',
+        image: 'img/scene-duty-board.jpg',
         text: 'Потемневшая доска под навесом. К ней прибиты листы: кто когда в карауле, кто в дозоре на перевале.',
         actions: [
           {
@@ -170,6 +173,7 @@ export const LOCATIONS: Record<LocationId, Location> = {
       },
       brazier: {
         name: 'Жаровня у ворот',
+        image: 'img/scene-brazier.jpg',
         text: 'Железная жаровня под навесом у ворот. Вечерами возле неё греются часовые.',
         actions: [ROUTINE.brazier],
       },
@@ -189,6 +193,7 @@ export const LOCATIONS: Record<LocationId, Location> = {
     spots: {
       kitchen: {
         name: 'Кухня',
+        image: 'img/scene-kitchen.jpg',
         text: 'За перегородкой — котлы, мешки с репой и красный от жара повар.',
         actions: [
           ROUTINE.kitchen,
@@ -272,6 +277,7 @@ export const LOCATIONS: Record<LocationId, Location> = {
     spots: {
       bench: {
         name: 'Верстак',
+        image: 'img/scene-lantern.jpg',
         text: 'Клещи, зубила, напильники, обрезки железа. С краю лежит недоделанный фонарь.',
         actions: [
           {

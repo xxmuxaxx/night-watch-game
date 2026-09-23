@@ -2,7 +2,7 @@
 // Сама работа — вариант с duty у точки интереса в src/content/locations.ts, там же награда.
 import type { Scene } from '@/game/types';
 
-const BOARD = 'img/scene-gateyard.jpg';
+const BOARD = 'img/scene-duty-board.jpg';
 
 /** Сцена у доски: что написано против имени героя. */
 function board(task: string): Scene {
@@ -33,7 +33,8 @@ export const duties: Record<string, Scene> = {
 
   // --- Работа ---
   duty_firewood_done: {
-    image: 'img/scene-hall.jpg',
+    image: 'img/scene-kitchen.jpg',
+    actor: 'img/portrait-cook.jpg',
     title: 'Дрова',
     text: 'Час вы колете чурбаки на заднем дворе кухни и таскаете охапки к очагу, пока не перестаёте чувствовать спину. Повар придирчиво оглядывает поленницу и хмыкает:\n— Сойдёт. На, заработал.\nОн суёт вам краюху хлеба.',
     choices: [{ text: 'Вернуться в зал', leave: true }],
@@ -50,7 +51,7 @@ export const duties: Record<string, Scene> = {
     choices: [{ text: 'Утереть лицо', leave: true }],
   },
   duty_weapons_done: {
-    image: 'img/scene-courtyard.jpg',
+    image: 'img/scene-drill.jpg',
     title: 'Щиты и мечи',
     text: 'Час вы отскребаете грязь и ржавчину с умбонов, подтягиваете ремни и шкурите иссечённые деревянные мечи. Торвин, проходя мимо, берёт один щит, придирчиво вертит в руках и одобрительно хлопает вас по плечу.',
     choices: [{ text: 'Перевести дух', leave: true }],
@@ -66,7 +67,8 @@ export const duties: Record<string, Scene> = {
     choices: [{ text: 'Отряхнуться', leave: true }],
   },
   duty_gate_done: {
-    image: 'img/scene-gateyard.jpg',
+    image: 'img/scene-guardhouse.jpg',
+    actor: 'img/portrait-stanley.jpg',
     title: 'Смена у ворот',
     text: ({ flag }) =>
       'Два часа вы стоите со Стенли под сводом ворот, притопывая от холода. Он оказывается неплохим рассказчиком: про медведя, что однажды унёс поварской котёл, про купцов, которые раньше ходили через перевал, пока дорогу не завалило.\n' +

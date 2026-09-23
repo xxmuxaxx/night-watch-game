@@ -8,7 +8,7 @@ const SMITH = 'img/portrait-smith.jpg';
 export const incidents: Record<string, Scene> = {
   // --- Двор: драка новобранцев ---
   incident_brawl: {
-    image: 'img/scene-courtyard.jpg',
+    image: 'img/scene-brawl.jpg',
     title: 'Драка',
     text: 'У стены казармы двое новобранцев катаются в снегу, вцепившись друг другу в вороты. Вокруг уже собираются зеваки. Из-за чего драка, не разобрать — кажется, из-за пары сапог.',
     choices: [
@@ -23,13 +23,13 @@ export const incidents: Record<string, Scene> = {
     ],
   },
   incident_brawl_stop: {
-    image: 'img/scene-courtyard.jpg',
+    image: 'img/scene-brawl.jpg',
     title: 'Разняли',
     text: 'Вы хватаете обоих за шиворот и растаскиваете в стороны. Драчуны ещё пыхтят, но уже больше для вида.\n— Да ладно, ладно, — бурчит один. — Забирай свои сапоги, подавись.\nСтаршие, кажется, ничего не заметили.',
     choices: [{ text: 'Отряхнуться', leave: true }],
   },
   incident_brawl_elbow: {
-    image: 'img/scene-courtyard.jpg',
+    image: 'img/scene-brawl.jpg',
     title: 'Локтем под рёбра',
     text: 'Вы лезете между ними и тут же получаете локтем под рёбра. Пока вы хватаете ртом воздух, драчунов растаскивает подоспевший старший и отвешивает каждому по подзатыльнику. Вам — заодно.',
     choices: [{ text: 'Отдышаться', leave: true }],
@@ -37,7 +37,8 @@ export const incidents: Record<string, Scene> = {
 
   // --- Трапезная: кот с колбасой ---
   incident_cat: {
-    image: 'img/scene-hall.jpg',
+    // повар уже в кадре — без портрета
+    image: 'img/scene-cat.jpg',
     title: 'Держи вора!',
     text: 'Из кухни с грохотом вылетает рыжий кот с колбасой в зубах. Следом — повар с половником:\n— Держи ворюгу!',
     choices: [
@@ -51,13 +52,15 @@ export const incidents: Record<string, Scene> = {
     ],
   },
   incident_cat_caught: {
-    image: 'img/scene-hall.jpg',
+    image: 'img/scene-kitchen.jpg',
+    actor: 'img/portrait-cook.jpg',
     title: 'Есть!',
     text: 'Вы бросаетесь наперерез и в последний миг хватаете кота за шкирку. Колбаса шлёпается на пол. Повар, отдуваясь, забирает добычу и, подумав, отламывает вам горбушку:\n— Ловкий. Хоть кто-то тут на что-то годен.',
     choices: [{ text: 'Спрятать хлеб', leave: true }],
   },
   incident_cat_gone: {
-    image: 'img/scene-hall.jpg',
+    image: 'img/scene-kitchen.jpg',
+    actor: 'img/portrait-cook.jpg',
     title: 'Ушёл',
     text: 'Кот проскальзывает у вас между ног и исчезает за дверью вместе с колбасой. Повар долго и витиевато ругается — похоже, и на вас тоже.',
     choices: [{ text: 'Сделать вид, что ни при чём', leave: true }],
@@ -65,7 +68,7 @@ export const incidents: Record<string, Scene> = {
 
   // --- Двор у ворот: спор часовых ---
   incident_sentries: {
-    image: 'img/scene-gateyard.jpg',
+    image: 'img/scene-brazier.jpg',
     set: { heardWinterRumor: true },
     title: 'Спор у жаровни',
     text: 'У жаровни спорят двое часовых.\n— Говорю тебе, огни это были. На перевале.\n— Тебе всё огни. Прошлой зимой тоже были огни — а потом двое из дозора не вернулись. Забыл?\nЗаметив вас, оба замолкают.',
@@ -80,7 +83,7 @@ export const incidents: Record<string, Scene> = {
     ],
   },
   incident_sentries_lights: {
-    image: 'img/scene-gateyard.jpg',
+    image: 'img/scene-brazier.jpg',
     title: 'Кто много видит',
     text: 'Часовые переглядываются. Старший сплёвывает в огонь.\n— Видел — и молчи. Кто много видит, тот недолго служит.',
     choices: [{ text: 'Отойти', leave: true }],
@@ -88,7 +91,7 @@ export const incidents: Record<string, Scene> = {
 
   // --- Двор у ворот: следы у калитки ---
   incident_tracks: {
-    image: 'img/scene-gateyard.jpg',
+    image: 'img/scene-tracks.jpg',
     title: 'Следы',
     text: 'Ночью подсыпало снега, и двор ещё не затоптан. У калитки рядом с воротами тянется цепочка следов — одна пара сапог.',
     choices: [
@@ -103,13 +106,13 @@ export const incidents: Record<string, Scene> = {
     ],
   },
   incident_tracks_found: {
-    image: 'img/scene-gateyard.jpg',
+    image: 'img/scene-tracks.jpg',
     title: 'От башни к калитке',
     text: 'Следы тянутся от угловой башни вдоль стены к калитке — и обратно. Кто-то ночью выходил за ворота и вернулся до рассвета. Шаг широкий, левый каблук стёрт набок.',
     choices: [{ text: 'Запомнить и отойти', leave: true }],
   },
   incident_tracks_lost: {
-    image: 'img/scene-gateyard.jpg',
+    image: 'img/scene-tracks.jpg',
     title: 'Затоптали',
     text: 'Пока вы присматриваетесь, через двор проходит смена караула, и следы превращаются в месиво.',
     choices: [{ text: 'Отойти', leave: true }],
@@ -117,7 +120,7 @@ export const incidents: Record<string, Scene> = {
 
   // --- Келья: ворон у окна ---
   incident_raven: {
-    image: 'img/scene-cell.jpg',
+    image: 'img/scene-raven.jpg',
     title: 'Ворон',
     text: 'В слюду окна стучит клювом огромный ворон. Смотрит на вас одним глазом, склонив голову, будто чего-то ждёт. На лапе у него — обрывок красной нитки.',
     choices: [
@@ -126,7 +129,7 @@ export const incidents: Record<string, Scene> = {
     ],
   },
   incident_raven_open: {
-    image: 'img/scene-cell.jpg',
+    image: 'img/scene-raven.jpg',
     title: 'К перевалу',
     text: 'Стоит вам приоткрыть створку, ворон тяжело взлетает и уходит к лесу, к перевалу. Чей-то посыльный? Здесь, где писем никто не пишет?',
     choices: [{ text: 'Закрыть окно', leave: true }],
@@ -134,8 +137,8 @@ export const incidents: Record<string, Scene> = {
 
   // --- Кузница: раскалённая полоса ---
   incident_sparks: {
-    image: 'img/scene-smithy.jpg',
-    actor: SMITH,
+    // Хальвар уже в кадре — без портрета
+    image: 'img/scene-sparks.jpg',
     title: 'Искры',
     text: 'Хальвар выхватывает из горна раскалённую полосу, клещи соскальзывают — и железо летит прямо в кучу промасленной ветоши.',
     choices: [
