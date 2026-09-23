@@ -2,8 +2,13 @@
 // Варианты стоят у точек интереса (src/content/locations.ts: ROUTINE), здесь — сцены после них.
 // Вне своих часов занятие видно закрытым с часами (showClosed).
 import type { Choice, Scene } from '@/game/types';
+import { ENEMIES } from '../enemies';
 
-/** Занятия: плац и жаровня во дворе, кухня и очаг в трапезной. */
+/**
+ * Занятия: плац и жаровня во дворе, кухня и очаг в трапезной. На плацу ещё учебные бои (lose):
+ * поражение не убивает, а ведёт в свою сцену. Васю и Торвина можно позвать, когда они расположены
+ * к герою; первая победа над Торвином поднимает его отношение (дальше — обычная сцена).
+ */
 export const ROUTINE = {
   training: {
     text: 'Тренироваться с новобранцами (2 ч, +5 опыта)',
@@ -32,6 +37,48 @@ export const ROUTINE = {
     give: { items: ['bread'] },
     next: 'routine_kitchen',
   },
+  sparRecruit: {
+    text: 'Учебный бой с новобранцем (20 мин)',
+    hours: [8, 17],
+    showClosed: true,
+    daily: 'sparRecruit',
+    minutes: 20,
+    fight: ENEMIES.recruit,
+    next: 'spar_recruit_win',
+    lose: 'spar_recruit_lose',
+  },
+  sparVasya: {
+    text: 'Позвать Васю на учебный бой (20 мин)',
+    hours: [8, 17],
+    ifRelation: { npc: 'vasya', min: 1 },
+    daily: 'sparVasya',
+    minutes: 20,
+    fight: ENEMIES.vasyaSpar,
+    next: 'spar_vasya_win',
+    lose: 'spar_vasya_lose',
+  },
+  sparTorvinFirst: {
+    text: 'Попросить Торвина об учебном бое (20 мин)',
+    hours: [8, 17],
+    ifRelation: { npc: 'torvin', min: 1 },
+    ifNot: 'beatTorvin',
+    daily: 'sparTorvin',
+    minutes: 20,
+    fight: ENEMIES.torvin,
+    next: 'spar_torvin_first',
+    lose: 'spar_torvin_lose',
+  },
+  sparTorvin: {
+    text: 'Попросить Торвина об учебном бое (20 мин)',
+    hours: [8, 17],
+    ifRelation: { npc: 'torvin', min: 1 },
+    if: 'beatTorvin',
+    daily: 'sparTorvin',
+    minutes: 20,
+    fight: ENEMIES.torvin,
+    next: 'spar_torvin_win',
+    lose: 'spar_torvin_lose',
+  },
   ash: {
     text: 'Набрать золы из очага (в бою — в глаза врагу)',
     daily: 'ash',
@@ -56,6 +103,62 @@ export const routine: Record<string, Scene> = {
         ? '\nВася встаёт с вами в пару и честно пытается не бить в лицо.'
         : ''),
     choices: [{ text: 'Перевести дух', leave: true }],
+  },
+  // --- Учебные бои на плацу ---
+  spar_recruit_win: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-recruit.jpg',
+    title: 'Учебный бой',
+    text: 'Долговязый веснушчатый новобранец пыхтит, наседает, но быстро выдыхается. Вы выбиваете у него меч, и он, отдуваясь, поднимает руки.\n— Всё, всё! Твоя взяла.',
+    choices: [{ text: 'Перевести дух', leave: true }],
+  },
+  spar_recruit_lose: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-recruit.jpg',
+    title: 'На снегу',
+    text: 'Долговязый новобранец оказывается проворнее, чем выглядит. Удар по рёбрам — и вы на снегу, хватаете ртом воздух.\n— Живой? — Он протягивает руку. — Завтра отыграешься.',
+    choices: [{ text: 'Подняться', leave: true }],
+  },
+  spar_vasya_win: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-vasya.jpg',
+    title: 'Ну ты даёшь',
+    text: ({ flag }) =>
+      '— Ну ты даёшь! — Вася сидит в снегу и смеётся, потирая плечо. ' +
+      (flag('trippedVasya')
+        ? '— Опять эта твоя подсечка? Ничего, я её ещё раскушу.'
+        : '— Ладно, сегодня твоя взяла. Завтра — моя.'),
+    choices: [{ text: 'Помочь ему встать', leave: true }],
+  },
+  spar_vasya_lose: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-vasya.jpg',
+    title: 'Без обид',
+    text: 'Вася, страшно довольный, помогает вам подняться.\n— Не обижайся, новенький. Ты, когда замахиваешься, весь открываешься — я сразу вижу. Завтра ещё раз?',
+    choices: [{ text: 'Подняться', leave: true }],
+  },
+  spar_torvin_first: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-mentor.jpg',
+    set: { beatTorvin: true },
+    relation: { torvin: 1 },
+    title: 'На что-то похоже',
+    text: 'Торвин отступает на шаг, опускает меч и смотрит на вас по-новому.\n— Вот это уже на что-то похоже. — Он хлопает вас по плечу так, что вы едва не садитесь в снег. — Кто учил? Ладно, не отвечай: прошлое за воротами.\nНовобранцы вокруг притихли: Торвина на плацу валят нечасто.',
+    choices: [{ text: 'Перевести дух', leave: true }],
+  },
+  spar_torvin_win: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-mentor.jpg',
+    title: 'Неплохо',
+    text: 'Торвин опускает меч и одобрительно кивает.\n— Неплохо. Но не зазнавайся: в лесу противник не остановится оттого, что ты победил.',
+    choices: [{ text: 'Перевести дух', leave: true }],
+  },
+  spar_torvin_lose: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-mentor.jpg',
+    title: 'Лицом в снег',
+    text: 'Мир переворачивается, и вы оказываетесь лицом в снегу. Торвин стоит над вами и даже не запыхался.\n— Ждёшь удара, а надо ждать замаха. Видишь, как я отвожу плечо? Тогда закрывайся — и бей в ответ. — Он протягивает руку. — Завтра ещё раз.',
+    choices: [{ text: 'Подняться', leave: true }],
   },
   routine_kitchen: {
     image: 'img/scene-hall.jpg',

@@ -12,6 +12,36 @@ export const ENEMIES = {
     damage: { min: 0, max: 2 },
     windup: 0.3,
   },
+  // Учебные бои на плацу (src/content/chapters/routine.ts): поражение не убивает.
+  // Новобранец — разминка для любого героя.
+  recruit: {
+    name: 'Новобранец',
+    portrait: 'img/portrait-recruit.jpg',
+    hp: 8,
+    damage: { min: 0, max: 2 },
+    windup: 0.2,
+    xp: 3,
+  },
+  // Вася на плацу злее, чем у ворот: бьёт сильнее и держит удар дольше.
+  vasyaSpar: {
+    name: 'Вася',
+    portrait: 'img/portrait-vasya.jpg',
+    hp: 12,
+    damage: { min: 1, max: 3 },
+    windup: 0.3,
+    dodge: 0.1,
+    xp: 6,
+  },
+  // Торвин учит парировать: кто только бьёт, почти не побеждает, кто ловит замах — побеждает чаще.
+  torvin: {
+    name: 'Торвин',
+    portrait: 'img/portrait-mentor.jpg',
+    hp: 22,
+    damage: { min: 2, max: 4 },
+    windup: 0.35,
+    dodge: 0.2,
+    xp: 15,
+  },
   // Для главы 2: быстрый и вёрткий, бьёт часто, но слабо, от удара уходит.
   wolf: {
     name: 'Волк',

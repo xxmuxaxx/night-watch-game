@@ -274,10 +274,14 @@ export interface GoChoice extends ChoiceBase {
   next: SceneId;
 }
 
-/** Бой; победа — опыт и переход в next, поражение — конец игры. */
+/**
+ * Бой; победа — опыт и переход в next, поражение — конец игры. С lose это учебный бой (спарринг):
+ * поражение ведёт в сцену lose, у героя остаётся хотя бы 1 здоровья.
+ */
 export interface FightChoice extends ChoiceBase {
   fight: EnemyDef;
   next: SceneId;
+  lose?: SceneId;
 }
 
 /** Проверка характеристики; успех — next, провал — fail. */
@@ -500,6 +504,8 @@ export interface FightState {
   result: 'win' | 'lose' | null;
   /** Куда перейти после победы. */
   winScene: SceneId;
+  /** Учебный бой: куда перейти после поражения; null — поражение означает конец игры. */
+  loseScene: SceneId | null;
   /** Партия перед боем: после поражения можно вернуться к ней и попробовать снова. */
   retry: Session | null;
 }

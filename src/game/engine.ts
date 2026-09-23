@@ -187,7 +187,7 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
   }
   if ('fight' in choice) {
     // перед боем запоминаем партию как была до выбора: после поражения можно попробовать снова
-    const fight = { ...startFight(choice.fight, choice.next), retry: current };
+    const fight = { ...startFight(choice.fight, choice.next, choice.lose), retry: current };
     return { ...state, session: { ...session, fight, notices: [] } };
   }
   if ('gameOver' in choice) return gameOver();
@@ -240,9 +240,12 @@ export function fightAction(state: GameState, action: FightAction, rng: Rng): Ga
   return { ...state, session: { ...session, hero, fight } };
 }
 
-/** Можно ли попробовать проигранный бой снова (не в режиме «Одна жизнь»). */
+/** Можно ли попробовать проигранный бой снова (не в режиме «Одна жизнь» и не в учебном бою). */
 export function canRetryFight(session: Session): boolean {
-  return session.fight?.result === 'lose' && session.fight.retry !== null && !session.oneLife;
+  const fight = session.fight;
+  return (
+    fight?.result === 'lose' && fight.loseScene === null && fight.retry !== null && !session.oneLife
+  );
 }
 
 /** Попробовать снова: вернуться к сцене перед боем с тем здоровьем, что было до него. */
@@ -254,12 +257,20 @@ export function retryFight(state: GameState): GameState {
   return { ...state, session: { ...retry, fight: null, notices } };
 }
 
-/** Закрыть окно итога боя: победа даёт опыт и ведёт дальше по сюжету, поражение — конец игры. */
+/**
+ * Закрыть окно итога боя: победа даёт опыт и ведёт дальше по сюжету, поражение — конец игры,
+ * а в учебном бою — в его сцену поражения с 1 здоровьем.
+ */
 export function closeFight(state: GameState): GameState {
   const session = state.session;
   const fight = session?.fight;
   if (!session || !fight?.result) return state;
-  if (fight.result === 'lose') return gameOver();
+  if (fight.result === 'lose') {
+    if (fight.loseScene === null) return gameOver();
+    const hero = { ...session.hero, hp: Math.max(1, session.hero.hp) };
+    const next = enterScene({ ...session, hero, fight: null, notices: [] }, fight.loseScene);
+    return withJournalNotices({ ...session, fight: null }, { ...state, session: next });
+  }
   const notices: Notice[] = [];
   const hero = gainXp(session.hero, fight.enemy.xp, notices);
   const next = enterScene({ ...session, hero, fight: null, notices }, fight.winScene);

@@ -79,7 +79,13 @@ export const LOCATIONS: Record<LocationId, Location> = {
           (time.hour >= 8 && time.hour < 17
             ? ' Новобранцы бьются парами, старшие покрикивают.'
             : ' Сейчас здесь пусто, только ветер гоняет снег.'),
-        actions: [ROUTINE.training],
+        actions: [
+          ROUTINE.training,
+          ROUTINE.sparRecruit,
+          ROUTINE.sparVasya,
+          ROUTINE.sparTorvinFirst,
+          ROUTINE.sparTorvin,
+        ],
       },
       stairs: {
         name: 'Лестница на стену',

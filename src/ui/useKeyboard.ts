@@ -3,7 +3,7 @@ import { LEVEL_REWARDS } from '@/content/progression';
 import { canUseSpecial } from '@/game/combat';
 import { itemBlocked } from '@/game/hero';
 import { availableChoices, canRetryFight, isChoosingLevelReward } from '@/game/engine';
-import type { FightAction } from '@/game/types';
+import type { Choice, FightAction } from '@/game/types';
 import type { GameStore } from './store';
 
 const FIGHT_KEYS: Record<string, 'attack' | 'defend' | 'special' | 'item'> = {
@@ -27,8 +27,9 @@ export type Panel = 'journal' | 'chronicle' | 'map' | 'settings' | 'load';
 /** Клавиши вариантов по порядку: 1–9, затем 0 для десятого; дальше — только мышью. */
 const CHOICE_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 
-/** Клавиша варианта с этим номером (с нуля) или null, если клавиши нет. */
-export function choiceKey(index: number): string | null {
+/** Клавиша варианта: «подождать час» — W (в любой раскладке), остальные — по номеру (с нуля). */
+export function choiceKey(choice: Choice, index: number): string | null {
+  if ('wait' in choice) return 'W';
   return CHOICE_KEYS[index] ?? null;
 }
 
@@ -42,7 +43,7 @@ export interface PanelControl {
 /**
  * Клавиатура: J открывает и закрывает журнал, H — летопись, M — карту, Esc закрывает открытое окно или открывает настройки
  * (пока окно открыто, остальные клавиши не работают);
- * в сцене 1–9 и 0 выбирают вариант ответа, Backspace отходит от точки интереса или прощается
+ * в сцене 1–9 и 0 выбирают вариант ответа, W — «подождать час», Backspace отходит от точки интереса или прощается
  * в разговоре (последний вариант, если он заканчивает сцену); при новом уровне 1–4 — награду;
  * в бою 1/Enter/пробел — удар, 2 — защита, 3 — приём, 4 — первый предмет из сумки;
  * после боя Enter/пробел/1 — «Продолжить» (после поражения — «Попробовать снова», 2 — «Сдаться»). В меню и при вводе имени клавиши не перехватываются.
@@ -125,7 +126,8 @@ export function useKeyboard(store: GameStore, panels: PanelControl) {
         return;
       }
 
-      const choice = choices[CHOICE_KEYS.indexOf(e.key)];
+      const choice =
+        e.code === 'KeyW' ? choices.find((c) => 'wait' in c) : choices[CHOICE_KEYS.indexOf(e.key)];
       if (choice) {
         e.preventDefault();
         store.choose(choice);

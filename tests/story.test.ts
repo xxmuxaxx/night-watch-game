@@ -58,7 +58,11 @@ const choices: { where: string; choice: Choice }[] = [
 ];
 
 function targets(choice: Choice): SceneId[] {
-  return [...('next' in choice ? [choice.next] : []), ...('fail' in choice ? [choice.fail] : [])];
+  return [
+    ...('next' in choice ? [choice.next] : []),
+    ...('fail' in choice ? [choice.fail] : []),
+    ...('lose' in choice && choice.lose ? [choice.lose] : []),
+  ];
 }
 
 describe('сюжет', () => {

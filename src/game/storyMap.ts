@@ -33,7 +33,13 @@ export interface MapNode {
 
 function links(choice: Choice): MapLink[] {
   const label = typeof choice.text === 'string' ? choice.text : '…';
-  if ('fight' in choice) return [{ to: choice.next, kind: 'fight', label }];
+  if ('fight' in choice) {
+    const win: MapLink = { to: choice.next, kind: 'fight', label };
+    // учебный бой: поражение ведёт в свою сцену, как провал проверки
+    return choice.lose
+      ? [win, { to: choice.lose, kind: 'fail', label: label + ' (поражение)' }]
+      : [win];
+  }
   if ('check' in choice) {
     return [
       { to: choice.next, kind: 'next', label: label + ' (успех)' },

@@ -174,6 +174,7 @@ export const en: Dict = {
     won: 'You won',
     lost: 'You lost',
     retry: 'Try again',
+    yielded: 'You yield',
     giveUp: 'Give up',
     continue: 'Continue',
     enemyArmor: (armor) => 'armor ' + armor + ': precise strikes pierce it',

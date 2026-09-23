@@ -238,7 +238,11 @@ describe('точки интереса', () => {
     const state = roaming('courtyard', 1, 10);
     const drill = play(state, 'Плац');
     expect(sessionOf(drill)).toMatchObject({ spotId: 'drill', time: atTime(1, 10) });
-    expect(choiceTexts(drill)).toEqual(['Тренироваться с новобранцами (2 ч, +5 опыта)', 'Отойти']);
+    expect(choiceTexts(drill)).toEqual([
+      'Тренироваться с новобранцами (2 ч, +5 опыта)',
+      'Учебный бой с новобранцем (20 мин)',
+      'Отойти',
+    ]);
     expect(roamGroups(sessionOf(drill)).map((group) => group.kind)).toEqual(['spot']);
     expect(sessionOf(play(drill, 'Отойти')).spotId).toBeNull();
   });
@@ -262,6 +266,54 @@ describe('точки интереса', () => {
       sceneId: 'window_day',
       spotId: null,
     });
+  });
+});
+
+describe('учебные бои', () => {
+  /** Начать бой на плацу и сразу закончить его с нужным итогом. */
+  function spar(state: GameState, fragment: string, result: 'win' | 'lose'): GameState {
+    const fighting = sessionOf(play(state, 'Плац', fragment));
+    const fight = fighting.fight;
+    if (!fight) throw new Error('Бой не начался');
+    const hero = result === 'lose' ? { ...fighting.hero, hp: 0 } : fighting.hero;
+    return engine.closeFight(
+      withSession(state, { ...fighting, hero, fight: { ...fight, result } }),
+    );
+  }
+
+  it('поражение не конец игры: сцена поражения, 1 здоровья, попробовать снова нельзя', () => {
+    const state = roaming('courtyard', 1, 10);
+    const fight = sessionOf(play(state, 'Плац', 'Учебный бой с новобранцем')).fight;
+    expect(fight?.loseScene).toBe('spar_recruit_lose');
+    const lost = withSession(state, { fight: fight && { ...fight, result: 'lose' } });
+    expect(engine.canRetryFight(sessionOf(lost))).toBe(false);
+    const after = sessionOf(spar(state, 'Учебный бой с новобранцем', 'lose'));
+    expect(after).toMatchObject({ sceneId: 'spar_recruit_lose', fight: null });
+    expect(after.hero.hp).toBe(1);
+  });
+
+  it('победа даёт опыт; второй раз за день нельзя', () => {
+    const won = spar(roaming('courtyard', 1, 10), 'Учебный бой с новобранцем', 'win');
+    expect(sessionOf(won)).toMatchObject({ sceneId: 'spar_recruit_win', hero: { xp: 3 } });
+    const again = play(play(won, 'Перевести дух'), 'Плац');
+    expect(pick(again, 'Учебный бой').disabled).toEqual({ id: 'doneToday' });
+  });
+
+  it('Торвин соглашается, только если расположен; первая победа поднимает его отношение', () => {
+    expect(choiceTexts(play(roaming('courtyard', 1, 10), 'Плац'))).not.toContain(
+      'Попросить Торвина об учебном бое (20 мин)',
+    );
+    const state = withSession(roaming('courtyard', 1, 10), { relations: { torvin: 1 } });
+    const first = sessionOf(spar(state, 'Попросить Торвина', 'win'));
+    expect(first).toMatchObject({
+      sceneId: 'spar_torvin_first',
+      relations: { torvin: 2 },
+      flags: { beatTorvin: true },
+    });
+    // назавтра — обычная сцена, отношение больше не растёт
+    const nextDay = withSession(state, { ...first, sceneId: null, time: atTime(2, 10) });
+    const second = sessionOf(spar(nextDay, 'Попросить Торвина', 'win'));
+    expect(second).toMatchObject({ sceneId: 'spar_torvin_win', relations: { torvin: 2 } });
   });
 });
 

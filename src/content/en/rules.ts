@@ -53,6 +53,9 @@ export const STATS: Record<StatId, string> = {
 
 export const ENEMIES: Record<EnemyId, string> = {
   vasya: 'Vasya',
+  recruit: 'Recruit',
+  vasyaSpar: 'Vasya',
+  torvin: 'Torvin',
   wolf: 'Wolf',
   raider: 'Man in a dark cloak',
 };

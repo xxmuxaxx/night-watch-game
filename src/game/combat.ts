@@ -35,8 +35,20 @@ export function createEnemy(def: EnemyDef): Enemy {
   };
 }
 
-export function startFight(def: EnemyDef, winScene: SceneId): FightState {
-  return { enemy: createEnemy(def), cooldown: 0, log: [], result: null, winScene, retry: null };
+export function startFight(
+  def: EnemyDef,
+  winScene: SceneId,
+  loseScene: SceneId | null = null,
+): FightState {
+  return {
+    enemy: createEnemy(def),
+    cooldown: 0,
+    log: [],
+    result: null,
+    winScene,
+    loseScene,
+    retry: null,
+  };
 }
 
 export function canUseSpecial(fight: FightState): boolean {

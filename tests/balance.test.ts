@@ -65,6 +65,19 @@ describe('пороги баланса', () => {
     }
   });
 
+  it('учебные бои: новобранца и Васю одолеет любой герой 1 уровня, Торвина — только тот, кто парирует', () => {
+    for (const hero of level1) {
+      for (const enemy of [ENEMIES.recruit, ENEMIES.vasyaSpar]) {
+        const result = simulate(hero, enemy, STRATEGIES.smart);
+        expect(result.winRate, hero.classId + ' — ' + enemy.name).toBeGreaterThanOrEqual(0.95);
+      }
+      const smart = simulate(hero, ENEMIES.torvin, STRATEGIES.smart).winRate;
+      const attack = simulate(hero, ENEMIES.torvin, STRATEGIES.attack).winRate;
+      expect(smart, hero.classId).toBeGreaterThanOrEqual(0.4);
+      expect(attack, hero.classId).toBeLessThan(0.1);
+    }
+  });
+
   it('классы не слишком расходятся: разница побед над каждым врагом не больше 15%', () => {
     for (const enemy of Object.values(ENEMIES)) {
       const rate = (classId: 'warrior' | 'rogue') =>

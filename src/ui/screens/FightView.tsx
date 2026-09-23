@@ -106,7 +106,9 @@ export function FightView({ session }: Props) {
           )}
           {result !== null && (
             <div class="fight-outcome">
-              <p class="fight-result">{result === 'win' ? t.fight.won : t.fight.lost}</p>
+              <p class="fight-result">
+                {result === 'win' ? t.fight.won : fight.loseScene ? t.fight.yielded : t.fight.lost}
+              </p>
               {canRetryFight(session) ? (
                 <>
                   <button class="button" onClick={() => store.retryFight()}>

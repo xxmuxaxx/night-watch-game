@@ -1,12 +1,35 @@
 # Промпты для картинок
 
-Промпты на английском: большинство локальных моделей понимают его лучше русского.
-Каждый промпт = описание + **общий стиль** в конце. Для моделей с негативным промптом
-(Stable Diffusion / SDXL) добавь **общий негатив**; Flux и похожие его не используют.
+Промпты на английском: модель понимает его лучше русского.
 
-Модель выдаёт PNG. Оригиналы лежат в `img-source/` (в гит не попадают), а игра использует
-их JPG-копии в `public/img/` с тем же именем: сцены в исходном размере, портреты уменьшены до 512×512.
-Главное при генерации — соотношение сторон: сцены 16:9, портреты 1:1.
+## Как генерируются картинки
+
+Картинки генерирует Claude через API локального ComfyUI скриптом `tools/comfy.py`; от автора
+нужно только запустить ComfyUI (Comfy Desktop, порт 8188) с моделями из графа. Граф —
+`tools/comfy-graph.json`, экспорт в API-формате: Krea 2 turbo (`krea2_turbo_fp8_scaled`),
+текстовый энкодер Qwen3-VL 4B, VAE `qwen_image_vae`, 8 шагов, euler / simple, cfg 1, без LoRA.
+
+```bash
+python tools/comfy.py portrait-recruit             # три варианта (seed 101, 202, 303) и лист для сравнения
+python tools/comfy.py portrait-recruit --pick 202  # выбранный — в public/img/portrait-recruit.jpg
+```
+
+Скрипт берёт промпт из этого файла по имени картинки (первый блок кода после заголовка с
+`` `имя.jpg` ``), добавляет **общий стиль** в конец, а портрету без своей компоновки — общее
+начало из раздела «Портреты». Варианты и лист складываются в `img-source/candidates/` (в гит не
+попадает). Игре нужны только JPG в `public/img/`: сцены 1344×768, фон 1536×768, портреты
+уменьшаются до 512×512; оригиналы не хранятся.
+
+Как писать промпт для этой модели:
+
+- **Связными фразами, а не списком тегов.** Текст читает языковая модель (Qwen3-VL): важное —
+  в начале и отдельным предложением («He grins widely…»), тогда оно не теряется.
+- **Всё нужное — в позитивном промпте.** При cfg 1 негативный промпт не действует, поэтому не
+  «no steel», а «a crude wooden training sword, plain pale wood, no metal at all».
+- **Без противоречий.** Не смешивай общий фон портретов со своим («snowy drill yard behind»):
+  модель выберет одно из двух. Если нужен другой фон, напиши компоновку портрета целиком сам,
+  начав с «Head and shoulders portrait», — тогда общее начало не добавляется.
+- LoRA не нужна: она меняет стиль, а не послушность, и новая картинка выбьется из набора.
 
 ## Общий стиль
 
@@ -16,12 +39,15 @@ dark fantasy digital painting, gritty low-fantasy medieval north, muted cold pal
 
 ## Общий негатив
 
+Вписан в граф; при cfg 1 почти не влияет, но пригодится, если граф сменится на модель с cfg выше 1.
+
 ```
 text, watermark, logo, signature, frame, border, blurry, lowres, jpeg artifacts, deformed, extra fingers, extra limbs, modern clothing, giant ice wall, glacier wall, photograph of a celebrity
 ```
 
 Отдельно просим «без гигантской ледяной стены»: это самый узнаваемый образ сериала.
-Вместо неё — каменная крепость в заснеженных горах на северной границе.
+Вместо неё — каменная крепость в заснеженных горах на северной границе. Раз негатив не действует,
+в самих промптах крепость всегда каменная.
 
 ---
 
@@ -189,6 +215,14 @@ friendly man in his early thirties, kind warm smile, short dark beard, tired but
 
 ```
 broad-shouldered blacksmith in his fifties, singed reddish-grey beard, soot-streaked face, burn scars on thick forearms, heavy leather apron over a sweat-stained shirt, wary appraising gaze, orange forge glow from one side
+```
+
+### Новобранец на плацу — `portrait-recruit.jpg`
+
+Противник в учебных боях: долговязый веснушчатый парень, проворнее, чем выглядит. Добродушный, после боя подаёт руку.
+
+```
+Head and shoulders portrait of a lanky, freckled nineteen-year-old recruit, centered and facing the viewer. He grins widely, showing a gap between his front teeth; his cheeks are flushed from the cold and messy straw-coloured hair sticks out over his big ears. He wears a patched grey padded gambeson and rests a crude, chipped wooden training sword on his shoulder: plain pale wood, no metal at all. Behind him is a plain dark stone wall, lit by soft torchlight from one side.
 ```
 
 ### Лица героя — `hero-1.jpg` … `hero-6.jpg`

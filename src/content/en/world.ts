@@ -183,8 +183,9 @@ export const NPCS: Record<NpcId, NpcText> = {
   torvin: {
     name: 'Torvin',
     talk: 'Talk to Torvin',
-    about:
-      'In charge of the recruits. His smile is good-natured, but he keeps a strict eye on the gate.',
+    about: ({ flag }) =>
+      'In charge of the recruits. His smile is good-natured, but he keeps a strict eye on the gate.' +
+      (flag('beatTorvin') ? ' On the drill yard I managed to beat him — he seemed pleased.' : ''),
   },
   vasya: {
     name: 'Vasya',

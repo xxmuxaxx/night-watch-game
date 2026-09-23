@@ -122,7 +122,7 @@ function ChoiceList({ session, ctx, choices, start = 0 }: ListProps) {
             onClick={() => store.choose(choice)}
           >
             <span class="choice__key" aria-hidden="true">
-              {choiceKey(start + i)}
+              {choiceKey(choice, start + i)}
             </span>
             {'check' in choice && (
               <span class="check-tag">
