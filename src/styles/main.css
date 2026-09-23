@@ -850,6 +850,50 @@ img {
   color: var(--muted);
 }
 
+/*  ПОДСКАЗКА ДЛЯ НОВИЧКА: внизу экрана, поверх сцены и боя  */
+.hint {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: 20px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  width: min(640px, 100% - 32px);
+  padding: 12px 16px;
+  transform: translateX(-50%);
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+  animation: hint-in 0.3s ease-out;
+}
+.hint p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.hint__close {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  font: 600 0.9rem var(--font-text);
+  color: #16110a;
+  background: var(--accent);
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.hint__close:hover,
+.hint__close:focus-visible {
+  background: var(--accent-2);
+  outline: none;
+}
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+
 /*  ТЕЛЕФОН: панель героя сверху компактной полосой, бой в две колонки  */
 @media (max-width: 760px) {
   body {

@@ -3,6 +3,7 @@ import { isChoosingLevelReward } from '@/game/engine';
 import { activeGoals, journal } from '@/game/journal';
 import { people } from '@/game/relations';
 import { HeroPanel } from './components/HeroPanel';
+import { HintToast } from './components/HintToast';
 import { DebugPanel } from './debug/DebugPanel';
 import { CreateHero } from './screens/CreateHero';
 import { FightView } from './screens/FightView';
@@ -10,6 +11,8 @@ import { Journal } from './screens/Journal';
 import { LevelUp } from './screens/LevelUp';
 import { MainMenu } from './screens/MainMenu';
 import { SceneView } from './screens/SceneView';
+import { currentHint } from './hints';
+import { useSettings } from './settings';
 import { useGameState, useStore } from './store';
 import { useKeyboard } from './useKeyboard';
 
@@ -17,6 +20,7 @@ import { useKeyboard } from './useKeyboard';
 export function App() {
   const store = useStore();
   const state = useGameState();
+  const [settings, updateSettings] = useSettings();
   const session = state.session;
   const inStory = state.screen === 'story' && session;
   // журнал открывается вне боя и выбора награды за уровень
@@ -31,6 +35,7 @@ export function App() {
   useEffect(() => {
     if (!canOpenJournal) setJournalOpen(false);
   }, [canOpenJournal]);
+  const hint = settings.hints ? currentHint(state, settings.seenHints) : null;
   useKeyboard(store, { open: showJournal, toggle: () => setJournalOpen((open) => !open) });
 
   return (
@@ -55,6 +60,12 @@ export function App() {
           entries={journal(session)}
           people={people(session)}
           onClose={() => setJournalOpen(false)}
+        />
+      )}
+      {hint && !showJournal && (
+        <HintToast
+          hint={hint}
+          onClose={() => updateSettings({ seenHints: [...settings.seenHints, hint.id] })}
         />
       )}
       {import.meta.env.DEV && <DebugPanel state={state} />}
