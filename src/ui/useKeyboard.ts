@@ -15,7 +15,7 @@ const FIGHT_KEYS: Record<string, 'attack' | 'defend' | 'special' | 'item'> = {
   '4': 'item',
 };
 
-export type Panel = 'journal' | 'settings' | 'load';
+export type Panel = 'journal' | 'chronicle' | 'settings' | 'load';
 
 /** Окна поверх игры: какое открыто и как открыть или закрыть. */
 export interface PanelControl {
@@ -25,7 +25,7 @@ export interface PanelControl {
 }
 
 /**
- * Клавиатура: J открывает и закрывает журнал, Esc закрывает открытое окно или открывает настройки
+ * Клавиатура: J открывает и закрывает журнал, H — летопись, Esc закрывает открытое окно или открывает настройки
  * (пока окно открыто, остальные клавиши не работают);
  * в сцене 1–9 выбирают вариант ответа; при новом уровне 1–4 — награду;
  * в бою 1/Enter/пробел — удар, 2 — защита, 3 — приём, 4 — первый предмет из сумки;
@@ -89,9 +89,9 @@ export function useKeyboard(store: GameStore, panels: PanelControl) {
       }
 
       // по коду клавиши, а не по символу: J работает и в русской раскладке
-      if (e.code === 'KeyJ') {
+      if (e.code === 'KeyJ' || e.code === 'KeyH') {
         e.preventDefault();
-        panels.toggle('journal');
+        panels.toggle(e.code === 'KeyJ' ? 'journal' : 'chronicle');
         return;
       }
       if (panels.panel) return;

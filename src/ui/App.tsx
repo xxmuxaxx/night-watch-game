@@ -7,6 +7,7 @@ import { HintToast } from './components/HintToast';
 import { DebugPanel } from './debug/DebugPanel';
 import { CreateHero } from './screens/CreateHero';
 import { FightView } from './screens/FightView';
+import { ChronicleView } from './screens/ChronicleView';
 import { Journal } from './screens/Journal';
 import { LevelUp } from './screens/LevelUp';
 import { MainMenu } from './screens/MainMenu';
@@ -33,9 +34,12 @@ export function App() {
     !isChoosingLevelReward(session);
   const [panel, setPanel] = useState<Panel | null>(null);
   const showJournal = canOpenJournal && panel === 'journal';
+  const showChronicle = canOpenJournal && panel === 'chronicle';
   // после смерти или выхода в меню новая партия начинается с закрытым журналом
   useEffect(() => {
-    if (!canOpenJournal) setPanel((open) => (open === 'journal' ? null : open));
+    if (!canOpenJournal) {
+      setPanel((open) => (open === 'journal' || open === 'chronicle' ? null : open));
+    }
   }, [canOpenJournal]);
   // размер шрифта из настроек — на корневом элементе: от него считаются все rem
   useEffect(() => {
@@ -57,7 +61,11 @@ export function App() {
             hero={session.hero}
             {...(session.fight ? {} : { onUseItem: (id) => store.applyItem(id) })}
             goal={activeGoals(session)[0]}
-            {...(canOpenJournal ? { onOpenJournal: () => setPanel('journal') } : {})}
+            {...(canOpenJournal
+              ? {
+                  onOpenJournal: () => setPanel('journal'),
+                }
+              : {})}
             onOpenSettings={() => setPanel('settings')}
           />
         </>
@@ -73,6 +81,14 @@ export function App() {
           entries={journal(session)}
           people={people(session)}
           onClose={() => setPanel(null)}
+          onSwitch={() => setPanel('chronicle')}
+        />
+      )}
+      {showChronicle && (
+        <ChronicleView
+          entries={store.getChronicle()}
+          onClose={() => setPanel(null)}
+          onSwitch={() => setPanel('journal')}
         />
       )}
       {panel === 'load' && <LoadView onClose={() => setPanel(null)} />}

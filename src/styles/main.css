@@ -93,7 +93,7 @@ img {
 .image-container {
   position: relative;
   aspect-ratio: 16 / 9;
-  max-height: 46vh; /*  на низких экранах картинка обрезается сверху и снизу, чтобы текст и ответы помещались  */
+  max-height: 42vh; /*  на низких экранах картинка обрезается сверху и снизу, чтобы текст и ответы помещались  */
   background: #07090c;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -246,7 +246,7 @@ img {
 .hero-status__portrait {
   width: 100%;
   aspect-ratio: 1;
-  max-height: 28vh; /*  на низких экранах портрет обрезается, чтобы панель героя помещалась без прокрутки  */
+  max-height: 26vh; /*  на низких экранах портрет обрезается, чтобы панель героя помещалась без прокрутки  */
   object-fit: cover;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -848,6 +848,54 @@ img {
 }
 .attitude--neutral {
   color: var(--muted);
+}
+
+/*  ЛЕТОПИСЬ  */
+.journal__tab {
+  margin-left: auto;
+  margin-right: 12px;
+  padding: 6px 14px;
+  font: 0.95rem var(--font-text);
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.journal__tab kbd {
+  font: inherit;
+  opacity: 0.7;
+}
+.journal__tab:hover,
+.journal__tab:focus-visible {
+  color: var(--text);
+  border-color: var(--accent);
+  outline: none;
+}
+.chronicle-entry {
+  margin-top: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.chronicle-entry h3 {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+}
+.chronicle-entry p {
+  margin: 0 0 6px;
+  white-space: pre-line;
+}
+.chronicle-entry__time,
+.chronicle-entry__notices {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.chronicle-entry__choice {
+  color: var(--accent-2);
+  font-style: italic;
+}
+.chronicle-entry__choice::before {
+  content: '→ ';
 }
 
 /*  НАСТРОЙКИ  */

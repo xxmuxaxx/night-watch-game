@@ -6,13 +6,15 @@ interface Props {
   entries: JournalView[];
   people: PersonView[];
   onClose: () => void;
+  /** Перейти к летописи. */
+  onSwitch: () => void;
 }
 
 /**
  * Журнал поверх игры: текущие и выполненные цели, зацепки и знакомые люди с их отношением к герою.
  * Закрывается J или Esc.
  */
-export function Journal({ entries, people, onClose }: Props) {
+export function Journal({ entries, people, onClose, onSwitch }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => closeRef.current?.focus(), []);
 
@@ -26,6 +28,9 @@ export function Journal({ entries, people, onClose }: Props) {
       <div class="journal__inner">
         <header class="journal__header">
           <h1>Журнал</h1>
+          <button class="journal__tab" title="Прочитанное в этом сеансе (H)" onClick={onSwitch}>
+            Летопись <kbd>H</kbd>
+          </button>
           <button ref={closeRef} class="journal__close" title="Закрыть (Esc)" onClick={onClose}>
             ✕
           </button>

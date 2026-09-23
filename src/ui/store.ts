@@ -16,9 +16,12 @@ import {
   type SaveStorage,
 } from '@/game/save';
 import type { Choice, FightAction, GameState, ItemId, LevelReward, Rng } from '@/game/types';
+import { appendEntry, chronicleEntry, fightEntry, type ChronicleEntry } from './chronicle';
 
 export interface GameStore {
   getState(): GameState;
+  /** Летопись этого сеанса (см. chronicle.ts). */
+  getChronicle(): ChronicleEntry[];
   subscribe(listener: () => void): () => void;
   hasSave(): boolean;
   /** Все ячейки: автосохранение и ручные; пустые — null. */
@@ -44,7 +47,15 @@ export interface GameStore {
 
 export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): GameStore {
   let state = engine.initialState;
+  let chronicle: ChronicleEntry[] = [];
   const listeners = new Set<() => void>();
+
+  /** Применить переход и, если он что-то изменил, записать его в летопись. */
+  function record(next: GameState, entry: ChronicleEntry | null) {
+    // запись — до update: подписчики должны увидеть летопись вместе с новым состоянием
+    if (entry && next !== state) chronicle = appendEntry(chronicle, entry);
+    update(next);
+  }
 
   /** leaving: выход в меню по желанию игрока, а не смерть — сохранение не трогаем. */
   function update(next: GameState, leaving = false) {
@@ -79,6 +90,7 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
 
   return {
     getState: () => state,
+    getChronicle: () => chronicle,
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -92,15 +104,32 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
       listeners.forEach((listener) => listener());
     },
     openHeroCreation: () => update(engine.openHeroCreation(state)),
-    startNewGame: (hero) => update(engine.startNewGame(state, hero)),
+    startNewGame(hero) {
+      chronicle = [];
+      update(engine.startNewGame(state, hero));
+    },
     loadGame(slot = 'auto') {
       const session = readSave(storage, slot);
-      if (session) update(engine.resumeSession(state, session));
+      if (!session) return;
+      chronicle = [];
+      update(engine.resumeSession(state, session));
     },
-    choose: (choice) => update(engine.choose(state, choice, rng)),
+    choose(choice) {
+      const session = state.session;
+      record(engine.choose(state, choice, rng), session && chronicleEntry(session, choice));
+    },
     fightAction: (action) => update(engine.fightAction(state, action, rng)),
-    closeFight: () => update(engine.closeFight(state)),
-    retryFight: () => update(engine.retryFight(state)),
+    closeFight() {
+      const session = state.session;
+      record(engine.closeFight(state), session && fightEntry(session));
+    },
+    retryFight() {
+      const entry = state.session && fightEntry(state.session);
+      record(
+        engine.retryFight(state),
+        entry && { ...entry, choice: 'Поражение, ещё одна попытка' },
+      );
+    },
     exitToMenu: () => update(engine.gameOver(), true),
     applyItem: (id) => update(engine.applyItem(state, id)),
     chooseLevelReward: (reward) => update(engine.chooseLevelReward(state, reward)),
