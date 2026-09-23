@@ -232,6 +232,9 @@ export function applyItem(state: GameState, id: ItemId): GameState {
   if (itemBlocked(session.hero, id, false)) return state;
   const hero = consumeItem(session.hero, id);
   const notices: Notice[] = [{ tone: 'info', message: { id: 'itemUsed', item: id } }];
+  if (hero.weaponId !== session.hero.weaponId) {
+    notices.push({ tone: 'info', message: { id: 'gotWeapon', weapon: hero.weaponId } });
+  }
   return { ...state, session: { ...session, hero, notices } };
 }
 

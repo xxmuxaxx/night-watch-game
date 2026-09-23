@@ -3,7 +3,7 @@ import { heroClass } from '@/content/classes';
 import { item } from '@/content/items';
 import { canUseSpecial } from '@/game/combat';
 import { canRetryFight } from '@/game/engine';
-import { inventoryCounts, itemBlocked } from '@/game/hero';
+import { fightItems, itemBlocked } from '@/game/hero';
 import type { FightState, Session } from '@/game/types';
 import { HpBar } from '../components/HpBar';
 import { Picture } from '../components/Picture';
@@ -23,7 +23,7 @@ export function FightView({ session }: Props) {
   const { t, name, msg } = useI18n();
   const special = heroClass(hero.classId).special;
   const { enemy, result } = fight;
-  const bag = inventoryCounts(hero);
+  const bag = fightItems(hero);
   const parry = enemy.windingUp && result === null;
   const traits = [
     enemy.armor > 0 && t.fight.enemyArmor(enemy.armor),

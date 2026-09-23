@@ -46,6 +46,7 @@ export const places: Record<string, SceneText> = {
       'What weapon would you advise?',
       'What was Erik like?',
       'Show him the note from the barracks',
+      'Ask for a whetstone for your knife',
       'Nothing, I’ll be going',
     ],
   },
@@ -65,6 +66,21 @@ export const places: Record<string, SceneText> = {
     choices: ['I see'],
   },
 
+  smith_whetstone: {
+    title: 'Whetstone',
+    text: 'Halvar rummages in a box under the workbench and hands you a grey stone worn down to a hollow in the middle.\n“Here. Wet it, draw from heel to point, don’t press. It’s a good knife — a shame if it stays blunt.”',
+    choices: ['Thank you'],
+  },
+  gate_torch: {
+    title: 'Torch',
+    text: 'Stanley snorts, takes a spare torch off its bracket and shoves it into your hands.\n“Take it. There’s pitch enough for half the night. Just don’t set my walls on fire, fresh meat.”',
+    choices: ['Step away'],
+  },
+  wall_rope: {
+    title: 'Up the rope',
+    text: 'The hook catches on a merlon at the second throw. The rope cuts into your palms, your boots slip on the icy stones, but a couple of minutes later you roll over the edge. Nobody up here — only the wind.',
+    choices: ['Look around'],
+  },
   wall_sneak: {
     title: 'Up',
     text: 'The sentry is nodding off. You slip past and, pressing yourself against the cold stone, climb the stairs. There is nobody at the top — only the wind.',

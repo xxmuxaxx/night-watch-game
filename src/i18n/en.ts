@@ -58,6 +58,9 @@ const messages: MessageFormats = {
   doneToday: () => 'You have already done this today',
   forFight: () => 'Useful in a fight',
   fullHealth: () => 'Your health is already full',
+  passive: () => 'It will come in handy by itself',
+  notInFight: () => 'No time for that in a fight',
+  nothingToSharpen: () => 'Nothing to sharpen',
 
   defend: (m) => (m.parry ? 'You get ready to parry' : 'You raise your guard'),
   hit: (m, n) =>
@@ -147,6 +150,7 @@ export const en: Dict = {
     here: 'Here: ',
     groups: { people: 'People', spots: 'Look around', paths: 'Paths', time: 'Time' },
     new: 'new',
+    light: 'with a torch',
   },
 
   map: {

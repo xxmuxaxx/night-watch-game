@@ -82,6 +82,10 @@ export interface Item {
   heal?: number;
   /** Только в бою: враг пропускает ответный удар и теряет замах. */
   stun?: boolean;
+  /** Светит: проверки в темноте (check.dark) на 1 легче, пока предмет в сумке. Не тратится. */
+  light?: boolean;
+  /** Вне боя: заменить оружие from на to (точильный камень). */
+  sharpen?: { from: WeaponId; to: WeaponId };
 }
 
 export interface Hero {
@@ -184,6 +188,9 @@ export type Message =
   | { id: 'doneToday' }
   | { id: 'forFight' }
   | { id: 'fullHealth' }
+  | { id: 'passive' }
+  | { id: 'notInFight' }
+  | { id: 'nothingToSharpen' }
   // боевой лог
   | { id: 'defend'; parry: boolean }
   | {
@@ -247,6 +254,8 @@ export interface StatCheck {
   xp?: number;
   /** Изменение отношений только при успехе. */
   relation?: Relations;
+  /** В темноте: со светом в сумке (Item.light) проверка на 1 легче. */
+  dark?: boolean;
 }
 
 interface ChoiceBase {
@@ -284,6 +293,8 @@ interface ChoiceBase {
   topic?: string;
   /** Работа по наряду: видна, только пока это сегодняшний невыполненный наряд; выбор его выполняет. */
   duty?: DutyId;
+  /** Показывать, только если этот предмет есть в сумке (он не тратится). */
+  needs?: ItemId;
 }
 
 /** Перейти в сцену. */

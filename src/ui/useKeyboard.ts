@@ -1,7 +1,7 @@
 import { useEffect } from 'preact/hooks';
 import { LEVEL_REWARDS } from '@/content/progression';
 import { canUseSpecial } from '@/game/combat';
-import { itemBlocked } from '@/game/hero';
+import { fightItems, itemBlocked } from '@/game/hero';
 import { availableChoices, canRetryFight, isChoosingLevelReward } from '@/game/engine';
 import type { Choice, FightAction } from '@/game/types';
 import type { GameStore } from './store';
@@ -87,7 +87,7 @@ export function useKeyboard(store: GameStore, panels: PanelControl) {
           return;
         }
         let action: FightAction | null = key === 'item' ? null : key;
-        const firstItem = hero.inventory[0];
+        const firstItem = fightItems(hero)[0]?.id;
         if (key === 'item' && firstItem && !itemBlocked(hero, firstItem, true)) {
           action = { item: firstItem };
         }

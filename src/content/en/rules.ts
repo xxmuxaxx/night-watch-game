@@ -33,6 +33,7 @@ export const CLASSES: Record<ClassId, ClassText> = {
 export const WEAPONS: Record<WeaponId, string> = {
   fists: 'Bare hands',
   knife: 'Old knife',
+  sharpKnife: 'Sharpened knife',
 };
 
 export const ARMORS: Record<ArmorId, string> = {
@@ -43,6 +44,10 @@ export const ARMORS: Record<ArmorId, string> = {
 export const ITEMS: Record<ItemId, ItemText> = {
   bread: { name: 'Crust of bread', description: '+3 health' },
   ash: { name: 'Handful of ash', description: 'into the enemy’s eyes: it misses a blow' },
+  flask: { name: 'Flask of spirits', description: '+5 health' },
+  torch: { name: 'Torch', description: 'easier to search in the dark' },
+  whetstone: { name: 'Whetstone', description: 'sharpen the old knife: damage +1' },
+  rope: { name: 'Rope with a hook', description: 'throw it up onto the wall' },
 };
 
 export const STATS: Record<StatId, string> = {

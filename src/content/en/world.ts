@@ -70,6 +70,7 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
         text: 'A low door beside the gate arch. On a bench by the winch sits Stanley, the one who opened the gate for you.',
         actions: [
           'Ask Stanley whether the gate is ever opened at night',
+          'Ask Stanley for a torch',
           'Stand a watch at the gate with Stanley (2 h, duty)',
         ],
       },
@@ -141,6 +142,11 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
         name: 'Workbench',
         text: 'Tongs, chisels, files, scraps of iron. An unfinished lantern lies at the edge.',
         actions: ['Examine the lantern', 'Haul coal for Halvar (1.5 h, duty)'],
+      },
+      yard: {
+        name: 'Behind the smithy',
+        text: 'A narrow passage between the smithy and the wall, cluttered with coal and rusty scrap. The wall is lower here than by the gate, and there are no sentries in sight.',
+        actions: ['Throw the hook onto the wall and climb up'],
       },
     },
   },

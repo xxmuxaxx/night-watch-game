@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { location } from '@/content/locations';
 import { NPCS } from '@/content/npcs';
 import { STAT_NAMES } from '@/content/stats';
-import { checkChance } from '@/game/checks';
+import { checkChance, lightHelps } from '@/game/checks';
 import { availableChoices, getScene, resolveImage, textContext } from '@/game/engine';
 import type { Choice, Session, TextContext } from '@/game/types';
 import { peopleAt } from '@/game/map';
@@ -128,6 +128,7 @@ function ChoiceList({ session, ctx, choices, start = 0 }: ListProps) {
               <span class="check-tag">
                 {name(STAT_NAMES[choice.check.stat])}{' '}
                 {Math.round(checkChance(session.hero, choice.check) * 100)}%
+                {lightHelps(session.hero, choice.check) && ' · ' + t.scene.light}
               </span>
             )}
             <span>

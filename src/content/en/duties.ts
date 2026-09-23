@@ -47,7 +47,7 @@ export const duties: Record<string, SceneText> = {
   duty_barracks_done: {
     title: 'Barracks',
     text: ({ relation }) =>
-      'For an hour you sweep the earthen floor, carry the ash out of the stove and shake the mattresses out in the snow. Dust rises in clouds, mice scatter into the corners.' +
+      'For an hour you sweep the earthen floor, carry the ash out of the stove and shake the mattresses out in the snow. Dust rises in clouds, mice scatter into the corners.\nUnder the far bunks your broom catches on something heavy: a coil of strong rope with an iron hook. Who in the barracks needed a hook? You take the find.' +
       (relation('vasya') >= 1
         ? '\nVasya, looking in for a minute, whistles: “Look at that, clean as the elders’ quarters!”'
         : ''),
@@ -59,7 +59,8 @@ export const duties: Record<string, SceneText> = {
       'For two hours you stand with Stanley under the gate arch, stamping against the cold. He turns out to be a decent storyteller: about the bear that once carried off the cook’s cauldron, about the merchants who used to come over the pass before the road was buried.\n' +
       (flag('talkedStanley')
         ? '“And don’t ask about those two,” he says at the end, not looking at you. “I’ve said my piece.”'
-        : '“It’s duller here at night,” he yawns. “We open only for a patrol, on an elder’s word. Otherwise you sit and listen to the forest.”'),
+        : '“It’s duller here at night,” he yawns. “We open only for a patrol, on an elder’s word. Otherwise you sit and listen to the forest.”') +
+      '\nAs you part, he shoves a dented flask at you: “It’ll warm you up. They’ll pour me more.”',
     choices: ['Hand over the watch'],
   },
 };

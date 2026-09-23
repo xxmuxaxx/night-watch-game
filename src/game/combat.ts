@@ -15,7 +15,7 @@ import { CRIT_PER_WITS, DODGE_PER_AGILITY, MAX_CHANCE } from '@/content/combat';
 import { item } from '@/content/items';
 import { FIGHT_XP } from '@/content/progression';
 import { weapon } from '@/content/weapons';
-import { consumeItem, hasItem } from './hero';
+import { consumeItem, hasItem, usableInFight } from './hero';
 import { chance, randomInt } from './random';
 import type { Enemy, EnemyDef, FightAction, FightState, Hero, Rng, SceneId } from './types';
 
@@ -89,7 +89,9 @@ export function playRound(
 ): RoundState {
   if (fight.result !== null) return { hero, fight };
   if (action === 'special' && !canUseSpecial(fight)) return { hero, fight };
-  if (typeof action === 'object' && !hasItem(hero, action.item)) return { hero, fight };
+  if (typeof action === 'object' && (!hasItem(hero, action.item) || !usableInFight(action.item))) {
+    return { hero, fight };
+  }
 
   const cls = heroClass(hero.classId);
   const stats = combatStats(hero);
