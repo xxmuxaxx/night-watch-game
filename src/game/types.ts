@@ -137,6 +137,10 @@ export interface EnemyDef {
   damage?: Range;
   /** Шанс замахнуться вместо удара; следующий удар двойной. По умолчанию 0. */
   windup?: number;
+  /** Доспех: столько урона снимается с каждого удара героя; точный удар его пробивает. По умолчанию 0. */
+  armor?: number;
+  /** Шанс увернуться от удара героя (не от приёма). По умолчанию 0. */
+  dodge?: number;
   /** Опыт за победу. По умолчанию FIGHT_XP из src/content/progression.ts. */
   xp?: number;
 }
@@ -351,6 +355,8 @@ export interface Enemy {
   maxHp: number;
   damage: Range;
   windup: number;
+  armor: number;
+  dodge: number;
   xp: number;
   /** Замахнулся: следующий удар двойной. */
   windingUp: boolean;

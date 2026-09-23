@@ -651,6 +651,16 @@ img {
   opacity: 0.45;
   cursor: default;
 }
+.enemy-traits {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--muted);
+}
+.action--hint {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 12px rgba(240, 179, 94, 0.35);
+}
 .intent {
   min-height: 1.5em;
   margin: 8px 0 0;
@@ -976,4 +986,59 @@ img {
 .debug-flag {
   display: block;
   cursor: pointer;
+}
+.balance {
+  position: fixed;
+  z-index: 100;
+  inset: 8px;
+  overflow: auto;
+  padding: 8px 12px;
+  font:
+    12px/1.4 ui-monospace,
+    Consolas,
+    monospace;
+  color: #ddd;
+  background: rgba(20, 20, 20, 0.97);
+  border: 1px solid #555;
+  border-radius: 6px;
+}
+.balance button,
+.balance select {
+  font: inherit;
+  color: #ddd;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.balance label {
+  margin-right: 8px;
+  cursor: pointer;
+}
+.balance__legend {
+  margin: 6px 0;
+  color: #999;
+}
+.balance table {
+  border-collapse: collapse;
+}
+.balance th,
+.balance td {
+  padding: 4px 8px;
+  text-align: left;
+  border: 1px solid #333;
+}
+.balance th small {
+  display: block;
+  font-weight: normal;
+  color: #999;
+}
+.balance__cell--easy {
+  background: rgba(80, 160, 80, 0.25);
+}
+.balance__cell--fair {
+  background: rgba(200, 160, 60, 0.25);
+}
+.balance__cell--hard {
+  background: rgba(200, 70, 60, 0.3);
 }

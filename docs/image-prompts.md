@@ -118,6 +118,22 @@ head and shoulders portrait, centered, facing the viewer, plain dark stone backg
 aggressive young man around 20 years old, crooked broken nose, sneering, clenched jaw, messy short hair, stubble, rough patched wool tunic, a bruise on the cheek, looking for a fight
 ```
 
+### Волк (враг, глава 2) — `portrait-wolf.jpg`
+
+«Быстрый и вёрткий, бьёт часто, но слабо».
+
+```
+lean grey northern wolf, snarling, bared fangs, yellow eyes, frost on its fur, crouched to lunge, snowy pine forest at night behind
+```
+
+### Человек в тёмном плаще (враг, глава 2) — `portrait-raider.jpg`
+
+«В кожаном доспехе, из тех, кто ходит с огнями в лесу». Плащ — такой же тёмный, как у стражи.
+
+```
+grim man in his thirties, dark hooded cloak like a border guard's, worn leather armor with iron studs, scarred face half in shadow, cold stare, torchlight, snowy night
+```
+
 ### Наставник во дворе — `portrait-mentor.jpg`
 
 «Мужчина лет 30–35, в чёрном плаще, добро улыбается».

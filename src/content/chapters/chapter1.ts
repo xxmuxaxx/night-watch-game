@@ -4,16 +4,9 @@
 // окно и сундук — действия в келье (src/content/locations.ts). Решения — в src/content/flags.ts.
 // Отношения: Торвин ценит послушание (ужин вовремя +1, опоздание −1, «не хочу служить» −1),
 // Вася — уважение (подсечка −1, рукопожатие +2, извинение +1, молча уйти −1).
+import { ENEMIES } from '@/content/enemies';
 import { LOCATIONS } from '@/content/locations';
-import type { EnemyDef, Image, Scene } from '@/game/types';
-
-const VASYA: EnemyDef = {
-  name: 'Вася',
-  portrait: 'img/portrait-vasya.jpg',
-  hp: 10,
-  damage: { min: 0, max: 2 },
-  windup: 0.3,
-};
+import type { Image, Scene } from '@/game/types';
 
 /** Картинка места, где сейчас герой: для разговоров, которые бывают и во дворе, и в трапезной. */
 const HERE: Image = (ctx) => {
@@ -52,7 +45,7 @@ export const chapter1: Record<string, Scene> = {
     title: 'К вам подошел агрессивно настроенный молодой человек...',
     text: '— Слышь, ты чего тут стоишь?\n— А? Что?\n— Ах ты, шельмец! Сейчас ты у меня получишь!',
     choices: [
-      { text: 'Приготовиться к драке', minutes: 5, fight: VASYA, next: 'st3' },
+      { text: 'Приготовиться к драке', minutes: 5, fight: ENEMIES.vasya, next: 'st3' },
       {
         text: 'Поднырнуть под его руку и сбить с ног',
         minutes: 2,
@@ -75,7 +68,7 @@ export const chapter1: Record<string, Scene> = {
     actor: 'img/portrait-vasya.jpg',
     title: 'Не вышло',
     text: 'Вы пытаетесь поднырнуть под его руку, но Вася оказывается проворнее и отпихивает вас в сугроб.\n— Ах ты так?! Ну держись!',
-    choices: [{ text: 'Драться', minutes: 5, fight: VASYA, next: 'st3' }],
+    choices: [{ text: 'Драться', minutes: 5, fight: ENEMIES.vasya, next: 'st3' }],
   },
   st3: {
     image: 'img/scene-outside-gate.jpg',

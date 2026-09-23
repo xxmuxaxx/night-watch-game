@@ -2,6 +2,7 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { ENEMIES } from '@/content/enemies';
 import { EVENTS } from '@/content/events';
 import { JOURNAL } from '@/content/journal';
 import { LOCATIONS } from '@/content/locations';
@@ -110,6 +111,7 @@ describe('сюжет', () => {
     for (const place of locations) add(place.image);
     for (const npc of npcs) images.add(npc.portrait);
     for (const { choice } of choices) if ('fight' in choice) images.add(choice.fight.portrait);
+    for (const enemy of Object.values(ENEMIES)) images.add(enemy.portrait);
     const missing = [...images].filter((path) => !existsSync(resolve('public', path)));
     expect(missing).toEqual([]);
   });

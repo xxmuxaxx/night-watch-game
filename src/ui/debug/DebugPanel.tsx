@@ -16,6 +16,7 @@ import { attitude, relationOf } from '@/game/relations';
 import { formatTime } from '@/game/time';
 import type { GameState, StatId } from '@/game/types';
 import { useStore } from '../store';
+import { BalanceView } from './BalanceView';
 
 const SCENE_IDS = Object.keys(SCENES);
 const FLAG_IDS = Object.keys(FLAGS) as FlagId[];
@@ -27,6 +28,7 @@ const NPC_IDS = Object.keys(NPCS) as NpcId[];
 export function DebugPanel({ state }: { state: GameState }) {
   const store = useStore();
   const [open, setOpen] = useState(false);
+  const [balanceOpen, setBalanceOpen] = useState(false);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -38,6 +40,9 @@ export function DebugPanel({ state }: { state: GameState }) {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  if (balanceOpen) {
+    return <BalanceView hero={state.session?.hero} onClose={() => setBalanceOpen(false)} />;
+  }
   if (!open) {
     return (
       <button class="debug-toggle" title="Панель отладки (`)" onClick={() => setOpen(true)}>
@@ -62,6 +67,10 @@ export function DebugPanel({ state }: { state: GameState }) {
         <strong>Отладка</strong>
         <button onClick={() => setOpen(false)}>✕</button>
       </div>
+
+      <section>
+        <button onClick={() => setBalanceOpen(true)}>Баланс боя</button>
+      </section>
 
       <section>
         <h5>Быстрый старт</h5>

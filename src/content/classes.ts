@@ -12,7 +12,7 @@ export const HERO_CLASSES = {
     special: {
       name: 'Мощный удар',
       description: 'двойной урон, враг пропускает ответный удар',
-      cooldown: 3,
+      cooldown: 4,
       damage: 2,
       stun: true,
     },
@@ -27,7 +27,7 @@ export const HERO_CLASSES = {
     special: {
       name: 'Подлый удар',
       description: 'гарантированный точный удар',
-      cooldown: 2,
+      cooldown: 1,
       crit: true,
     },
   },

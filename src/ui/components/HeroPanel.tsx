@@ -3,6 +3,7 @@ import { heroClass } from '@/content/classes';
 import { item } from '@/content/items';
 import { STAT_IDS, STAT_NAMES } from '@/content/stats';
 import { weapon } from '@/content/weapons';
+import { combatStats } from '@/game/combat';
 import { inventoryCounts } from '@/game/hero';
 import type { JournalView } from '@/game/journal';
 import type { Hero, ItemId } from '@/game/types';
@@ -23,11 +24,12 @@ interface Props {
 export function HeroPanel({ hero, onUseItem, goal, onOpenJournal }: Props) {
   const cls = heroClass(hero.classId);
   const heroWeapon = weapon(hero.weaponId);
+  const chances = combatStats(hero);
   const rows: [string, string | number][] = [
     ...STAT_IDS.map((stat): [string, number] => [STAT_NAMES[stat], hero.stats[stat]]),
     ['Оружие', `${heroWeapon.name} (${heroWeapon.damage.min}–${heroWeapon.damage.max})`],
-    ['Точный удар', percent(cls.crit)],
-    ['Уклонение', percent(cls.dodge)],
+    ['Точный удар', percent(chances.crit)],
+    ['Уклонение', percent(chances.dodge)],
     ['Приём', cls.special.name],
   ];
   const bag = inventoryCounts(hero);
