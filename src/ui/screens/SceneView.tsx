@@ -25,6 +25,8 @@ export function SceneView({ session }: { session: Session }) {
   const actor = scene ? scene.actor : npcs[0]?.portrait;
   const title = scene ? scene.title : place.name;
   const text = resolveText(scene ? scene.text : place.text, ctx);
+  // смена ключа перезапускает анимацию появления: новая сцена или новое место
+  const view = session.sceneId ?? 'place:' + session.locationId;
 
   return (
     <main class="event-container">
@@ -37,7 +39,7 @@ export function SceneView({ session }: { session: Session }) {
         <Picture key={image} src={image} class="scene-image" />
       </div>
 
-      <div class="text">
+      <div class="text fade-in" key={view}>
         <p class="scene-meta">
           {place.name} · {formatTime(session.time)}
         </p>
@@ -57,7 +59,7 @@ export function SceneView({ session }: { session: Session }) {
         )}
       </div>
 
-      <ul class="select">
+      <ul class="select fade-in fade-in--late" key={view}>
         {choices.map((choice, i) => (
           <li key={i}>
             <button

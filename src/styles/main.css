@@ -850,6 +850,37 @@ img {
   color: var(--muted);
 }
 
+/*  ПЛАВНАЯ СМЕНА СЦЕН  */
+.fade-in {
+  animation: fade-in 0.35s ease-out both;
+}
+.fade-in--late {
+  animation-delay: 0.1s;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.scene-image,
+.actor-image > img {
+  animation: image-in 0.5s ease-out;
+}
+@keyframes image-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /*  ЛЕТОПИСЬ  */
 .journal__tab {
   margin-left: auto;
