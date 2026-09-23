@@ -2,19 +2,20 @@
 // но без игровых правил: прыгают в любую сцену и меняют героя напрямую.
 import { startNewGame } from './engine';
 import type { ClassId, FlagId, Flags, GameState, Hero, LocationId, SceneId } from './types';
-import { passTime } from './world';
+import { enterScene, passTime } from './world';
 
 /** Сразу начать игру, минуя меню и создание героя. */
 export function quickStart(state: GameState, classId: ClassId): GameState {
   return startNewGame(state, { name: 'Тест', classId, portrait: 'img/hero-1.jpg' });
 }
 
+/** Перейти в сцену как по сюжету: сцена переносит героя (location) и запоминает решения (set). */
 export function jumpToScene(state: GameState, sceneId: SceneId): GameState {
   if (!state.session) return state;
   return {
     ...state,
     screen: 'story',
-    session: { ...state.session, sceneId, fight: null, notices: [] },
+    session: enterScene({ ...state.session, fight: null, notices: [] }, sceneId),
   };
 }
 

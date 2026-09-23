@@ -3,16 +3,24 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { EVENTS } from '@/content/events';
+import { JOURNAL } from '@/content/journal';
 import { LOCATIONS } from '@/content/locations';
 import { NPCS } from '@/content/npcs';
 import { HERO_PORTRAITS } from '@/content/portraits';
 import { SCENES, START_SCENE } from '@/content/story';
-import type { Choice, FlagId, SceneId, StoryEvent } from '@/game/types';
+import type { Choice, Condition, FlagId, JournalEntry, SceneId, StoryEvent } from '@/game/types';
 
 const scenes = Object.entries(SCENES);
 const locations = Object.values(LOCATIONS);
 const npcs = Object.values(NPCS);
 const events: StoryEvent[] = Object.values(EVENTS);
+const journal: JournalEntry[] = Object.values(JOURNAL);
+/** Все условия журнала: появление записей, отдельные записи и выполнение целей. */
+const journalConditions: Condition[] = journal.flatMap((entry) => [
+  entry,
+  ...entry.notes,
+  ...(entry.done ? [entry.done] : []),
+]);
 
 /** Все варианты игры: в сценах, действия в локациях и разговоры с персонажами. */
 const choices: { where: string; choice: Choice }[] = [
@@ -93,6 +101,7 @@ describe('сюжет', () => {
       ...choices.flatMap(({ choice }) => [choice.if, choice.ifNot]),
       ...locations.flatMap((place) => place.exits.map((exit) => exit.if)),
       ...events.flatMap((event) => [event.if, event.ifNot]),
+      ...journalConditions.flatMap((condition) => [condition.if, condition.ifNot]),
     ].filter((f): f is FlagId => f !== undefined);
     expect(required.filter((flag) => !setFlags.has(flag))).toEqual([]);
   });

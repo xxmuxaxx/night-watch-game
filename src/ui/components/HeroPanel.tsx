@@ -4,6 +4,7 @@ import { item } from '@/content/items';
 import { STAT_IDS, STAT_NAMES } from '@/content/stats';
 import { weapon } from '@/content/weapons';
 import { inventoryCounts } from '@/game/hero';
+import type { JournalView } from '@/game/journal';
 import type { Hero, ItemId } from '@/game/types';
 import { percent } from '../format';
 import { HpBar } from './HpBar';
@@ -13,9 +14,13 @@ interface Props {
   hero: Hero;
   /** Использовать предмет из сумки; не передаётся, когда предметы использовать нельзя (бой). */
   onUseItem?: (id: ItemId) => void;
+  /** Текущая цель из журнала. */
+  goal?: JournalView | undefined;
+  /** Открыть журнал; не передаётся, когда журнал открыть нельзя (бой). */
+  onOpenJournal?: () => void;
 }
 
-export function HeroPanel({ hero, onUseItem }: Props) {
+export function HeroPanel({ hero, onUseItem, goal, onOpenJournal }: Props) {
   const cls = heroClass(hero.classId);
   const heroWeapon = weapon(hero.weaponId);
   const rows: [string, string | number][] = [
@@ -37,6 +42,22 @@ export function HeroPanel({ hero, onUseItem }: Props) {
         </div>
         <HpBar hp={hero.hp} maxHp={hero.maxHp} />
         <XpBar xp={hero.xp} level={hero.level} />
+        <button
+          class="journal-button"
+          disabled={!onOpenJournal}
+          title="Открыть журнал (J)"
+          onClick={() => onOpenJournal?.()}
+        >
+          <span class="journal-button__label">
+            Журнал <kbd>J</kbd>
+          </span>
+          {goal && (
+            <small>
+              {goal.title}
+              {goal.hint && ': ' + goal.hint}
+            </small>
+          )}
+        </button>
         <dl class="stats">
           {rows.map(([label, value]) => (
             <Fragment key={label}>

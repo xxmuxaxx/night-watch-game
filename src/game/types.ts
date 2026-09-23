@@ -285,6 +285,34 @@ export interface StoryEvent {
   ifNot?: FlagId;
 }
 
+// --- Журнал ---
+
+/** Условие по решениям и случившимся событиям; должны выполняться все указанные части. */
+export interface Condition {
+  if?: FlagId;
+  ifNot?: FlagId;
+  event?: EventId;
+}
+
+export interface JournalNote extends Condition {
+  text: Text;
+}
+
+/**
+ * Запись журнала: цель (что сделать) или зацепка (что удалось узнать). Появляется, когда выполнено
+ * её условие; журнал не хранится в сохранении, а каждый раз строится по решениям и событиям.
+ */
+export interface JournalEntry extends Condition {
+  kind: 'goal' | 'lead';
+  title: string;
+  /** Записи по порядку; видны те, чьё условие выполнено. */
+  notes: readonly JournalNote[];
+  /** Подсказка, пока цель не выполнена: куда идти и когда. */
+  hint?: Text;
+  /** Цель выполнена. */
+  done?: Condition;
+}
+
 // --- Бой ---
 
 /** Действие в бою: удар, защита, приём класса или предмет из сумки. */

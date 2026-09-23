@@ -44,7 +44,8 @@ describe('новая игра', () => {
   it('начинается с первой сцены без решений, опыта и добычи', () => {
     const state = newGame();
     expect(state.screen).toBe('story');
-    expect(state.session).toMatchObject({ sceneId: 'st0', flags: {}, fight: null, notices: [] });
+    expect(state.session).toMatchObject({ sceneId: 'st0', flags: {}, fight: null });
+    expect(texts(state)).toEqual(['Журнал: новая цель «Новая жизнь»']);
     expect(state.session?.hero).toMatchObject({
       name: 'Ивар',
       classId: 'warrior',
@@ -97,7 +98,11 @@ describe('choose', () => {
     expect(success.session).toMatchObject({ sceneId: 'st3', flags: { trippedVasya: true } });
     // сбить Васю с ног — опыт как за победу в бою
     expect(success.session?.hero.xp).toBe(10);
-    expect(texts(success)).toEqual(['Проверка: Ловкость — успех', '+10 опыта']);
+    expect(texts(success)).toEqual([
+      'Проверка: Ловкость — успех',
+      '+10 опыта',
+      'Журнал: новая запись в «Новая жизнь»',
+    ]);
     // следующий переход убирает сообщения
     expect(play(success, 'Направиться').session?.notices).toEqual([]);
   });

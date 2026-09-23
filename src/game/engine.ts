@@ -7,6 +7,7 @@ import { rollCheck } from './checks';
 import { playRound, startFight } from './combat';
 import { getScene, isAvailable, textContext } from './context';
 import { consumeItem, createHero, giveLoot, hasItem, heal, type NewHero } from './hero';
+import { journalNotices } from './journal';
 import { addXp, applyLevelReward } from './progression';
 import type {
   Choice,
@@ -54,7 +55,11 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
     fight: null,
     notices: [],
   };
-  return { ...state, screen: 'story', session };
+  return {
+    ...state,
+    screen: 'story',
+    session: { ...session, notices: journalNotices(null, session) },
+  };
 }
 
 export function resumeSession(state: GameState, session: Session): GameState {
@@ -78,8 +83,22 @@ function gainXp(hero: Hero, amount: number, notices: Notice[]): Hero {
 
 // --- Сюжет и перемещение ---
 
+/** Добавить сообщения об изменениях в журнале (новые цели, зацепки, выполненные цели). */
+function withJournalNotices(before: Session | null, state: GameState): GameState {
+  const session = state.session;
+  // в бою сообщения не видны: итог боя начинает их заново
+  if (!before || !session || session === before || session.fight) return state;
+  const notices = journalNotices(before, session);
+  if (notices.length === 0) return state;
+  return { ...state, session: { ...session, notices: [...session.notices, ...notices] } };
+}
+
 /** Выбрать вариант: в сцене или в локации. */
 export function choose(state: GameState, choice: Choice, rng: Rng): GameState {
+  return withJournalNotices(state.session, applyChoice(state, choice, rng));
+}
+
+function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
   const current = state.session;
   if (!current || current.fight || isChoosingLevelReward(current) || choice.disabled) return state;
 
@@ -167,8 +186,6 @@ export function closeFight(state: GameState): GameState {
   if (fight.result === 'lose') return gameOver();
   const notices: Notice[] = [];
   const hero = gainXp(session.hero, fight.enemy.xp, notices);
-  return {
-    ...state,
-    session: enterScene({ ...session, hero, fight: null, notices }, fight.winScene),
-  };
+  const next = enterScene({ ...session, hero, fight: null, notices }, fight.winScene);
+  return withJournalNotices({ ...session, fight: null }, { ...state, session: next });
 }

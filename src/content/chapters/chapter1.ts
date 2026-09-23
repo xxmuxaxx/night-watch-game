@@ -87,6 +87,7 @@ export const chapter1: Record<string, Scene> = {
   st5: {
     image: 'img/scene-courtyard.jpg',
     actor: 'img/portrait-mentor.jpg',
+    set: { joined: true },
     title: 'Добро пожаловать в Ночную стражу',
     text: ({ hero }) =>
       '— ' +

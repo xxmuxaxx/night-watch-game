@@ -246,6 +246,7 @@ img {
 .hero-status__portrait {
   width: 100%;
   aspect-ratio: 1;
+  max-height: 28vh; /*  на низких экранах портрет обрезается, чтобы панель героя помещалась без прокрутки  */
   object-fit: cover;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -367,6 +368,45 @@ img {
   outline: none;
 }
 .bag__item:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/*  КНОПКА ЖУРНАЛА: текущая цель  */
+.journal-button {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 10px;
+  font: 0.9rem var(--font-text);
+  color: var(--text);
+  text-align: left;
+  background: rgba(217, 146, 59, 0.08);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.journal-button__label {
+  display: flex;
+  justify-content: space-between;
+  font: 700 1.1rem var(--font-title);
+  color: var(--accent-2);
+}
+.journal-button kbd {
+  font: 0.75rem var(--font-text);
+  color: var(--muted);
+}
+.journal-button small {
+  display: block;
+  color: var(--muted);
+}
+.journal-button:hover:not(:disabled),
+.journal-button:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.journal-button:disabled {
   cursor: default;
   opacity: 0.6;
 }
@@ -663,6 +703,84 @@ img {
   padding: 14px 16px;
 }
 
+/*  ЖУРНАЛ  */
+.journal {
+  background: rgba(9, 11, 15, 0.94);
+}
+.journal__inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+.journal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.journal h1 {
+  margin: 0;
+  font-size: 2.6rem;
+  color: var(--accent-2);
+}
+.journal__close {
+  width: 40px;
+  height: 40px;
+  font-size: 1.1rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.journal__close:hover,
+.journal__close:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.journal section {
+  margin-top: 20px;
+}
+.journal h2 {
+  margin: 0 0 10px;
+  padding-bottom: 4px;
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.journal__empty {
+  margin: 0;
+  font-style: italic;
+  color: var(--muted);
+}
+.journal-entry {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+}
+.journal-entry h3 {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+}
+.journal-entry h3 small {
+  font: italic 0.9rem var(--font-text);
+  color: var(--muted);
+}
+.journal-entry p {
+  margin: 0 0 4px;
+}
+.journal-entry__hint {
+  color: var(--accent-2);
+  font-style: italic;
+}
+.journal-entry__hint::before {
+  content: '→ ';
+}
+.journal-entry--done {
+  border-left-color: var(--line);
+  opacity: 0.65;
+}
+
 /*  ТЕЛЕФОН: панель героя сверху компактной полосой, бой в две колонки  */
 @media (max-width: 760px) {
   body {
@@ -695,9 +813,16 @@ img {
   .xp {
     margin-top: 0;
   }
-  .bag {
+  .bag,
+  .journal-button {
     grid-column: 1 / -1;
     margin-top: 6px;
+  }
+  .journal-button kbd {
+    display: none;
+  }
+  .journal__inner {
+    padding: 20px 16px 32px;
   }
   .bag h4 {
     display: none;

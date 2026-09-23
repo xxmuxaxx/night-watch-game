@@ -93,7 +93,7 @@ describe('миграция старых сохранений', () => {
       locationId: 'cell',
       time: atTime(1, 21, 30),
       events: ['dinner'],
-      flags: { ate: true, knowsCell: true },
+      flags: { ate: true, knowsCell: true, joined: true },
       fight: null,
       notices: [],
     });
@@ -147,9 +147,26 @@ describe('миграция старых сохранений', () => {
     });
   });
 
+  it('версия 5: после пролога добавляется решение joined (журнал)', () => {
+    const storage = memoryStorage();
+    const v5 = (sceneId: string | null) => ({
+      version: 5,
+      sceneId,
+      locationId: 'courtyard',
+      time: atTime(1, 17),
+      events: [],
+      hero: testHero(),
+      flags: { ate: true },
+    });
+    storage.setItem(SAVE_KEY, JSON.stringify(v5(null)));
+    expect(readSave(storage)?.flags).toEqual({ ate: true, joined: true });
+    storage.setItem(SAVE_KEY, JSON.stringify(v5('st4')));
+    expect(readSave(storage)?.flags).toEqual({ ate: true });
+  });
+
   it('загружает сохранение без решений', () => {
     const storage = memoryStorage();
-    storage.setItem(SAVE_KEY, JSON.stringify({ ...v2, stage: 'st5', flags: undefined }));
+    storage.setItem(SAVE_KEY, JSON.stringify({ ...v2, stage: 'st3', flags: undefined }));
     expect(readSave(storage)?.flags).toEqual({});
   });
 });

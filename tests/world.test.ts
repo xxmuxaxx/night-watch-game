@@ -150,6 +150,7 @@ describe('события', () => {
     expect(session.hero.hp).toBe(3 + 3); // 21:30 → 01:00: три полных часа
     expect(session.notices.map((n) => n.text)).toEqual([
       'Вы проспали 3 ч и проснулись (+3 здоровья)',
+      'Журнал: новая цель «Тревога»',
     ]);
     const text = engine.resolveText(engine.getScene('st8').text, engine.textContext(session));
     expect(text).toContain('Вас будит протяжный звук рога');

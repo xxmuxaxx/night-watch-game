@@ -21,7 +21,7 @@ import type {
 } from './types';
 
 export const SAVE_KEY = 'nightwatch-save';
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -36,6 +36,9 @@ interface SaveData {
   hero: Hero;
   flags: Flags;
 }
+
+/** Формат версии 5: до журнала (решения joined). */
+type SaveV5 = Omit<SaveData, 'version'> & { version: 5 };
 
 /** Формат версии 4: до локаций, времени и событий. */
 interface SaveV4 {
@@ -126,9 +129,9 @@ function migrateV3(save: SaveV3): SaveV4 {
  * До версии 5 глава была линейной. Место, время и случившиеся события восстанавливаем
  * по сцене, на которой остановился игрок.
  */
-function migrateV4(save: SaveV4): SaveData {
+function migrateV4(save: SaveV4): SaveV5 {
   const id = save.sceneId;
-  const base = { ...save, version: SAVE_VERSION } as const;
+  const base = { ...save, version: 5 } as const;
   if (id.startsWith('st6')) {
     return { ...base, locationId: 'hall', time: atTime(1, 18, 30), events: ['dinner'] };
   }
@@ -159,10 +162,23 @@ function migrateV4(save: SaveV4): SaveData {
   };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → 3 → 4 → 5. */
+/** Сцены до знакомства с Торвином: решение joined ещё не принято. */
+const PROLOGUE_SCENES: readonly SceneId[] = ['st0', 'st1', 'st1_1', 'st2', 'st2_1', 'st3', 'st4'];
+
+/** В версии 6 появился журнал: его первая цель выполняется решением joined (сцена st5). */
+function migrateV5(save: SaveV5): SaveData {
+  const joined = save.sceneId === null || !PROLOGUE_SCENES.includes(save.sceneId);
+  return {
+    ...save,
+    version: SAVE_VERSION,
+    flags: joined ? { ...save.flags, joined: true } : save.flags,
+  };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 6. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
-  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveData;
+  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
     if (!v3) return null;
@@ -170,6 +186,7 @@ export function migrate(raw: unknown): SaveData | null {
   }
   if (save.version === 3) save = migrateV3(save);
   if (save.version === 4) save = migrateV4(save);
+  if (save.version === 5) save = migrateV5(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 

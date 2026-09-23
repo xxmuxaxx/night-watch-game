@@ -2,7 +2,7 @@ import { useEffect } from 'preact/hooks';
 import { LEVEL_REWARDS } from '@/content/progression';
 import { canUseSpecial } from '@/game/combat';
 import { availableChoices, isChoosingLevelReward } from '@/game/engine';
-import type { FightAction, GameState } from '@/game/types';
+import type { FightAction } from '@/game/types';
 import type { GameStore } from './store';
 
 const FIGHT_KEYS: Record<string, 'attack' | 'defend' | 'special' | 'item'> = {
@@ -14,12 +14,19 @@ const FIGHT_KEYS: Record<string, 'attack' | 'defend' | 'special' | 'item'> = {
   '4': 'item',
 };
 
+/** Журнал: открыт ли он и как его открыть или закрыть. */
+export interface JournalControl {
+  open: boolean;
+  toggle: () => void;
+}
+
 /**
- * Клавиатура: в сцене 1–9 выбирают вариант ответа; при новом уровне 1–4 — награду;
+ * Клавиатура: J открывает и закрывает журнал (пока он открыт, Esc закрывает, остальное не работает);
+ * в сцене 1–9 выбирают вариант ответа; при новом уровне 1–4 — награду;
  * в бою 1/Enter/пробел — удар, 2 — защита, 3 — приём, 4 — первый предмет из сумки;
  * после боя Enter/пробел/1 — «Продолжить». В меню и при вводе имени клавиши не перехватываются.
  */
-export function useKeyboard(store: GameStore, state: GameState) {
+export function useKeyboard(store: GameStore, journal: JournalControl) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
@@ -27,6 +34,9 @@ export function useKeyboard(store: GameStore, state: GameState) {
       // кнопку в фокусе браузер нажмёт сам
       if (target?.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;
 
+      // состояние берём в момент нажатия, а не из отрисовки: при двух быстрых нажатиях
+      // второе иначе применило бы вариант прошлой сцены к новой
+      const state = store.getState();
       const session = state.session;
       if (state.screen !== 'story' || !session) return;
       const n = Number.parseInt(e.key, 10);
@@ -58,6 +68,14 @@ export function useKeyboard(store: GameStore, state: GameState) {
         return;
       }
 
+      // по коду клавиши, а не по символу: J работает и в русской раскладке
+      if (e.code === 'KeyJ' || (journal.open && e.key === 'Escape')) {
+        e.preventDefault();
+        journal.toggle();
+        return;
+      }
+      if (journal.open) return;
+
       const choice = availableChoices(session)[n - 1];
       if (choice) {
         e.preventDefault();
@@ -66,5 +84,5 @@ export function useKeyboard(store: GameStore, state: GameState) {
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [store, state]);
+  }, [store, journal]);
 }

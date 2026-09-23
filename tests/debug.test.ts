@@ -9,7 +9,14 @@ describe('панель отладки', () => {
     let state = debug.quickStart(initialState, 'rogue');
     expect(sessionOf(state).hero.classId).toBe('rogue');
     state = debug.jumpToScene(state, 'st7');
-    expect(sessionOf(state)).toMatchObject({ sceneId: 'st7', fight: null, notices: [] });
+    // как при обычном входе в сцену: келья и решение «знает, где келья»
+    expect(sessionOf(state)).toMatchObject({
+      sceneId: 'st7',
+      locationId: 'cell',
+      flags: { knowsCell: true },
+      fight: null,
+      notices: [],
+    });
   });
 
   it('решения включаются и выключаются', () => {
