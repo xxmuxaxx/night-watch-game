@@ -980,6 +980,17 @@ html[data-font='large'] {
   background: var(--accent);
   border-color: var(--accent);
 }
+.settings__volume {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+  color: var(--muted);
+}
+.settings__volume input {
+  width: min(260px, 60%);
+  accent-color: var(--accent);
+}
 .settings__button {
   margin-top: 12px;
 }

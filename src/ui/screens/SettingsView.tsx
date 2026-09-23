@@ -50,6 +50,30 @@ export function SettingsView({ onClose, onExit }: Props) {
         </section>
 
         <section>
+          <h2>Звук</h2>
+          <label class="one-life">
+            <input
+              type="checkbox"
+              checked={settings.sound}
+              onChange={(e) => update({ sound: e.currentTarget.checked })}
+            />
+            <span>Звук: ветер, очаг, удары и сигналы</span>
+          </label>
+          <label class="settings__volume">
+            <span>Громкость</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={settings.volume}
+              disabled={!settings.sound}
+              onInput={(e) => update({ volume: Number(e.currentTarget.value) })}
+            />
+          </label>
+        </section>
+
+        <section>
           <h2>Подсказки</h2>
           <label class="one-life">
             <input

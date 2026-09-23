@@ -274,7 +274,12 @@ export interface Scene {
   set?: Flags;
   /** Изменение отношений при входе в сцену. */
   relation?: Relations;
+  /** Звук при входе в сцену (src/ui/audio.ts). */
+  sound?: SoundCue;
 }
+
+/** Звуки, которые может заказать сцена. */
+export type SoundCue = 'horn';
 
 // --- Мир ---
 

@@ -17,6 +17,7 @@ import { SettingsView } from './screens/SettingsView';
 import { currentHint } from './hints';
 import { useSettings } from './settings';
 import { useGameState, useStore } from './store';
+import { useAudio } from './useAudio';
 import { useKeyboard, type Panel } from './useKeyboard';
 
 /** Окно игры: сцена и панель героя, поверх них — меню, создание героя, бой, новый уровень или журнал. */
@@ -24,6 +25,7 @@ export function App() {
   const store = useStore();
   const state = useGameState();
   const [settings, updateSettings] = useSettings();
+  useAudio(state, settings);
   const session = state.session;
   const inStory = state.screen === 'story' && session;
   // журнал открывается вне боя и выбора награды за уровень

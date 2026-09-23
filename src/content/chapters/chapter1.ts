@@ -415,6 +415,7 @@ export const chapter1: Record<string, Scene> = {
   // --- Ночь: тревога (событие alarm) застаёт героя там, где он есть ---
   st8: {
     image: 'img/background.jpg',
+    sound: 'horn',
     title: 'Три сигнала',
     text: ({ flag, location }) => {
       const inCell = location === 'cell';
