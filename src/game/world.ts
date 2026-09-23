@@ -13,6 +13,7 @@ import type {
   Choice,
   LocationId,
   Notice,
+  Rng,
   SceneId,
   Session,
   Spot,
@@ -154,8 +155,11 @@ function arrive(session: Session, locationId: LocationId): Session {
   return visit({ ...session, locationId, spotId: null }, locationId);
 }
 
-/** Событие, которое должно начаться сейчас (только при свободном перемещении). */
-export function dueEvent(session: Session): EventId | null {
+/**
+ * Событие, которое должно начаться сейчас (только при свободном перемещении). Происшествия
+ * (chance) бросают кубик rng; без rng (во сне, в отладке) они не случаются.
+ */
+export function dueEvent(session: Session, rng?: Rng): EventId | null {
   if (session.sceneId !== null) return null;
   const ctx = textContext(session);
   return (
@@ -167,7 +171,9 @@ export function dueEvent(session: Session): EventId | null {
         (!event.hours || inHours(ctx.time, event.hours)) &&
         (!event.fromDay || ctx.time.day >= event.fromDay) &&
         (!event.if || ctx.flag(event.if)) &&
-        (!event.ifNot || !ctx.flag(event.ifNot))
+        (!event.ifNot || !ctx.flag(event.ifNot)) &&
+        // кубик — последним, чтобы бросать его только за подходящие происшествия
+        (event.chance === undefined || (rng !== undefined && rng() < event.chance))
       );
     }) ?? null
   );
@@ -188,34 +194,34 @@ export function enterScene(session: Session, sceneId: SceneId): Session {
 }
 
 /** Начать событие, если оно должно случиться сейчас. */
-export function startDueEvent(session: Session): Session {
-  const id = dueEvent(session);
+export function startDueEvent(session: Session, rng?: Rng): Session {
+  const id = dueEvent(session, rng);
   if (!id) return session;
   return enterScene({ ...session, events: [...session.events, id] }, EVENTS[id].scene);
 }
 
 /** Закончить сцену и оказаться в локации; там сразу может начаться событие. */
-export function leaveScene(session: Session, to: true | LocationId): Session {
+export function leaveScene(session: Session, to: true | LocationId, rng?: Rng): Session {
   const locationId = to === true ? session.locationId : to;
-  return startDueEvent(arrive({ ...session, sceneId: null }, locationId));
+  return startDueEvent(arrive({ ...session, sceneId: null }, locationId), rng);
 }
 
 /** Перейти в соседнюю локацию (время на дорогу уже учтено выбором). */
-export function moveTo(session: Session, to: LocationId): Session {
-  return startDueEvent(arrive(session, to));
+export function moveTo(session: Session, to: LocationId, rng?: Rng): Session {
+  return startDueEvent(arrive(session, to), rng);
 }
 
 /**
  * Дойти до места по карте: по самому быстрому пути, место за местом. Время идёт по дороге,
  * и событие в промежуточном месте прерывает путь. Недостижимое место — партия не меняется.
  */
-export function travel(session: Session, to: LocationId): Session {
+export function travel(session: Session, to: LocationId, rng?: Rng): Session {
   const way = route(session, to);
   if (!way || session.sceneId !== null) return session;
   let current = session;
   for (const step of way.path) {
     const exit = location(current.locationId).exits.find((found) => found.to === step);
-    current = moveTo({ ...current, time: current.time + (exit?.minutes ?? 0) }, step);
+    current = moveTo({ ...current, time: current.time + (exit?.minutes ?? 0) }, step, rng);
     if (current.sceneId !== null) break;
   }
   return current;
@@ -225,23 +231,31 @@ export function travel(session: Session, to: LocationId): Session {
  * Пропустить время до момента until шагами по TIME_STEP минут; событие прерывает ожидание.
  * Возвращает новую партию и сколько минут прошло на самом деле.
  */
-export function passTime(session: Session, until: number): { session: Session; elapsed: number } {
+export function passTime(
+  session: Session,
+  until: number,
+  rng?: Rng,
+): { session: Session; elapsed: number } {
   let current = session;
   while (current.time < until && current.sceneId === null) {
     // шаги выровнены по четвертям часа, чтобы события начинались ровно в свой час
     const nextStep = (Math.floor(current.time / TIME_STEP) + 1) * TIME_STEP;
-    current = startDueEvent({ ...current, time: Math.min(until, nextStep) });
+    current = startDueEvent({ ...current, time: Math.min(until, nextStep) }, rng);
   }
   return { session: current, elapsed: current.time - session.time };
 }
 
-/** Подождать; событие может прервать ожидание. */
-export function wait(session: Session, minutes: number): { session: Session; notices: Notice[] } {
-  const result = passTime(session, session.time + minutes);
+/** Подождать; событие или происшествие может прервать ожидание. */
+export function wait(
+  session: Session,
+  minutes: number,
+  rng?: Rng,
+): { session: Session; notices: Notice[] } {
+  const result = passTime(session, session.time + minutes, rng);
   return { session: result.session, notices: [] };
 }
 
-/** Спать до утра: +1 здоровья за час сна; событие может разбудить. */
+/** Спать до утра: +1 здоровья за час сна; событие может разбудить, происшествие — нет. */
 export function sleep(session: Session): { session: Session; notices: Notice[] } {
   const result = passTime(session, nextMorning(session.time));
   const hours = Math.floor(result.elapsed / 60);

@@ -269,6 +269,43 @@ describe('точки интереса', () => {
   });
 });
 
+describe('мелкие происшествия', () => {
+  /** Выбор с заданным броском кубика. */
+  function roll(state: GameState, fragment: string, value: number): GameState {
+    return engine.choose(state, pick(state, fragment), constant(value));
+  }
+
+  it('случаются по приходе в место, если выпал шанс; иначе — нет', () => {
+    const state = roaming('gateyard', 2, 10);
+    expect(sessionOf(roll(state, 'Внутренний двор', 0.5))).toMatchObject({
+      sceneId: null,
+      locationId: 'courtyard',
+    });
+    const brawl = sessionOf(roll(state, 'Внутренний двор', 0.1));
+    expect(brawl).toMatchObject({ sceneId: 'incident_brawl', locationId: 'courtyard' });
+    expect(brawl.events).toContain('brawl');
+  });
+
+  it('случаются и пока герой ждёт; каждое — один раз', () => {
+    const state = roaming('courtyard', 2, 10);
+    const waited = roll(state, 'Подождать', 0.1);
+    expect(sessionOf(waited)).toMatchObject({ sceneId: 'incident_brawl', time: atTime(2, 10, 15) });
+    const again = roll(roll(waited, 'Пройти мимо', 0.5), 'Подождать', 0.1);
+    expect(sessionOf(again)).toMatchObject({ sceneId: null, time: atTime(2, 11, 15) });
+  });
+
+  it('не в свои часы и не во сне', () => {
+    expect(sessionOf(roll(roaming('courtyard', 2, 19), 'Подождать', 0)).sceneId).toBeNull();
+    const cell = withSession(roaming('cell', 2, 23), {
+      events: ['alarm'],
+      flags: { knowsCell: true },
+    });
+    const slept = sessionOf(roll(cell, 'Лечь спать', 0));
+    expect(slept.sceneId).toBeNull();
+    expect(slept.events).not.toContain('raven');
+  });
+});
+
 describe('учебные бои', () => {
   /** Начать бой на плацу и сразу закончить его с нужным итогом. */
   function spar(state: GameState, fragment: string, result: 'win' | 'lose'): GameState {

@@ -198,9 +198,9 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
     return { ...state, session: { ...session, fight, notices: [] } };
   }
   if ('gameOver' in choice) return gameOver();
-  if ('leave' in choice) return { ...state, session: leaveScene(session, choice.leave) };
-  if ('move' in choice) return { ...state, session: moveTo(session, choice.move) };
-  if ('travel' in choice) return { ...state, session: travel(session, choice.travel) };
+  if ('leave' in choice) return { ...state, session: leaveScene(session, choice.leave, rng) };
+  if ('move' in choice) return { ...state, session: moveTo(session, choice.move, rng) };
+  if ('travel' in choice) return { ...state, session: travel(session, choice.travel, rng) };
   if ('look' in choice) return { ...state, session: lookAt(session, choice.look) };
   if ('takeDuty' in choice) {
     const taken = takeDuty(session, rng);
@@ -208,7 +208,7 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
   }
   if ('back' in choice) return { ...state, session: stepBack(session) };
   if ('wait' in choice) {
-    const result = wait(session, choice.wait);
+    const result = wait(session, choice.wait, rng);
     return {
       ...state,
       session: { ...result.session, notices: [...result.session.notices, ...result.notices] },

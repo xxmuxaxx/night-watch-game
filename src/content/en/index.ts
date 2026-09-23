@@ -2,6 +2,7 @@
 // описано в src/i18n/content.ts.
 import { chapter1 } from './chapter1';
 import { duties } from './duties';
+import { incidents } from './incidents';
 import { places } from './places';
 import { routine, ROUTINE } from './routine';
 import { talks } from './talks';
@@ -16,6 +17,7 @@ const scenes: Record<string, SceneText> = {
   ...routine,
   ...talks,
   ...duties,
+  ...incidents,
 };
 
 export const EN = {
