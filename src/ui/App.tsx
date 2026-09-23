@@ -11,10 +11,11 @@ import { Journal } from './screens/Journal';
 import { LevelUp } from './screens/LevelUp';
 import { MainMenu } from './screens/MainMenu';
 import { SceneView } from './screens/SceneView';
+import { SettingsView } from './screens/SettingsView';
 import { currentHint } from './hints';
 import { useSettings } from './settings';
 import { useGameState, useStore } from './store';
-import { useKeyboard } from './useKeyboard';
+import { useKeyboard, type Panel } from './useKeyboard';
 
 /** Окно игры: сцена и панель героя, поверх них — меню, создание героя, бой, новый уровень или журнал. */
 export function App() {
@@ -29,14 +30,22 @@ export function App() {
     session !== null &&
     !session.fight &&
     !isChoosingLevelReward(session);
-  const [journalOpen, setJournalOpen] = useState(false);
-  const showJournal = canOpenJournal && journalOpen;
+  const [panel, setPanel] = useState<Panel | null>(null);
+  const showJournal = canOpenJournal && panel === 'journal';
   // после смерти или выхода в меню новая партия начинается с закрытым журналом
   useEffect(() => {
-    if (!canOpenJournal) setJournalOpen(false);
+    if (!canOpenJournal) setPanel((open) => (open === 'journal' ? null : open));
   }, [canOpenJournal]);
-  const hint = settings.hints ? currentHint(state, settings.seenHints) : null;
-  useKeyboard(store, { open: showJournal, toggle: () => setJournalOpen((open) => !open) });
+  // размер шрифта из настроек — на корневом элементе: от него считаются все rem
+  useEffect(() => {
+    document.documentElement.dataset['font'] = settings.fontSize;
+  }, [settings.fontSize]);
+  const hint = settings.hints && !panel ? currentHint(state, settings.seenHints) : null;
+  useKeyboard(store, {
+    panel,
+    toggle: (next) => setPanel((open) => (open === next ? null : next)),
+    close: () => setPanel(null),
+  });
 
   return (
     <div class="wrapper">
@@ -47,11 +56,12 @@ export function App() {
             hero={session.hero}
             {...(session.fight ? {} : { onUseItem: (id) => store.applyItem(id) })}
             goal={activeGoals(session)[0]}
-            {...(canOpenJournal ? { onOpenJournal: () => setJournalOpen(true) } : {})}
+            {...(canOpenJournal ? { onOpenJournal: () => setPanel('journal') } : {})}
+            onOpenSettings={() => setPanel('settings')}
           />
         </>
       )}
-      {state.screen === 'menu' && <MainMenu />}
+      {state.screen === 'menu' && <MainMenu onOpenSettings={() => setPanel('settings')} />}
       {state.screen === 'createHero' && <CreateHero />}
       {inStory && session.fight && <FightView session={{ ...session, fight: session.fight }} />}
       {inStory && isChoosingLevelReward(session) && <LevelUp hero={session.hero} />}
@@ -59,10 +69,23 @@ export function App() {
         <Journal
           entries={journal(session)}
           people={people(session)}
-          onClose={() => setJournalOpen(false)}
+          onClose={() => setPanel(null)}
         />
       )}
-      {hint && !showJournal && (
+      {panel === 'settings' && (
+        <SettingsView
+          onClose={() => setPanel(null)}
+          {...(inStory
+            ? {
+                onExit: () => {
+                  setPanel(null);
+                  store.exitToMenu();
+                },
+              }
+            : {})}
+        />
+      )}
+      {hint && (
         <HintToast
           hint={hint}
           onClose={() => updateSettings({ seenHints: [...settings.seenHints, hint.id] })}

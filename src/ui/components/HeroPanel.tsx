@@ -20,9 +20,10 @@ interface Props {
   goal?: JournalView | undefined;
   /** Открыть журнал; не передаётся, когда журнал открыть нельзя (бой). */
   onOpenJournal?: () => void;
+  onOpenSettings?: () => void;
 }
 
-export function HeroPanel({ hero, onUseItem, goal, onOpenJournal }: Props) {
+export function HeroPanel({ hero, onUseItem, goal, onOpenJournal, onOpenSettings }: Props) {
   const cls = heroClass(hero.classId);
   const heroWeapon = weapon(hero.weaponId);
   const chances = combatStats(hero);
@@ -42,6 +43,11 @@ export function HeroPanel({ hero, onUseItem, goal, onOpenJournal }: Props) {
 
   return (
     <aside class="right-column">
+      {onOpenSettings && (
+        <button class="settings-button" title="Настройки (Esc)" onClick={onOpenSettings}>
+          ⚙
+        </button>
+      )}
       <div class="hero-status">
         <img class="hero-status__portrait" src={hero.portrait} alt="" />
         <h3 class="hero-status__name">{hero.name}</h3>

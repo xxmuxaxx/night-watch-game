@@ -27,7 +27,7 @@ body {
   background: var(--bg) url('/img/background.jpg') center / cover fixed;
   color: var(--text);
   font-family: var(--font-text);
-  font-size: 17px;
+  font-size: 1.0625rem; /*  17px при обычном шрифте; размер меняют настройки через html[data-font]  */
   line-height: 1.55;
 }
 h1,
@@ -850,6 +850,61 @@ img {
   color: var(--muted);
 }
 
+/*  НАСТРОЙКИ  */
+html[data-font='small'] {
+  font-size: 87.5%;
+}
+html[data-font='large'] {
+  font-size: 118.75%;
+}
+.right-column {
+  position: relative;
+}
+.settings-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.settings-button:hover,
+.settings-button:focus-visible {
+  color: var(--text);
+  border-color: var(--line);
+  outline: none;
+}
+.settings {
+  z-index: 20;
+}
+.settings__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.settings__option {
+  padding: 8px 18px;
+  font: 1rem var(--font-text);
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.settings__option.is-active {
+  color: #16110a;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.settings__button {
+  margin-top: 12px;
+}
+
 /*  ПОДСКАЗКА ДЛЯ НОВИЧКА: внизу экрана, поверх сцены и боя  */
 .hint {
   position: fixed;
@@ -898,7 +953,7 @@ img {
 @media (max-width: 760px) {
   body {
     padding: 0;
-    font-size: 16px;
+    font-size: 1rem;
   }
   .wrapper {
     width: 100%;

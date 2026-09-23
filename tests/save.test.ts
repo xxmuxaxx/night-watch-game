@@ -226,6 +226,22 @@ describe('автосохранение в хранилище интерфейс�
     expect(readSave(storage)?.sceneId).toBe('st1');
   });
 
+  it('выход в меню посреди партии не стирает сохранение даже в режиме «Одна жизнь»', () => {
+    const storage = memoryStorage();
+    const store = createGameStore(storage, () => 0.5);
+    store.openHeroCreation();
+    store.startNewGame({
+      name: 'Ивар',
+      classId: 'warrior',
+      portrait: 'img/hero-1.jpg',
+      oneLife: true,
+    });
+    store.choose({ text: 'Подойти к воротам', next: 'st1' });
+    store.exitToMenu();
+    expect(store.getState().screen).toBe('menu');
+    expect(readSave(storage)?.sceneId).toBe('st1');
+  });
+
   it('в режиме «Одна жизнь» смерть стирает сохранение', () => {
     const storage = memoryStorage();
     const store = createGameStore(storage, () => 0.5);

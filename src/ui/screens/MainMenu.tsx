@@ -1,6 +1,6 @@
 import { useStore } from '../store';
 
-export function MainMenu() {
+export function MainMenu({ onOpenSettings }: { onOpenSettings: () => void }) {
   const store = useStore();
   return (
     <div class="menu main-menu">
@@ -16,6 +16,9 @@ export function MainMenu() {
               Загрузить игру
             </button>
           )}
+          <button class="button button--secondary" onClick={onOpenSettings}>
+            Настройки
+          </button>
         </div>
       </div>
     </div>

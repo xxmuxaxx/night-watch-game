@@ -15,19 +15,23 @@ const FIGHT_KEYS: Record<string, 'attack' | 'defend' | 'special' | 'item'> = {
   '4': 'item',
 };
 
-/** Журнал: открыт ли он и как его открыть или закрыть. */
-export interface JournalControl {
-  open: boolean;
-  toggle: () => void;
+export type Panel = 'journal' | 'settings';
+
+/** Окна поверх игры: какое открыто и как открыть или закрыть. */
+export interface PanelControl {
+  panel: Panel | null;
+  toggle: (panel: Panel) => void;
+  close: () => void;
 }
 
 /**
- * Клавиатура: J открывает и закрывает журнал (пока он открыт, Esc закрывает, остальное не работает);
+ * Клавиатура: J открывает и закрывает журнал, Esc закрывает открытое окно или открывает настройки
+ * (пока окно открыто, остальные клавиши не работают);
  * в сцене 1–9 выбирают вариант ответа; при новом уровне 1–4 — награду;
  * в бою 1/Enter/пробел — удар, 2 — защита, 3 — приём, 4 — первый предмет из сумки;
  * после боя Enter/пробел/1 — «Продолжить» (после поражения — «Попробовать снова», 2 — «Сдаться»). В меню и при вводе имени клавиши не перехватываются.
  */
-export function useKeyboard(store: GameStore, journal: JournalControl) {
+export function useKeyboard(store: GameStore, panels: PanelControl) {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
@@ -40,6 +44,13 @@ export function useKeyboard(store: GameStore, journal: JournalControl) {
       const state = store.getState();
       const session = state.session;
       if (state.screen !== 'story' || !session) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (panels.panel) panels.close();
+        else panels.toggle('settings');
+        return;
+      }
+      if (panels.panel === 'settings') return;
       const n = Number.parseInt(e.key, 10);
 
       if (session.fight) {
@@ -78,12 +89,12 @@ export function useKeyboard(store: GameStore, journal: JournalControl) {
       }
 
       // по коду клавиши, а не по символу: J работает и в русской раскладке
-      if (e.code === 'KeyJ' || (journal.open && e.key === 'Escape')) {
+      if (e.code === 'KeyJ') {
         e.preventDefault();
-        journal.toggle();
+        panels.toggle('journal');
         return;
       }
-      if (journal.open) return;
+      if (panels.panel) return;
 
       const choice = availableChoices(session)[n - 1];
       if (choice) {
@@ -93,5 +104,5 @@ export function useKeyboard(store: GameStore, journal: JournalControl) {
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [store, journal]);
+  }, [store, panels]);
 }
