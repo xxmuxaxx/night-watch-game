@@ -16,9 +16,13 @@ export function isKnown(id: LocationId, session: Session): boolean {
   return !known || meetsCondition(known, session);
 }
 
-/** Открыт ли выход: место известно, и решение, которое его открывает, принято. */
+/** Открыт ли выход: место известно, выход не закрыт совсем, и решение, которое его открывает, принято. */
 export function isOpen(exit: Exit, session: Session): boolean {
-  return isKnown(exit.to, session) && (!exit.if || session.flags[exit.if] === true);
+  return (
+    isKnown(exit.to, session) &&
+    exit.closed !== true &&
+    (!exit.if || session.flags[exit.if] === true)
+  );
 }
 
 /** Кто из знакомых герою персонажей сейчас в месте (по расписанию). */

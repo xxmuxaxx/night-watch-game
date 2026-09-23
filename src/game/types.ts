@@ -367,6 +367,8 @@ export interface Exit {
   minutes: number;
   /** Открыт, только если решение принято; иначе показан закрытым с подсказкой locked. */
   if?: FlagId;
+  /** Закрыт всегда: туда попадают только по сюжету (сцена с location). Показан с подсказкой locked. */
+  closed?: boolean;
   locked?: string;
 }
 
@@ -397,7 +399,7 @@ export interface Location {
   spots?: Readonly<Record<SpotId, Spot>>;
   /** Здесь можно спать. */
   bed?: boolean;
-  /** Положение на карте крепости (0–100 по ширине, 0–70 по высоте); без него места нет на карте. */
+  /** Положение на карте крепости (0–100 по ширине, 0–80 по высоте; подписи — ниже точки); без него места нет на карте. */
   map?: { x: number; y: number };
   /** Когда герой знает о месте: до этого его нет ни на карте, ни среди выходов. По умолчанию знает. */
   known?: Condition;
@@ -442,6 +444,8 @@ export interface StoryEvent {
 export interface Condition {
   if?: FlagId;
   ifNot?: FlagId;
+  /** Принято хотя бы одно из решений: когда к одному и тому же ведут разные пути. */
+  ifAny?: readonly FlagId[];
   event?: EventId;
 }
 

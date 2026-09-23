@@ -40,9 +40,10 @@ export const JOURNAL: Record<JournalId, JournalText> = {
       'I couldn’t make out who carried them. All that remained was the feeling that someone in the forest was watching.',
       'I told Torvin about the lights. He grew grim and told me to keep quiet: “Not everything that walks in that forest is human. And not every human out there is an enemy.”',
       'Torvin brushed it off: I was seeing things, not used to it yet. But he turned away a little too quickly.',
+      'At night I sneaked onto the wall and saw a lantern flash three times on the corner tower, and the forest answered. Someone in the fortress is giving signals.',
     ],
     hint: ({ flag }) =>
-      flag('toldTorvinLights')
+      flag('toldTorvinLights') || !flag('sawLights')
         ? ''
         : 'Tell Torvin? In the evenings he is in the mess hall, until 22:00',
   },
@@ -50,12 +51,25 @@ export const JOURNAL: Record<JournalId, JournalText> = {
     title: 'The missing recruits',
     notes: [
       'Vasya told me: two of his group went out on night watch to the pass and never came back. The elders say they ran. But where would you run to out here?',
+      'On the duty board by the gate: a week ago, a patrol to the pass — Erik and Martin. Both names are crossed out, and someone else added: “ran.”',
+      'Stanley at the gate said the gate is opened at night only for a patrol, on an elder’s word. Torvin himself saw that patrol off, and nobody ever let them back in.',
+      'Under a board of their bunk in the barracks lay a scrap of paper: the wall, the corner tower, the forest, and a note, “third watch — three flashes.”',
+      'Halvar the smith: the day before the patrol, Erik brought in a shuttered lantern to be fixed — the kind used for signals. He never picked it up.',
     ],
+    hint: ({ flag }) =>
+      !flag('readBoard')
+        ? 'Who goes on patrol is written on the duty board in the gate yard'
+        : !flag('searchedBunks')
+          ? 'Their bunks in the barracks must still be empty'
+          : !flag('talkedStanley')
+            ? 'Stanley in the guardhouse knows who was let out at night'
+            : '',
   },
   knife: {
     title: 'The knife from the chest',
     notes: [
       'In the chest in my cell, under rotten rags, lay an old knife with a bone handle. Who lived here before me, and where did he go?',
+      'I had to pry the rusty lock open with Halvar’s chisel.',
     ],
   },
 };

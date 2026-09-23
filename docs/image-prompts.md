@@ -99,6 +99,47 @@ view from a high fortress window at night over a snow-covered stone wall to a va
 
 Финал главы (st8, «Три сигнала») пока использует `background.jpg`: ночная крепость в горах подходит к сцене.
 
+## Места крепости
+
+Картинки мест, по которым герой ходит сам; сцены в этих местах используют их же. Новую картинку,
+пока её нет, игра прячет, а `tests/story.test.ts` держит её в списке `AWAITING_ART` — когда файл
+появится в `public/img/`, строку оттуда нужно убрать. Над картинкой бывает портрет собеседника
+(Вася, кузнец), поэтому левый верхний угол лучше оставить спокойным.
+
+### Двор у ворот — `scene-gateyard.jpg` (16:9)
+
+Тесный двор за воротами: караулка, доска нарядов под навесом, жаровня, коновязь. Чаще всего сюда
+приходят вечером и ночью.
+
+```
+cramped yard just inside the massive barred wooden gate of a dark stone fortress at night, a torch smoking under the gate arch, a low guardhouse door with warm light spilling out, a weathered wooden notice board under a small lean-to with sheets of paper nailed to it, an iron brazier with glowing coals, horses at a hitching post, trampled snow, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
+```
+
+### Казарма — `scene-barracks.jpg` (16:9)
+
+Длинный барак с двумя рядами нар, печка; в дальнем углу двое голых нар без соломы и одеял.
+
+```
+long dark wooden barracks inside a stone fortress at night, two rows of rough bunk beds with sleeping recruits under wool blankets, a small iron stove glowing red, wet cloaks hanging on pegs, in the far corner two bare bunks stripped of straw and blankets, dim candlelight, cold drafts, grim and lonely mood, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
+```
+
+### Кузница — `scene-smithy.jpg` (16:9)
+
+Горн, наковальня, верстак с инструментом; на краю верстака — фонарь со шторкой.
+
+```
+interior of a fortress smithy at evening, a glowing stone forge with leather bellows, an anvil, a water tub with steam, a cluttered workbench with tongs, chisels, files and scraps of iron, an unfinished iron lantern with a sliding shutter lying at the edge of the bench, orange forge glow against cold blue shadows, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
+```
+
+### Стена — `scene-wall.jpg` (16:9)
+
+Ночь на крепостной стене: зубцы, ветер, внизу чёрный лес до перевала, левее — угловая башня.
+Та же картинка у сцен «Ответный огонь» и «Темнота», поэтому огонёк у перевала можно оставить.
+
+```
+top of a snow-covered stone fortress wall at night, battlements in the foreground, strong wind blowing snow, below a vast black pine forest stretching to a distant mountain pass, a dark corner tower to the left with a faint light in its window, a tiny answering light far away at the pass, a huge copper-bound horn on an iron stand, cold moonlight, tense and secret mood, dark fantasy digital painting, gritty low-fantasy medieval north, muted cold palette of slate blue and grey with warm torchlight accents, painterly brushwork, cinematic lighting, highly detailed, no text
+```
+
 ---
 
 ## Портреты
@@ -140,6 +181,14 @@ grim man in his thirties, dark hooded cloak like a border guard's, worn leather 
 
 ```
 friendly man in his early thirties, kind warm smile, short dark beard, tired but gentle eyes, wearing a heavy black wool cloak with a simple iron clasp
+```
+
+### Хальвар, кузнец — `portrait-smith.jpg`
+
+«Широкоплечий кузнец с опалённой бородой»: руки в ожогах, кожаный фартук. Говорит мало, замечает всё.
+
+```
+broad-shouldered blacksmith in his fifties, singed reddish-grey beard, soot-streaked face, burn scars on thick forearms, heavy leather apron over a sweat-stained shirt, wary appraising gaze, orange forge glow from one side
 ```
 
 ### Лица героя — `hero-1.jpg` … `hero-6.jpg`

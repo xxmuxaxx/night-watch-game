@@ -240,6 +240,11 @@ export const chapter1: Record<string, SceneText> = {
         (flag('torvinWarned')
           ? '\nTorvin’s words ring in your ears: “Not everything that walks in that forest is human.”'
           : '') +
+        (flag('sawSignal')
+          ? '\nYou remember the light on the corner tower: three flashes — and the forest answered.'
+          : flag('foundNote')
+            ? '\nThree blasts… “Third watch — three flashes,” you remember the scrap of paper from the barracks.'
+            : '') +
         (flag('foundKnife')
           ? '\nYou feel for the old knife in your belt. Somehow it’s calmer with it.'
           : '')

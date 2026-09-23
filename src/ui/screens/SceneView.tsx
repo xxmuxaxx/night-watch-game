@@ -5,6 +5,7 @@ import { STAT_NAMES } from '@/content/stats';
 import { checkChance } from '@/game/checks';
 import { availableChoices, getScene, resolveImage, textContext } from '@/game/engine';
 import type { Choice, Session, TextContext } from '@/game/types';
+import { peopleAt } from '@/game/map';
 import { currentSpot, npcsHere, roamGroups, spotKey, type RoamGroup } from '@/game/world';
 import { Picture } from '../components/Picture';
 import { useI18n } from '../i18n';
@@ -23,6 +24,8 @@ export function SceneView({ session }: { session: Session }) {
   const scene = session.sceneId === null ? null : getScene(session.sceneId);
   const spot = scene ? null : currentSpot(session);
   const npcs = scene || spot ? [] : npcsHere(session).map((id) => NPCS[id]);
+  // по имени — только знакомые: кузнеца до разговора с ним не назвать
+  const known = scene || spot ? [] : peopleAt(session.locationId, session).map((id) => NPCS[id]);
   const image = resolveImage(scene?.image ?? spot?.image ?? place.image, ctx);
   const actor = scene ? scene.actor : npcs[0]?.portrait;
   const title = name(scene?.title ?? spot?.name ?? place.name);
@@ -57,10 +60,10 @@ export function SceneView({ session }: { session: Session }) {
         )}
         <h1>{title}</h1>
         <p class="scene-text">{text}</p>
-        {npcs.length > 0 && (
+        {known.length > 0 && (
           <p class="scene-npcs">
             {t.scene.here}
-            {npcs.map((npc) => name(npc.name)).join(', ')}
+            {known.map((npc) => name(npc.name)).join(', ')}
           </p>
         )}
       </div>

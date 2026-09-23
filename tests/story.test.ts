@@ -19,13 +19,20 @@ import type {
   Image,
   JournalEntry,
   LocationId,
+  Npc,
   SceneId,
   StoryEvent,
 } from '@/game/types';
 
+/**
+ * Картинки, для которых уже есть промпт в docs/image-prompts.md, но ещё нет файла: игра их прячет
+ * (компонент Picture). Когда файл появится в public/img, строку отсюда надо убрать.
+ */
+const AWAITING_ART = new Set<string>([]);
+
 const scenes = Object.entries(SCENES);
 const locations = Object.values(LOCATIONS);
-const npcs = Object.values(NPCS);
+const npcs: Npc[] = Object.values(NPCS);
 const events: StoryEvent[] = Object.values(EVENTS);
 const journal: JournalEntry[] = Object.values(JOURNAL);
 /** Все условия журнала: появление записей, отдельные записи и выполнение целей. */
@@ -118,8 +125,12 @@ describe('сюжет', () => {
     for (const npc of npcs) images.add(npc.portrait);
     for (const { choice } of choices) if ('fight' in choice) images.add(choice.fight.portrait);
     for (const enemy of Object.values(ENEMIES)) images.add(enemy.portrait);
-    const missing = [...images].filter((path) => !existsSync(resolve('public', path)));
+    const missing = [...images].filter(
+      (path) => !existsSync(resolve('public', path)) && !AWAITING_ART.has(path),
+    );
     expect(missing).toEqual([]);
+    // картинка уже нарисована — её пора убрать из списка ожидающих
+    expect([...AWAITING_ART].filter((path) => existsSync(resolve('public', path)))).toEqual([]);
   });
 
   it('каждое решение, от которого что-то зависит, где-то принимается', () => {
@@ -136,7 +147,15 @@ describe('сюжет', () => {
       ...choices.flatMap(({ choice }) => [choice.if, choice.ifNot]),
       ...locations.flatMap((place) => place.exits.map((exit) => exit.if)),
       ...events.flatMap((event) => [event.if, event.ifNot]),
-      ...journalConditions.flatMap((condition) => [condition.if, condition.ifNot]),
+      ...journalConditions.flatMap((condition) => [
+        condition.if,
+        condition.ifNot,
+        ...(condition.ifAny ?? []),
+      ]),
+      ...npcs.flatMap((npc) => [npc.known.if, npc.known.ifNot, ...(npc.known.ifAny ?? [])]),
+      ...locations.flatMap((place) =>
+        Object.values(place.spots ?? {}).flatMap((spot) => [spot.if, spot.ifNot]),
+      ),
     ].filter((f): f is FlagId => f !== undefined);
     expect(required.filter((flag) => !setFlags.has(flag))).toEqual([]);
   });

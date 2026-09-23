@@ -40,6 +40,7 @@ export function meetsCondition(condition: Condition, session: Session): boolean 
   return (
     (!condition.if || session.flags[condition.if] === true) &&
     (!condition.ifNot || session.flags[condition.ifNot] !== true) &&
+    (!condition.ifAny || condition.ifAny.some((flag) => session.flags[flag] === true)) &&
     (!condition.event || session.events.includes(condition.event))
   );
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as engine from '@/game/engine';
 import { atTime } from '@/game/time';
-import type { Choice, GameState } from '@/game/types';
+import type { Choice, GameState, LocationId } from '@/game/types';
 import { fortressMap, route } from '@/game/map';
 import { npcsHere, roamGroups } from '@/game/world';
 import { constant, sessionOf, withSession, noticeTexts, ru } from './helpers';
@@ -43,7 +43,7 @@ function play(state: GameState, ...fragments: string[]): GameState {
 }
 
 /** Герой свободно ходит: в локации в заданное время. */
-function roaming(locationId: 'courtyard' | 'hall' | 'cell', day: number, hour: number, minute = 0) {
+function roaming(locationId: LocationId, day: number, hour: number, minute = 0) {
   return withSession(newGame(), { sceneId: null, locationId, time: atTime(day, hour, minute) });
 }
 
@@ -68,10 +68,13 @@ describe('локации', () => {
     expect(choiceTexts(state)).toEqual([
       'Поговорить с Торвином',
       'Плац',
-      'Жаровня у ворот',
       'Лестница на стену',
       'Пойти: Трапезная (5 мин)',
+      'Пойти: Двор у ворот (3 мин)',
+      'Пойти: Казарма (3 мин)',
+      'Пойти: Кузница (4 мин)',
       'Пойти: Келья (10 мин)',
+      'Пойти: Стена (5 мин)',
       'Подождать час',
     ]);
     expect(roamGroups(sessionOf(state)).map((group) => group.kind)).toEqual([
@@ -216,14 +219,14 @@ describe('распорядок дня', () => {
       'Только с 8:00 до 17:00',
     );
     expect(engine.choose(evening, pick(evening, 'Тренироваться'), constant(0))).toBe(evening);
-    expect(pick(play(roaming('courtyard', 1, 20), 'Жаровня'), 'жаровни').disabled).toBeUndefined();
+    expect(pick(play(roaming('gateyard', 1, 20), 'Жаровня'), 'жаровни').disabled).toBeUndefined();
     expect(pick(play(roaming('hall', 1, 12), 'Кухня'), 'на кухне').disabled).toBeUndefined();
   });
 
   it('кухня даёт хлеб, жаровня лечит', () => {
     const kitchen = play(roaming('hall', 1, 12), 'Кухня', 'на кухне');
     expect(sessionOf(kitchen).hero.inventory).toEqual(['bread']);
-    const cold = withSession(roaming('courtyard', 1, 20), {
+    const cold = withSession(roaming('gateyard', 1, 20), {
       hero: { ...sessionOf(newGame()).hero, hp: 5 },
     });
     expect(sessionOf(play(cold, 'Жаровня', 'жаровни')).hero.hp).toBe(7);
@@ -266,7 +269,15 @@ describe('карта крепости', () => {
   it('известные места, где герой, сколько идти и почему закрыто', () => {
     const state = withSession(roaming('hall', 1, 12), { flags: { joined: true } });
     const map = fortressMap(sessionOf(state));
-    expect(map.places.map((place) => place.id)).toEqual(['courtyard', 'hall', 'cell']);
+    expect(map.places.map((place) => place.id)).toEqual([
+      'courtyard',
+      'gateyard',
+      'hall',
+      'barracks',
+      'smithy',
+      'cell',
+      'wall',
+    ]);
     expect(map.places.find((place) => place.id === 'hall')).toMatchObject({
       here: true,
       minutes: null,
@@ -279,9 +290,13 @@ describe('карта крепости', () => {
       minutes: null,
       locked: 'Торвин обещал показать, где спать, после ужина',
     });
-    expect(map.roads).toEqual([
-      { from: 'courtyard', to: 'hall', open: true },
+    expect(map.places.find((place) => place.id === 'wall')).toMatchObject({
+      minutes: null,
+      locked: 'Наверх пускают только дозорных',
+    });
+    expect(map.roads.filter((road) => !road.open)).toEqual([
       { from: 'courtyard', to: 'cell', open: false },
+      { from: 'courtyard', to: 'wall', open: false },
     ]);
   });
 

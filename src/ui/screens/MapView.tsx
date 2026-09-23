@@ -44,7 +44,7 @@ export function MapView({ session, onClose }: Props) {
           </button>
         </header>
         <p class="journal__empty">{roaming ? t.map.legend : t.map.busy}</p>
-        <svg class="fortress-map" viewBox="0 0 100 70" role="group" aria-label={t.map.title}>
+        <svg class="fortress-map" viewBox="0 0 100 82" role="group" aria-label={t.map.title}>
           {roads.map((road) => {
             const from = at(road.from);
             const to = at(road.to);

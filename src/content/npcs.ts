@@ -20,6 +20,7 @@ export const NPCS = {
     schedule: [
       { location: 'courtyard', hours: [8, 17] },
       { location: 'hall', hours: [18, 21] },
+      { location: 'barracks', hours: [21, 23] },
     ],
     talk: { text: 'Поговорить с Васей', next: 'vasya_talk' },
     known: { if: 'joined' },
@@ -29,6 +30,15 @@ export const NPCS = {
         ? 'Встретил меня у ворот с кулаками, но я его отговорил.'
         : 'Встретил меня у ворот кулаками.') +
       (flag('vasyaFriend') ? ' За ужином мы помирились.' : ''),
+  },
+  smith: {
+    name: 'Хальвар',
+    portrait: 'img/portrait-smith.jpg',
+    schedule: [{ location: 'smithy', hours: [7, 22] }],
+    talk: { text: 'Поговорить с кузнецом', next: 'smith_talk' },
+    known: { if: 'metSmith' },
+    about:
+      'Кузнец. Руки в старых ожогах, борода опалена. Говорит мало, но замечает всё — и, кажется, знает больше, чем говорит.',
   },
 } as const satisfies Record<string, Npc>;
 
