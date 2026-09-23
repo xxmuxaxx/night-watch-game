@@ -24,6 +24,24 @@ import type {
 } from './types';
 
 export const SAVE_KEY = 'nightwatch-save';
+
+/** Ячейки: автосохранение и три ручные. */
+export type SaveSlot = 'auto' | 1 | 2 | 3;
+export const SAVE_SLOTS: readonly SaveSlot[] = ['auto', 1, 2, 3];
+export const MANUAL_SLOTS: readonly SaveSlot[] = [1, 2, 3];
+
+/** Ключ ячейки в хранилище: автосохранение — под старым ключом, ручные — с номером. */
+export function slotKey(slot: SaveSlot): string {
+  return slot === 'auto' ? SAVE_KEY : SAVE_KEY + '-' + slot;
+}
+
+/** Сохранение в ячейке: партия и когда она записана (для списка сохранений). */
+export interface SavedGame {
+  slot: SaveSlot;
+  session: Session;
+  /** Время записи, мс с 1970 года; у старых сохранений его нет. */
+  savedAt: number | null;
+}
 export const SAVE_VERSION = 10;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
@@ -41,6 +59,8 @@ interface SaveData {
   relations: Relations;
   oneLife: boolean;
   daily: Record<string, number>;
+  /** Когда записано; необязательное поле, читается и без него. */
+  savedAt?: number;
 }
 
 /** Герой до версии 10: без защиты. */
@@ -263,30 +283,48 @@ function isValid(save: SaveData): boolean {
   );
 }
 
-export function readSave(storage: SaveStorage): Session | null {
+export function readSave(storage: SaveStorage, slot: SaveSlot = 'auto'): Session | null {
+  return readSavedGame(storage, slot)?.session ?? null;
+}
+
+/** Все ячейки по порядку: автосохранение, затем ручные; пустые и испорченные — null. */
+export function listSaves(storage: SaveStorage): (SavedGame | null)[] {
+  return SAVE_SLOTS.map((slot) => readSavedGame(storage, slot));
+}
+
+export function readSavedGame(storage: SaveStorage, slot: SaveSlot): SavedGame | null {
   try {
-    const save = migrate(JSON.parse(storage.getItem(SAVE_KEY) ?? 'null'));
+    const save = migrate(JSON.parse(storage.getItem(slotKey(slot)) ?? 'null'));
     if (!save || !isValid(save)) return null;
-    return {
-      hero: save.hero,
-      sceneId: save.sceneId,
-      locationId: save.locationId,
-      time: save.time,
-      events: save.events,
-      flags: save.flags,
-      relations: save.relations,
-      oneLife: save.oneLife,
-      daily: save.daily,
-      fight: null,
-      notices: [],
-    };
+    return { slot, session: toSession(save), savedAt: save.savedAt ?? null };
   } catch {
     return null;
   }
 }
 
-/** Сохранить партию. Сцены смерти не сохраняются. */
-export function writeSave(storage: SaveStorage, session: Session): void {
+function toSession(save: SaveData): Session {
+  return {
+    hero: save.hero,
+    sceneId: save.sceneId,
+    locationId: save.locationId,
+    time: save.time,
+    events: save.events,
+    flags: save.flags,
+    relations: save.relations,
+    oneLife: save.oneLife,
+    daily: save.daily,
+    fight: null,
+    notices: [],
+  };
+}
+
+/** Сохранить партию в ячейку (по умолчанию — автосохранение). Сцены смерти не сохраняются. */
+export function writeSave(
+  storage: SaveStorage,
+  session: Session,
+  slot: SaveSlot = 'auto',
+  now = Date.now(),
+): void {
   if (session.sceneId !== null && isDeathScene(getScene(session.sceneId))) return;
   const save: SaveData = {
     version: SAVE_VERSION,
@@ -299,17 +337,18 @@ export function writeSave(storage: SaveStorage, session: Session): void {
     relations: session.relations,
     oneLife: session.oneLife,
     daily: session.daily,
+    savedAt: now,
   };
   try {
-    storage.setItem(SAVE_KEY, JSON.stringify(save));
+    storage.setItem(slotKey(slot), JSON.stringify(save));
   } catch {
     // хранилище недоступно (приватный режим и т.п.) — играем без сохранения
   }
 }
 
-export function deleteSave(storage: SaveStorage): void {
+export function deleteSave(storage: SaveStorage, slot: SaveSlot = 'auto'): void {
   try {
-    storage.removeItem(SAVE_KEY);
+    storage.removeItem(slotKey(slot));
   } catch {
     // см. writeSave
   }

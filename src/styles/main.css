@@ -905,6 +905,61 @@ html[data-font='large'] {
   margin-top: 12px;
 }
 
+/*  ЯЧЕЙКИ СОХРАНЕНИЯ  */
+.save-slots {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.save-slot {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  font: 0.95rem var(--font-text);
+  color: var(--text);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.save-slot:hover:not(:disabled),
+.save-slot:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.save-slot:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.save-slot__title {
+  font: 700 1.15rem var(--font-title);
+  color: var(--accent-2);
+}
+.save-slot__title small {
+  display: block;
+  font: italic 0.8rem var(--font-text);
+  color: var(--muted);
+}
+.save-slot__info small,
+.save-slot__empty {
+  color: var(--muted);
+}
+.save-slots__done {
+  margin: 10px 0 0;
+  color: #8fbf6a;
+}
+@media (max-width: 760px) {
+  .save-slot {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
 /*  ПОДСКАЗКА ДЛЯ НОВИЧКА: внизу экрана, поверх сцены и боя  */
 .hint {
   position: fixed;

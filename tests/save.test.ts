@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deleteSave, readSave, SAVE_KEY, writeSave } from '@/game/save';
+import { deleteSave, listSaves, readSave, SAVE_KEY, slotKey, writeSave } from '@/game/save';
 import type { Session } from '@/game/types';
 import { atTime } from '@/game/time';
 import { createGameStore } from '@/ui/store';
@@ -194,6 +194,51 @@ describe('миграция старых сохранений', () => {
     const storage = memoryStorage();
     storage.setItem(SAVE_KEY, JSON.stringify({ ...v2, stage: 'st3', flags: undefined }));
     expect(readSave(storage)?.flags).toEqual({});
+  });
+});
+
+describe('ячейки сохранения', () => {
+  it('автосохранение и три ручные ячейки, со временем записи', () => {
+    const storage = memoryStorage();
+    writeSave(storage, session(), 'auto', 1000);
+    writeSave(storage, session({ sceneId: 'st6' }), 2, 2000);
+    expect(storage.data.has(SAVE_KEY)).toBe(true);
+    expect(storage.data.has(slotKey(2))).toBe(true);
+    const saves = listSaves(storage);
+    expect(saves.map((save) => save?.slot ?? null)).toEqual(['auto', null, 2, null]);
+    expect(saves[2]).toMatchObject({ savedAt: 2000, session: { sceneId: 'st6' } });
+    expect(readSave(storage, 2)?.sceneId).toBe('st6');
+  });
+
+  it('старое сохранение без времени записи читается', () => {
+    const storage = memoryStorage();
+    writeSave(storage, session());
+    const raw = JSON.parse(storage.getItem(SAVE_KEY) ?? '{}') as Record<string, unknown>;
+    delete raw['savedAt'];
+    storage.setItem(SAVE_KEY, JSON.stringify(raw));
+    expect(listSaves(storage)[0]?.savedAt).toBeNull();
+  });
+
+  it('интерфейс: сохранить в ячейку и загрузить из неё; в режиме «Одна жизнь» — нельзя', () => {
+    const storage = memoryStorage();
+    const store = createGameStore(storage, () => 0.5);
+    store.openHeroCreation();
+    store.startNewGame({ name: 'Ивар', classId: 'warrior', portrait: 'img/hero-1.jpg' });
+    expect(store.canSaveToSlot()).toBe(true);
+    store.saveToSlot(1);
+    store.choose({ text: 'Подойти к воротам', next: 'st1' });
+    store.loadGame(1);
+    expect(store.getState().session?.sceneId).toBe('st0');
+
+    store.startNewGame({
+      name: 'Ивар',
+      classId: 'warrior',
+      portrait: 'img/hero-1.jpg',
+      oneLife: true,
+    });
+    expect(store.canSaveToSlot()).toBe(false);
+    store.saveToSlot(3);
+    expect(readSave(storage, 3)).toBeNull();
   });
 });
 

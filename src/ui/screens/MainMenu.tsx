@@ -1,6 +1,11 @@
 import { useStore } from '../store';
 
-export function MainMenu({ onOpenSettings }: { onOpenSettings: () => void }) {
+interface Props {
+  onOpenSettings: () => void;
+  onOpenLoad: () => void;
+}
+
+export function MainMenu({ onOpenSettings, onOpenLoad }: Props) {
   const store = useStore();
   return (
     <div class="menu main-menu">
@@ -8,11 +13,19 @@ export function MainMenu({ onOpenSettings }: { onOpenSettings: () => void }) {
         <h1 class="ng-title">Night Watch</h1>
         <p class="ng-subtitle">Северный рубеж</p>
         <div class="buttons-wrapper">
-          <button class="button" onClick={() => store.openHeroCreation()}>
+          {store.listSaves()[0] && (
+            <button class="button" onClick={() => store.loadGame()}>
+              Продолжить
+            </button>
+          )}
+          <button
+            class={store.listSaves()[0] ? 'button button--secondary' : 'button'}
+            onClick={() => store.openHeroCreation()}
+          >
             Начать новую игру
           </button>
           {store.hasSave() && (
-            <button class="button button--secondary" onClick={() => store.loadGame()}>
+            <button class="button button--secondary" onClick={onOpenLoad}>
               Загрузить игру
             </button>
           )}

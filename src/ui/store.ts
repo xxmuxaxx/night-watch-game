@@ -6,16 +6,29 @@ import { createContext } from 'preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
 import * as engine from '@/game/engine';
 import type { NewHero } from '@/game/hero';
-import { deleteSave, readSave, writeSave, type SaveStorage } from '@/game/save';
+import {
+  deleteSave,
+  listSaves,
+  readSave,
+  writeSave,
+  type SavedGame,
+  type SaveSlot,
+  type SaveStorage,
+} from '@/game/save';
 import type { Choice, FightAction, GameState, ItemId, LevelReward, Rng } from '@/game/types';
 
 export interface GameStore {
   getState(): GameState;
   subscribe(listener: () => void): () => void;
   hasSave(): boolean;
+  /** Все ячейки: автосохранение и ручные; пустые — null. */
+  listSaves(): (SavedGame | null)[];
+  /** Можно ли сейчас сохранить в ручную ячейку (не в бою и не в режиме «Одна жизнь»). */
+  canSaveToSlot(): boolean;
+  saveToSlot(slot: SaveSlot): void;
   openHeroCreation(): void;
   startNewGame(hero: NewHero): void;
-  loadGame(): void;
+  loadGame(slot?: SaveSlot): void;
   choose(choice: Choice): void;
   fightAction(action: FightAction): void;
   closeFight(): void;
@@ -53,17 +66,35 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
     listeners.forEach((listener) => listener());
   }
 
+  function canSaveToSlot(): boolean {
+    const session = state.session;
+    return (
+      state.screen === 'story' &&
+      session !== null &&
+      !session.fight &&
+      !session.oneLife &&
+      !(session.sceneId !== null && engine.isDeathScene(engine.getScene(session.sceneId)))
+    );
+  }
+
   return {
     getState: () => state,
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    hasSave: () => readSave(storage) !== null,
+    hasSave: () => listSaves(storage).some((save) => save !== null),
+    listSaves: () => listSaves(storage),
+    canSaveToSlot,
+    saveToSlot(slot) {
+      if (!canSaveToSlot() || !state.session) return;
+      writeSave(storage, state.session, slot);
+      listeners.forEach((listener) => listener());
+    },
     openHeroCreation: () => update(engine.openHeroCreation(state)),
     startNewGame: (hero) => update(engine.startNewGame(state, hero)),
-    loadGame() {
-      const session = readSave(storage);
+    loadGame(slot = 'auto') {
+      const session = readSave(storage, slot);
       if (session) update(engine.resumeSession(state, session));
     },
     choose: (choice) => update(engine.choose(state, choice, rng)),

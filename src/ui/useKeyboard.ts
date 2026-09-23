@@ -15,7 +15,7 @@ const FIGHT_KEYS: Record<string, 'attack' | 'defend' | 'special' | 'item'> = {
   '4': 'item',
 };
 
-export type Panel = 'journal' | 'settings';
+export type Panel = 'journal' | 'settings' | 'load';
 
 /** Окна поверх игры: какое открыто и как открыть или закрыть. */
 export interface PanelControl {

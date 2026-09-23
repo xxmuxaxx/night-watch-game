@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import { SaveSlots } from '../components/SaveSlots';
 import { useSettings, type FontSize } from '../settings';
+import { useStore } from '../store';
 
 const FONT_SIZES: { id: FontSize; label: string }[] = [
   { id: 'small', label: 'Мелкий' },
@@ -16,6 +18,8 @@ interface Props {
 /** Настройки поверх игры или меню. Закрываются кнопкой или Esc. */
 export function SettingsView({ onClose, onExit }: Props) {
   const [settings, update] = useSettings();
+  const store = useStore();
+  const [saved, setSaved] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => closeRef.current?.focus(), []);
 
@@ -67,7 +71,27 @@ export function SettingsView({ onClose, onExit }: Props) {
         {onExit && (
           <section>
             <h2>Партия</h2>
-            <p class="journal__empty">Игра сохраняется сама после каждого выбора.</p>
+            <p class="journal__empty">
+              Игра сохраняется сама после каждого выбора. В ячейку можно сохраниться, чтобы потом
+              вернуться к этому месту.
+            </p>
+            {store.canSaveToSlot() ? (
+              <SaveSlots
+                saves={store.listSaves()}
+                mode="save"
+                onPick={(slot) => {
+                  store.saveToSlot(slot);
+                  setSaved('Сохранено в ячейку ' + String(slot));
+                }}
+              />
+            ) : (
+              <p class="journal__empty">
+                {store.getState().session?.oneLife
+                  ? 'В режиме «Одна жизнь» сохраняться в ячейки нельзя.'
+                  : 'Сейчас сохраниться в ячейку нельзя: сначала закончите бой.'}
+              </p>
+            )}
+            {saved && <p class="save-slots__done">{saved}</p>}
             <button class="button button--secondary settings__button" onClick={onExit}>
               Выйти в главное меню
             </button>

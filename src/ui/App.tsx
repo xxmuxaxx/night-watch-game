@@ -11,6 +11,7 @@ import { Journal } from './screens/Journal';
 import { LevelUp } from './screens/LevelUp';
 import { MainMenu } from './screens/MainMenu';
 import { SceneView } from './screens/SceneView';
+import { LoadView } from './screens/LoadView';
 import { SettingsView } from './screens/SettingsView';
 import { currentHint } from './hints';
 import { useSettings } from './settings';
@@ -61,7 +62,9 @@ export function App() {
           />
         </>
       )}
-      {state.screen === 'menu' && <MainMenu onOpenSettings={() => setPanel('settings')} />}
+      {state.screen === 'menu' && (
+        <MainMenu onOpenSettings={() => setPanel('settings')} onOpenLoad={() => setPanel('load')} />
+      )}
       {state.screen === 'createHero' && <CreateHero />}
       {inStory && session.fight && <FightView session={{ ...session, fight: session.fight }} />}
       {inStory && isChoosingLevelReward(session) && <LevelUp hero={session.hero} />}
@@ -72,6 +75,7 @@ export function App() {
           onClose={() => setPanel(null)}
         />
       )}
+      {panel === 'load' && <LoadView onClose={() => setPanel(null)} />}
       {panel === 'settings' && (
         <SettingsView
           onClose={() => setPanel(null)}
