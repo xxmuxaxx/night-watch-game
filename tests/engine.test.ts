@@ -109,6 +109,26 @@ describe('choose', () => {
     expect(play(success, 'Направиться').session?.notices).toEqual([]);
   });
 
+  it('чутьё: Васю можно отговорить от драки — он запомнит это, Торвин тоже заметит', () => {
+    const state = play(newGame('rogue'), 'Подойти', 'Ждать');
+    const talked = engine.choose(state, pick(state, 'Заговорить'), constant(0.1));
+    expect(talked.session).toMatchObject({
+      sceneId: 'st3_talk',
+      flags: { talkedDownVasya: true },
+      relations: { vasya: 1 },
+      hero: { xp: 10 },
+    });
+    const joined = play(talked, 'Направиться', 'Меня зовут');
+    const text = engine.resolveText(
+      engine.getScene('st5').text,
+      engine.textContext(sessionOf(joined)),
+    );
+    expect(text).toContain('уболтал нашего задиру');
+
+    const failed = engine.choose(state, pick(state, 'Заговорить'), constant(0.9));
+    expect(failed.session?.sceneId).toBe('st2_2');
+  });
+
   it('проверка: провал ведёт в fail без check.set и без опыта', () => {
     const state = play(newGame(), 'Подойти', 'Ждать');
     const fail = engine.choose(state, pick(state, 'Поднырнуть'), constant(0.9));
