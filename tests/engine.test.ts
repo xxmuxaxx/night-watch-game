@@ -143,6 +143,7 @@ describe('choose', () => {
     const inCell = withSession(newGame(), {
       sceneId: null,
       locationId: 'cell',
+      spotId: 'chest',
       flags: { knowsCell: true },
     });
     const opened = engine.choose(inCell, pick(inCell, 'сундук'), constant(0.1));
@@ -153,7 +154,9 @@ describe('choose', () => {
     expect(failed.session).toMatchObject({ sceneId: 'st7_3', flags: { triedChest: true } });
     expect(failed.session?.hero.weaponId).toBe('fists');
     failed = play(failed, 'Отойти');
-    expect(failed.session?.sceneId).toBeNull();
+    expect(failed.session).toMatchObject({ sceneId: null, spotId: null });
+    // у сундука осталось только «Отойти»
+    failed = play(failed, 'Сундук');
     expect(() => pick(failed, 'сундук')).toThrow();
   });
 });
@@ -163,6 +166,7 @@ describe('опыт и уровни', () => {
     let state = withSession(newGame(), {
       sceneId: null,
       locationId: 'cell',
+      spotId: 'chest',
       hero: { ...sessionOf(newGame()).hero, xp: 15, hp: 4 },
     });
     state = engine.choose(state, pick(state, 'сундук'), constant(0.1)); // +5 → 20 опыта

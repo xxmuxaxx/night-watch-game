@@ -1,5 +1,7 @@
 // Локации крепости. Выходы с `if` открываются по решениям (мягкое открытие мест);
 // пока решение не принято, выход виден закрытым с подсказкой `locked`.
+// У места есть точки интереса (spots): к ним подходят, и там свои действия. Место с `map` видно
+// на карте крепости (src/game/map.ts); место с `known` появляется, только когда герой о нём узнал.
 import type { Choice, Location } from '@/game/types';
 import { ROUTINE } from './chapters/routine';
 
@@ -22,7 +24,7 @@ export const OPEN_CHEST: Choice = {
 };
 
 export const LOCATIONS: Record<LocationId, Location> = {
-  // Пролог: перед воротами крепости. Свободно сюда не попасть, выходов нет.
+  // Пролог: перед воротами крепости. Свободно сюда не попасть, выходов нет, на карте его нет.
   gate: {
     name: 'Перед воротами',
     image: 'img/scene-outside-gate.jpg',
@@ -49,7 +51,28 @@ export const LOCATIONS: Record<LocationId, Location> = {
         locked: 'Торвин обещал показать, где спать, после ужина',
       },
     ],
-    actions: ROUTINE.courtyard,
+    spots: {
+      drill: {
+        name: 'Плац',
+        text: ({ time }) =>
+          'Утоптанная площадка у казармы. На стойке — щиты и деревянные мечи, иссечённые до щепы.' +
+          (time.hour >= 8 && time.hour < 17
+            ? ' Новобранцы бьются парами, старшие покрикивают.'
+            : ' Сейчас здесь пусто, только ветер гоняет снег.'),
+        actions: [ROUTINE.training],
+      },
+      brazier: {
+        name: 'Жаровня у ворот',
+        text: 'Железная жаровня под навесом у ворот. Вечерами возле неё греются часовые.',
+        actions: [ROUTINE.brazier],
+      },
+      stairs: {
+        name: 'Лестница на стену',
+        text: 'Крутая каменная лестница ведёт на стену. Внизу переминается с ноги на ногу часовой и косится на вас.',
+        actions: [{ text: 'Подняться на стену', disabled: 'Наверх пускают только дозорных' }],
+      },
+    },
+    map: { x: 50, y: 42 },
   },
   hall: {
     name: 'Трапезная',
@@ -61,7 +84,19 @@ export const LOCATIONS: Record<LocationId, Location> = {
           ? 'Зал полон: стучат ложки, у очага спорят о чём-то старшие.'
           : 'Длинные столы пусты. На кухне гремит котлами повар, в очаге тлеют угли.',
     exits: [{ to: 'courtyard', minutes: 5 }],
-    actions: ROUTINE.hall,
+    spots: {
+      kitchen: {
+        name: 'Кухня',
+        text: 'За перегородкой — котлы, мешки с репой и красный от жара повар.',
+        actions: [ROUTINE.kitchen],
+      },
+      hearth: {
+        name: 'Очаг',
+        text: 'Большой очаг в дальнем конце зала. Под решёткой — толстый слой золы.',
+        actions: [ROUTINE.ash],
+      },
+    },
+    map: { x: 20, y: 28 },
   },
   cell: {
     name: 'Келья',
@@ -78,18 +113,34 @@ export const LOCATIONS: Record<LocationId, Location> = {
             : ''),
     exits: [{ to: 'courtyard', minutes: 10 }],
     bed: true,
-    actions: [
-      { text: 'Выглянуть в окно', hours: [6, 21], next: 'window_day' },
-      {
-        text: 'Выглянуть в окно',
-        hours: [21, 6],
-        ifNot: 'sawLights',
-        set: { sawLights: true },
-        next: 'st7_1',
+    spots: {
+      window: {
+        name: 'Окно',
+        text: 'Узкое окно, затянутое мутной слюдой. За ним — стена и лес до самого перевала.',
+        actions: [
+          { text: 'Выглянуть в окно', hours: [6, 21], next: 'window_day' },
+          {
+            text: 'Выглянуть в окно',
+            hours: [21, 6],
+            ifNot: 'sawLights',
+            set: { sawLights: true },
+            next: 'st7_1',
+          },
+          { text: 'Выглянуть в окно', hours: [21, 6], if: 'sawLights', next: 'window_night' },
+        ],
       },
-      { text: 'Выглянуть в окно', hours: [21, 6], if: 'sawLights', next: 'window_night' },
-      OPEN_CHEST,
-    ],
+      chest: {
+        name: 'Сундук',
+        text: ({ flag }) =>
+          flag('foundKnife')
+            ? 'Сундук открыт. Кроме истлевшего тряпья, в нём ничего не осталось.'
+            : flag('triedChest')
+              ? 'Ржавый замок держит намертво. Без инструмента его не поддеть.'
+              : 'Старый сундук, окованный железом. Замок покрыт рыжей ржавчиной.',
+        actions: [OPEN_CHEST],
+      },
+    },
+    map: { x: 80, y: 20 },
   },
 };
 

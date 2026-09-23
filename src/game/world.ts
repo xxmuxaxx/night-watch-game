@@ -1,13 +1,24 @@
-// Свободное перемещение: локации, персонажи по расписанию, течение времени и сюжетные события.
-// Когда session.sceneId === null, герой не в сцене, а в локации; варианты строятся здесь.
+// Свободное перемещение: локации, точки интереса, персонажи по расписанию, течение времени
+// и сюжетные события. Когда session.sceneId === null, герой не в сцене, а в локации (или у одной
+// из её точек интереса, session.spotId); варианты строятся здесь, по группам.
 import { EVENTS, type EventId } from '@/content/events';
 import { location } from '@/content/locations';
 import { NPCS, type NpcId } from '@/content/npcs';
-import { getScene, isAvailable, textContext, withDaily } from './context';
+import { getScene, isAvailable, textContext, withLimits } from './context';
 import { heal } from './hero';
+import { isKnown, isOpen, route } from './map';
 import { changeRelations } from './relations';
 import { inHours, nextMorning, toGameTime } from './time';
-import type { Choice, LocationId, Notice, SceneId, Session, StoryEvent } from './types';
+import type {
+  Choice,
+  LocationId,
+  Notice,
+  SceneId,
+  Session,
+  Spot,
+  SpotId,
+  StoryEvent,
+} from './types';
 
 /** Шаг, с которым идёт время при ожидании и сне: события проверяются после каждого шага. */
 const TIME_STEP = 15;
@@ -25,28 +36,99 @@ export function npcsHere(session: Session): NpcId[] {
   );
 }
 
-/** Варианты в локации: разговоры, действия на месте, выходы, ожидание и сон. */
-export function roamChoices(session: Session): Choice[] {
+/** Ключ точки интереса в session.visited: «место.точка». */
+export function spotKey(locationId: LocationId, spotId: SpotId): string {
+  return locationId + '.' + spotId;
+}
+
+/** Точки интереса, видные сейчас в месте героя (по решениям и часам), по порядку. */
+export function spotsHere(session: Session): [SpotId, Spot][] {
+  const ctx = textContext(session);
+  return Object.entries(location(session.locationId).spots ?? {}).filter(
+    ([, spot]) =>
+      (!spot.if || ctx.flag(spot.if)) &&
+      (!spot.ifNot || !ctx.flag(spot.ifNot)) &&
+      (!spot.hours || inHours(ctx.time, spot.hours)),
+  );
+}
+
+/** Точка, у которой стоит герой, если она сейчас видна. */
+export function currentSpot(session: Session): Spot | null {
+  if (session.spotId === null) return null;
+  return spotsHere(session).find(([id]) => id === session.spotId)?.[1] ?? null;
+}
+
+/** Группа вариантов при свободном перемещении; порядок групп — порядок клавиш 1–9. */
+export interface RoamGroup {
+  /** people — разговоры, spots — точки интереса, paths — выходы, time — ожидание и сон, spot — действия у точки. */
+  kind: 'people' | 'spots' | 'paths' | 'time' | 'spot';
+  choices: Choice[];
+}
+
+/** Варианты в локации по группам; у точки интереса — её действия и «Отойти». */
+export function roamGroups(session: Session): RoamGroup[] {
   const place = location(session.locationId);
   const ctx = textContext(session);
+  const spot = currentSpot(session);
+  if (spot) {
+    const actions = spot.actions
+      .filter((choice) => isAvailable(choice, ctx))
+      .map((choice) => withLimits(choice, session));
+    return [{ kind: 'spot', choices: [...actions, { text: { id: 'back' }, back: true }] }];
+  }
   const talks = npcsHere(session)
     .map((id): Choice => NPCS[id].talk)
     .filter((choice) => isAvailable(choice, ctx));
-  const actions = (place.actions ?? [])
-    .filter((choice) => isAvailable(choice, ctx))
-    .map((choice) => withDaily(choice, session));
-  const exits = place.exits.map((exit): Choice => {
-    const open = !exit.if || ctx.flag(exit.if);
-    const choice: Choice = {
-      text: { id: 'move', to: exit.to, minutes: exit.minutes },
-      move: exit.to,
-      minutes: exit.minutes,
-    };
-    return open ? choice : { ...choice, disabled: exit.locked ?? { id: 'closed' } };
-  });
+  const spots = spotsHere(session).map(([id, found]): Choice => ({ text: found.name, look: id }));
+  const exits = place.exits
+    .filter((exit) => isKnown(exit.to, session))
+    .map((exit): Choice => {
+      const choice: Choice = {
+        text: { id: 'move', to: exit.to, minutes: exit.minutes },
+        move: exit.to,
+        minutes: exit.minutes,
+      };
+      return isOpen(exit, session)
+        ? choice
+        : { ...choice, disabled: exit.locked ?? { id: 'closed' } };
+    });
   const rest: Choice[] = [{ text: { id: 'wait' }, wait: 60 }];
   if (place.bed) rest.push({ text: { id: 'sleep' }, sleep: true });
-  return [...talks, ...actions, ...exits, ...rest];
+  const groups: RoamGroup[] = [
+    { kind: 'people', choices: talks },
+    { kind: 'spots', choices: spots },
+    { kind: 'paths', choices: exits },
+    { kind: 'time', choices: rest },
+  ];
+  return groups.filter((group) => group.choices.length > 0);
+}
+
+/** Варианты в локации подряд, в порядке групп. */
+export function roamChoices(session: Session): Choice[] {
+  return roamGroups(session).flatMap((group) => group.choices);
+}
+
+/** Отметить, что герой здесь побывал (место или «место.точка»). */
+function visit(session: Session, key: string): Session {
+  return session.visited.includes(key)
+    ? session
+    : { ...session, visited: [...session.visited, key] };
+}
+
+/** Подойти к точке интереса. */
+export function lookAt(session: Session, spotId: SpotId): Session {
+  if (!spotsHere(session).some(([id]) => id === spotId)) return session;
+  return visit({ ...session, spotId }, spotKey(session.locationId, spotId));
+}
+
+/** Отойти от точки интереса. */
+export function stepBack(session: Session): Session {
+  return { ...session, spotId: null };
+}
+
+/** Перейти в место: оно отмечается посещённым, точка интереса сбрасывается. */
+function arrive(session: Session, locationId: LocationId): Session {
+  return visit({ ...session, locationId, spotId: null }, locationId);
 }
 
 /** Событие, которое должно начаться сейчас (только при свободном перемещении). */
@@ -74,8 +156,8 @@ export function enterScene(session: Session, sceneId: SceneId): Session {
   const relations = changeRelations(session.relations, scene.relation);
   return {
     ...session,
+    ...arrive(session, scene.location ?? session.locationId),
     sceneId,
-    locationId: scene.location ?? session.locationId,
     flags: { ...session.flags, ...scene.set },
     relations: relations.relations,
     notices: [...session.notices, ...relations.notices],
@@ -92,12 +174,28 @@ export function startDueEvent(session: Session): Session {
 /** Закончить сцену и оказаться в локации; там сразу может начаться событие. */
 export function leaveScene(session: Session, to: true | LocationId): Session {
   const locationId = to === true ? session.locationId : to;
-  return startDueEvent({ ...session, sceneId: null, locationId });
+  return startDueEvent(arrive({ ...session, sceneId: null }, locationId));
 }
 
 /** Перейти в соседнюю локацию (время на дорогу уже учтено выбором). */
 export function moveTo(session: Session, to: LocationId): Session {
-  return startDueEvent({ ...session, locationId: to });
+  return startDueEvent(arrive(session, to));
+}
+
+/**
+ * Дойти до места по карте: по самому быстрому пути, место за местом. Время идёт по дороге,
+ * и событие в промежуточном месте прерывает путь. Недостижимое место — партия не меняется.
+ */
+export function travel(session: Session, to: LocationId): Session {
+  const way = route(session, to);
+  if (!way || session.sceneId !== null) return session;
+  let current = session;
+  for (const step of way.path) {
+    const exit = location(current.locationId).exits.find((found) => found.to === step);
+    current = moveTo({ ...current, time: current.time + (exit?.minutes ?? 0) }, step);
+    if (current.sceneId !== null) break;
+  }
+  return current;
 }
 
 /**

@@ -16,6 +16,8 @@ function session(overrides: Partial<Session> = {}): Session {
     relations: { torvin: -1 },
     oneLife: false,
     daily: {},
+    spotId: null,
+    visited: ['courtyard', 'courtyard.drill'],
     fight: null,
     notices: [],
     ...overrides,
@@ -27,6 +29,12 @@ describe('writeSave / readSave', () => {
     const storage = memoryStorage();
     writeSave(storage, session());
     expect(readSave(storage)).toEqual(session());
+  });
+
+  it('точка интереса не сохраняется: после загрузки герой в месте целиком', () => {
+    const storage = memoryStorage();
+    writeSave(storage, session({ sceneId: null, spotId: 'drill' }));
+    expect(readSave(storage)).toMatchObject({ sceneId: null, spotId: null });
   });
 
   it('не сохраняет сцену смерти', () => {
@@ -103,9 +111,23 @@ describe('миграция старых сохранений', () => {
       // v8: старые партии — в обычном режиме
       oneLife: false,
       daily: {},
+      // v11: из посещённых известно только текущее место
+      spotId: null,
+      visited: ['cell'],
       fight: null,
       notices: [],
     });
+  });
+
+  it('версия 10: посещённым считается только текущее место', () => {
+    const storage = memoryStorage();
+    const saved = { ...session(), version: 10 } as Record<string, unknown>;
+    delete saved['visited'];
+    delete saved['spotId'];
+    delete saved['fight'];
+    delete saved['notices'];
+    storage.setItem(SAVE_KEY, JSON.stringify(saved));
+    expect(readSave(storage)?.visited).toEqual(['courtyard']);
   });
 
   it('версия 3: герой получает пустую сумку, нулевой опыт и уровень 1', () => {

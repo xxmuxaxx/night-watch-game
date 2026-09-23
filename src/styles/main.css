@@ -189,6 +189,47 @@ img {
   border-radius: 10px;
 }
 
+/*  ГРУППЫ ВАРИАНТОВ ПРИ СВОБОДНОМ ПЕРЕМЕЩЕНИИ: люди, точки интереса, пути, время  */
+.select ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.choice-group + .choice-group {
+  margin-top: 14px;
+}
+.choice-group__title {
+  margin: 0 0 6px;
+  font: 700 0.95rem var(--font-title);
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+/*  пути и время — короткие варианты, в ряд  */
+.choice-group--paths ul,
+.choice-group--time ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.choice-group--paths li,
+.choice-group--time li {
+  flex: 1 1 220px;
+  margin-bottom: 0;
+}
+.choice-group--paths .choice,
+.choice-group--time .choice {
+  height: 100%;
+  font-size: 0.95rem;
+}
+.new-tag {
+  margin-left: 8px;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  color: var(--accent-2);
+  border: 1px solid rgba(217, 146, 59, 0.5);
+  border-radius: 8px;
+}
+
 /*  СООБЩЕНИЯ НАД ТЕКСТОМ СЦЕНЫ: итог проверки, добыча, опыт  */
 .notices {
   display: flex;
@@ -409,6 +450,86 @@ img {
 .journal-button:disabled {
   cursor: default;
   opacity: 0.6;
+}
+
+.map-button {
+  margin-top: 6px;
+  border-left-color: var(--line);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/*  КАРТА КРЕПОСТИ: места — кружки, дороги — линии, закрытые — пунктиром  */
+.fortress-map {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  margin-top: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.map-road {
+  stroke: var(--muted);
+  stroke-width: 0.6;
+}
+.map-road--locked {
+  stroke-dasharray: 1.5 1.5;
+  opacity: 0.6;
+}
+.map-place circle {
+  fill: var(--panel-2);
+  stroke: var(--muted);
+  stroke-width: 0.6;
+}
+.map-place text {
+  text-anchor: middle;
+  fill: var(--text);
+}
+.map-place__name {
+  font: 700 3.2px var(--font-title);
+}
+.map-place__status,
+.map-place__people {
+  font: 2.3px var(--font-text);
+}
+.map-place .map-place__status {
+  fill: var(--muted);
+}
+.map-place .map-place__people {
+  fill: var(--accent-2);
+  font-style: italic;
+}
+.map-place .map-place__new {
+  fill: var(--accent-2);
+  stroke: none;
+}
+.map-place--here circle:first-of-type {
+  fill: var(--accent);
+  stroke: var(--accent-2);
+}
+.map-place--locked {
+  opacity: 0.55;
+}
+.map-place--reachable {
+  cursor: pointer;
+}
+.map-place--reachable:hover circle:first-of-type,
+.map-place--reachable:focus-visible circle:first-of-type {
+  stroke: var(--accent-2);
+  stroke-width: 1;
+}
+.map-place:focus-visible {
+  outline: none;
+}
+/*  на узком экране схема мельче — подписи крупнее  */
+@media (max-width: 760px) {
+  .map-place__name {
+    font-size: 4.4px;
+  }
+  .map-place__status,
+  .map-place__people {
+    font-size: 3.2px;
+  }
 }
 
 /*  ОКНА ПОВЕРХ ИГРЫ: меню, создание героя, бой  */

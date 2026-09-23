@@ -10,13 +10,23 @@ export interface SceneText {
   choices: Text[];
 }
 
+/** Действие у точки интереса: текст или текст с причиной, почему оно закрыто. */
+export type ActionText = Text | { text: Text; disabled: string };
+
+export interface SpotText {
+  name: string;
+  text: Text;
+  /** Действия в том же порядке, что у точки (занятия распорядка переводятся в routine.ts). */
+  actions?: ActionText[];
+}
+
 export interface LocationText {
   name: string;
   text: Text;
   /** Подсказки закрытых выходов, по месту назначения. */
   locked?: Partial<Record<string, string>>;
-  /** Тексты действий по порядку (занятия распорядка переводятся в routine.ts). */
-  actions?: Text[];
+  /** Точки интереса по их ключам. */
+  spots?: Record<string, SpotText>;
 }
 
 export interface NpcText {

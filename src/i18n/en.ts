@@ -11,6 +11,8 @@ const PERIODS: Record<Period, string> = {
   night: 'night',
 };
 
+const clock = (hour: number) => hour + ':00';
+
 function turns(n: number): string {
   return n === 1 ? '1 turn' : n + ' turns';
 }
@@ -46,7 +48,10 @@ const messages: MessageFormats = {
     (m.healed > 0 ? ' (+' + m.healed + ' health)' : ''),
 
   move: (m, n) => 'Go to: ' + n.location(m.to) + ' (' + m.minutes + ' min)',
+  travel: (m, n) => 'Walk to: ' + n.location(m.to),
+  back: () => 'Step back',
   closed: () => 'Closed',
+  hours: (m) => 'Only from ' + clock(m.hours[0]) + ' to ' + clock(m.hours[1]),
   wait: () => 'Wait an hour',
   sleep: () => 'Sleep until morning',
   doneToday: () => 'You have already done this today',
@@ -139,6 +144,21 @@ export const en: Dict = {
 
   scene: {
     here: 'Here: ',
+    groups: { people: 'People', spots: 'Look around', paths: 'Paths', time: 'Time' },
+    new: 'new',
+  },
+
+  map: {
+    title: 'Map of the fortress',
+    open: 'Map',
+    openInfo: 'Map of the fortress (M)',
+    here: 'you are here',
+    minutes: (minutes) => minutes + ' min',
+    new: 'not visited yet',
+    locked: 'closed',
+    go: (place, minutes) => `Walk to: ${place} (${minutes} min)`,
+    busy: 'You cannot leave right now: finish the scene first.',
+    legend: 'Click a place to walk there. Something may happen on the way.',
   },
 
   fight: {
@@ -227,7 +247,7 @@ export const en: Dict = {
     journal:
       'Goals and leads go into the journal: press J or the “Journal” button on the hero panel.',
     roaming:
-      'You can now move freely around the fortress. Time passes: people keep their own routine, events happen at their hour, and some activities can be done once a day.',
+      'You can now move freely around the fortress. Walk up to whatever is under “Look around”, and find farther places on the map (M). Time passes: people keep their own routine, events happen at their hour, and some activities can be done once a day.',
     bag: 'Items in your bag can be used from the hero panel, and in a fight instead of a blow (key 4).',
     gotIt: 'Got it',
   },

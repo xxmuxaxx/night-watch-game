@@ -61,20 +61,32 @@ export function resolveImage(image: Image, ctx: TextContext): string {
   return typeof image === 'function' ? image(ctx) : image;
 }
 
-/** Показывать ли вариант: решения (if / ifNot), отношения (ifRelation) и часы (hours). */
+/**
+ * Показывать ли вариант: решения (if / ifNot), отношения (ifRelation) и часы (hours).
+ * Вариант с showClosed вне своих часов показывается — закрытым (см. withLimits).
+ */
 export function isAvailable(choice: Choice, ctx: TextContext): boolean {
   return (
     (!choice.if || ctx.flag(choice.if)) &&
     (!choice.ifNot || !ctx.flag(choice.ifNot)) &&
     (!choice.ifRelation || meetsRelation(choice.ifRelation, ctx)) &&
-    (!choice.hours || inHours(ctx.time, choice.hours))
+    (!choice.hours || choice.showClosed === true || inHours(ctx.time, choice.hours))
   );
 }
 
-/** Занятие раз в день, которое сегодня уже было, показывается закрытым. */
-export function withDaily(choice: Choice, session: Session): Choice {
-  if (!choice.daily || session.daily[choice.daily] !== toGameTime(session.time).day) return choice;
-  return { ...choice, disabled: { id: 'doneToday' } };
+/**
+ * Закрыть вариант, который сейчас нельзя выбрать, с причиной: занятие раз в день, которое сегодня
+ * уже было, или занятие по расписанию вне своих часов.
+ */
+export function withLimits(choice: Choice, session: Session): Choice {
+  const time = toGameTime(session.time);
+  if (choice.daily && session.daily[choice.daily] === time.day) {
+    return { ...choice, disabled: { id: 'doneToday' } };
+  }
+  if (choice.hours && choice.showClosed && !inHours(time, choice.hours)) {
+    return { ...choice, disabled: { id: 'hours', hours: choice.hours } };
+  }
+  return choice;
 }
 
 /** Сцена смерти: в ней есть «Конец игры». Такие сцены не сохраняются. */

@@ -4,7 +4,7 @@ import { CHECK_XP } from '@/content/progression';
 import { START_LOCATION, START_SCENE, START_TIME } from '@/content/story';
 import { rollCheck } from './checks';
 import { playRound, startFight } from './combat';
-import { getScene, isAvailable, textContext, withDaily } from './context';
+import { getScene, isAvailable, textContext, withLimits } from './context';
 import {
   consumeItem,
   createHero,
@@ -29,7 +29,17 @@ import type {
   Rng,
   Session,
 } from './types';
-import { enterScene, leaveScene, moveTo, roamChoices, sleep, wait } from './world';
+import {
+  enterScene,
+  leaveScene,
+  lookAt,
+  moveTo,
+  roamChoices,
+  sleep,
+  stepBack,
+  travel,
+  wait,
+} from './world';
 
 export {
   getScene,
@@ -43,13 +53,13 @@ export {
 
 export const initialState: GameState = { screen: 'menu', session: null };
 
-/** Варианты сейчас: в сцене — её варианты, в локации — разговоры, действия, выходы, ожидание. */
+/** Варианты сейчас: в сцене — её варианты, в локации — разговоры, точки интереса, выходы, ожидание. */
 export function availableChoices(session: Session): Choice[] {
   if (session.sceneId === null) return roamChoices(session);
   const ctx = textContext(session);
   return getScene(session.sceneId)
     .choices.filter((choice) => isAvailable(choice, ctx))
-    .map((choice) => withDaily(choice, session));
+    .map((choice) => withLimits(choice, session));
 }
 
 /** Нужно выбрать награду за новый уровень (окно поверх сцены; не во время боя). */
@@ -74,6 +84,8 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
     relations: {},
     oneLife: newHero.oneLife ?? false,
     daily: {},
+    spotId: null,
+    visited: [],
     fight: null,
     notices: [],
   };
@@ -85,7 +97,11 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
 }
 
 export function resumeSession(state: GameState, session: Session): GameState {
-  return { ...state, screen: 'story', session: { ...session, fight: null, notices: [] } };
+  return {
+    ...state,
+    screen: 'story',
+    session: { ...session, spotId: null, fight: null, notices: [] },
+  };
 }
 
 export function gameOver(): GameState {
@@ -172,6 +188,9 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
   if ('gameOver' in choice) return gameOver();
   if ('leave' in choice) return { ...state, session: leaveScene(session, choice.leave) };
   if ('move' in choice) return { ...state, session: moveTo(session, choice.move) };
+  if ('travel' in choice) return { ...state, session: travel(session, choice.travel) };
+  if ('look' in choice) return { ...state, session: lookAt(session, choice.look) };
+  if ('back' in choice) return { ...state, session: stepBack(session) };
   if ('wait' in choice) {
     const result = wait(session, choice.wait);
     return {

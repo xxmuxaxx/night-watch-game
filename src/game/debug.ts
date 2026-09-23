@@ -64,7 +64,14 @@ export function goToLocation(state: GameState, locationId: LocationId): GameStat
   if (!state.session) return state;
   return {
     ...state,
-    session: { ...state.session, sceneId: null, locationId, fight: null, notices: [] },
+    session: {
+      ...state.session,
+      sceneId: null,
+      locationId,
+      spotId: null,
+      fight: null,
+      notices: [],
+    },
   };
 }
 
@@ -81,6 +88,12 @@ export function passHours(state: GameState, hours: number): GameState {
 export function resetDaily(state: GameState): GameState {
   if (!state.session) return state;
   return { ...state, session: { ...state.session, daily: {} } };
+}
+
+/** Забыть, где герой побывал: места и точки интереса снова помечены новыми. */
+export function resetVisited(state: GameState): GameState {
+  if (!state.session) return state;
+  return { ...state, session: { ...state.session, visited: [] } };
 }
 
 /** Забыть случившиеся события, чтобы они сработали снова. */

@@ -15,7 +15,14 @@ const FIGHT_KEYS: Record<string, 'attack' | 'defend' | 'special' | 'item'> = {
   '4': 'item',
 };
 
-export type Panel = 'journal' | 'chronicle' | 'settings' | 'load';
+/** Окна по коду клавиши, а не по символу: так они открываются и в русской раскладке. */
+const PANEL_KEYS: Record<string, 'journal' | 'chronicle' | 'map'> = {
+  KeyJ: 'journal',
+  KeyH: 'chronicle',
+  KeyM: 'map',
+};
+
+export type Panel = 'journal' | 'chronicle' | 'map' | 'settings' | 'load';
 
 /** Окна поверх игры: какое открыто и как открыть или закрыть. */
 export interface PanelControl {
@@ -25,9 +32,9 @@ export interface PanelControl {
 }
 
 /**
- * Клавиатура: J открывает и закрывает журнал, H — летопись, Esc закрывает открытое окно или открывает настройки
+ * Клавиатура: J открывает и закрывает журнал, H — летопись, M — карту, Esc закрывает открытое окно или открывает настройки
  * (пока окно открыто, остальные клавиши не работают);
- * в сцене 1–9 выбирают вариант ответа; при новом уровне 1–4 — награду;
+ * в сцене 1–9 выбирают вариант ответа, Backspace отходит от точки интереса; при новом уровне 1–4 — награду;
  * в бою 1/Enter/пробел — удар, 2 — защита, 3 — приём, 4 — первый предмет из сумки;
  * после боя Enter/пробел/1 — «Продолжить» (после поражения — «Попробовать снова», 2 — «Сдаться»). В меню и при вводе имени клавиши не перехватываются.
  */
@@ -88,13 +95,19 @@ export function useKeyboard(store: GameStore, panels: PanelControl) {
         return;
       }
 
-      // по коду клавиши, а не по символу: J работает и в русской раскладке
-      if (e.code === 'KeyJ' || e.code === 'KeyH') {
+      const panelKey = PANEL_KEYS[e.code];
+      if (panelKey) {
         e.preventDefault();
-        panels.toggle(e.code === 'KeyJ' ? 'journal' : 'chronicle');
+        panels.toggle(panelKey);
         return;
       }
       if (panels.panel) return;
+
+      if (e.key === 'Backspace' && session.sceneId === null && session.spotId !== null) {
+        e.preventDefault();
+        store.choose({ text: { id: 'back' }, back: true });
+        return;
+      }
 
       const choice = availableChoices(session)[n - 1];
       if (choice) {

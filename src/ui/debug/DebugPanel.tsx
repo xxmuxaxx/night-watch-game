@@ -145,6 +145,7 @@ export function DebugPanel({ state }: { state: GameState }) {
               <button onClick={() => store.apply((s) => debug.passHours(s, 6))}>+6 ч</button>
               <button onClick={() => store.apply(debug.resetEvents)}>Сбросить события</button>
               <button onClick={() => store.apply(debug.resetDaily)}>Сбросить занятия дня</button>
+              <button onClick={() => store.apply(debug.resetVisited)}>Сбросить «новое»</button>
             </div>
             <div>События: {session.events.length ? session.events.join(', ') : 'нет'}</div>
           </section>

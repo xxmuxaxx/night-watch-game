@@ -63,7 +63,13 @@ describe('журнал', () => {
   });
 
   it('выбор в сюжете сообщает об изменениях в журнале', () => {
-    const session: Session = { ...newSession(), sceneId: null, locationId: 'cell', time: 22 * 60 };
+    const session: Session = {
+      ...newSession(),
+      sceneId: null,
+      locationId: 'cell',
+      spotId: 'window',
+      time: 22 * 60,
+    };
     const state = { ...engine.initialState, screen: 'story' as const, session };
     const window = engine
       .availableChoices(session)

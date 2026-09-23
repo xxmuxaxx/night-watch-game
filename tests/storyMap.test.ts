@@ -15,7 +15,7 @@ describe('карта сюжета', () => {
     expect(node(START_SCENE)).toMatchObject({ depth: 0, entry: 'начало игры' });
     expect(node('st6')?.entry).toBe('событие dinner');
     expect(node('torvin_talk')?.entry).toBe('разговор: Торвин');
-    expect(node('routine_training')?.entry).toBe('действие: Внутренний двор');
+    expect(node('routine_training')?.entry).toBe('действие: Внутренний двор, Плац');
   });
 
   it('связи: проверка даёт успех и провал, бой — свой значок; тупик — только конец главы', () => {

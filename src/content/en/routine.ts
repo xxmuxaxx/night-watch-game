@@ -1,16 +1,12 @@
 // Распорядок крепости на английском: занятия (ROUTINE) и сцены после них.
-import type { Text } from '@/game/types';
+import type { RoutineId } from '@/content/chapters/routine';
 import type { SceneText } from './types';
 
-export const ROUTINE: { courtyard: Text[]; hall: Text[] } = {
-  courtyard: [
-    'Train with the recruits (2 h, +5 XP)',
-    'Warm up by the brazier with the sentries (1 h, +2 health)',
-  ],
-  hall: [
-    'Help the cook in the kitchen (1.5 h, food for your bag)',
-    'Scoop up ash from the hearth (in a fight — into the enemy’s eyes)',
-  ],
+export const ROUTINE: Record<RoutineId, string> = {
+  training: 'Train with the recruits (2 h, +5 XP)',
+  brazier: 'Warm up by the brazier with the sentries (1 h, +2 health)',
+  kitchen: 'Help the cook in the kitchen (1.5 h, food for your bag)',
+  ash: 'Scoop up ash from the hearth (in a fight — into the enemy’s eyes)',
 };
 
 export const routine: Record<string, SceneText> = {

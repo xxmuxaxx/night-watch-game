@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import * as engine from '@/game/engine';
 import { atTime } from '@/game/time';
 import type { Choice, GameState } from '@/game/types';
-import { npcsHere } from '@/game/world';
+import { fortressMap, route } from '@/game/map';
+import { npcsHere, roamGroups } from '@/game/world';
 import { constant, sessionOf, withSession, noticeTexts, ru } from './helpers';
 
 function newGame(): GameState {
@@ -29,6 +30,8 @@ function pick(state: GameState, fragment: string): Choice {
     throw new Error('Нет варианта «' + fragment + '»: ' + choiceTexts(state).join(' | '));
   return choice;
 }
+
+const ctxOf = (state: GameState) => engine.textContext(sessionOf(state));
 
 /** Куда ведёт вариант (для вариантов-переходов). */
 function nextOf(choice: Choice): string | undefined {
@@ -64,9 +67,18 @@ describe('локации', () => {
     const state = roaming('courtyard', 1, 17);
     expect(choiceTexts(state)).toEqual([
       'Поговорить с Торвином',
+      'Плац',
+      'Жаровня у ворот',
+      'Лестница на стену',
       'Пойти: Трапезная (5 мин)',
       'Пойти: Келья (10 мин)',
       'Подождать час',
+    ]);
+    expect(roamGroups(sessionOf(state)).map((group) => group.kind)).toEqual([
+      'people',
+      'spots',
+      'paths',
+      'time',
     ]);
     const cell = pick(state, 'Келья');
     expect(cell.disabled).toBe('Торвин обещал показать, где спать, после ужина');
@@ -91,9 +103,9 @@ describe('локации', () => {
   });
 
   it('окно в келье показывает разное днём и ночью', () => {
-    const day = roaming('cell', 2, 12);
+    const day = withSession(roaming('cell', 2, 12), { spotId: 'window' });
     expect(nextOf(pick(day, 'окно'))).toBe('window_day');
-    const night = roaming('cell', 1, 23);
+    const night = withSession(roaming('cell', 1, 23), { spotId: 'window' });
     expect(nextOf(pick(night, 'окно'))).toBe('st7_1');
     const seen = withSession(night, { flags: { sawLights: true } });
     expect(nextOf(pick(seen, 'окно'))).toBe('window_night');
@@ -181,7 +193,7 @@ describe('события', () => {
 describe('распорядок дня', () => {
   it('тренировка: 2 часа, опыт и сцена; второй раз за день — закрыто, назавтра снова можно', () => {
     let state = roaming('courtyard', 1, 10);
-    state = play(state, 'Тренироваться');
+    state = play(state, 'Плац', 'Тренироваться');
     expect(sessionOf(state)).toMatchObject({
       sceneId: 'routine_training',
       time: atTime(1, 12),
@@ -189,7 +201,7 @@ describe('распорядок дня', () => {
     });
     expect(noticeTexts(sessionOf(state).notices)).toContain('+5 опыта');
 
-    state = play(state, 'Перевести дух');
+    state = play(state, 'Перевести дух', 'Плац');
     expect(pick(state, 'Тренироваться').disabled).toEqual({ id: 'doneToday' });
     expect(engine.choose(state, pick(state, 'Тренироваться'), constant(0))).toBe(state);
 
@@ -197,18 +209,122 @@ describe('распорядок дня', () => {
     expect(pick(tomorrow, 'Тренироваться').disabled).toBeUndefined();
   });
 
-  it('занятия — только в свои часы', () => {
-    expect(choiceTexts(roaming('courtyard', 1, 20)).join()).not.toContain('Тренироваться');
-    expect(choiceTexts(roaming('courtyard', 1, 20)).join()).toContain('жаровни');
-    expect(choiceTexts(roaming('hall', 1, 12)).join()).toContain('на кухне');
+  it('занятия — только в свои часы; вне их видны закрытыми с часами', () => {
+    const evening = play(roaming('courtyard', 1, 20), 'Плац');
+    expect(pick(evening, 'Тренироваться').disabled).toEqual({ id: 'hours', hours: [8, 17] });
+    expect(ru.label({ id: 'hours', hours: [8, 17] }, ctxOf(evening))).toBe(
+      'Только с 8:00 до 17:00',
+    );
+    expect(engine.choose(evening, pick(evening, 'Тренироваться'), constant(0))).toBe(evening);
+    expect(pick(play(roaming('courtyard', 1, 20), 'Жаровня'), 'жаровни').disabled).toBeUndefined();
+    expect(pick(play(roaming('hall', 1, 12), 'Кухня'), 'на кухне').disabled).toBeUndefined();
   });
 
   it('кухня даёт хлеб, жаровня лечит', () => {
-    const kitchen = play(roaming('hall', 1, 12), 'на кухне');
+    const kitchen = play(roaming('hall', 1, 12), 'Кухня', 'на кухне');
     expect(sessionOf(kitchen).hero.inventory).toEqual(['bread']);
     const cold = withSession(roaming('courtyard', 1, 20), {
       hero: { ...sessionOf(newGame()).hero, hp: 5 },
     });
-    expect(sessionOf(play(cold, 'жаровни')).hero.hp).toBe(7);
+    expect(sessionOf(play(cold, 'Жаровня', 'жаровни')).hero.hp).toBe(7);
+  });
+});
+
+describe('точки интереса', () => {
+  it('подойти и отойти; у точки — её действия и «Отойти», без разговоров и выходов', () => {
+    const state = roaming('courtyard', 1, 10);
+    const drill = play(state, 'Плац');
+    expect(sessionOf(drill)).toMatchObject({ spotId: 'drill', time: atTime(1, 10) });
+    expect(choiceTexts(drill)).toEqual(['Тренироваться с новобранцами (2 ч, +5 опыта)', 'Отойти']);
+    expect(roamGroups(sessionOf(drill)).map((group) => group.kind)).toEqual(['spot']);
+    expect(sessionOf(play(drill, 'Отойти')).spotId).toBeNull();
+  });
+
+  it('отмечает, где герой побывал: места и точки', () => {
+    let state = withSession(roaming('courtyard', 1, 10), { visited: [] });
+    state = play(state, 'Плац', 'Отойти', 'Трапезная');
+    expect(sessionOf(state).visited).toEqual(['courtyard.drill', 'hall']);
+  });
+
+  it('закрытое действие у точки показывает причину и не выбирается', () => {
+    const stairs = play(roaming('courtyard', 1, 10), 'Лестница');
+    const climb = pick(stairs, 'Подняться');
+    expect(climb.disabled).toBe('Наверх пускают только дозорных');
+    expect(engine.choose(stairs, climb, constant(0))).toBe(stairs);
+  });
+
+  it('уход в другое место или в сцену сбрасывает точку', () => {
+    const state = withSession(roaming('cell', 1, 12), { spotId: 'window' });
+    expect(sessionOf(play(state, 'Выглянуть'))).toMatchObject({
+      sceneId: 'window_day',
+      spotId: null,
+    });
+  });
+});
+
+describe('карта крепости', () => {
+  it('известные места, где герой, сколько идти и почему закрыто', () => {
+    const state = withSession(roaming('hall', 1, 12), { flags: { joined: true } });
+    const map = fortressMap(sessionOf(state));
+    expect(map.places.map((place) => place.id)).toEqual(['courtyard', 'hall', 'cell']);
+    expect(map.places.find((place) => place.id === 'hall')).toMatchObject({
+      here: true,
+      minutes: null,
+    });
+    expect(map.places.find((place) => place.id === 'courtyard')).toMatchObject({
+      minutes: 5,
+      people: ['torvin', 'vasya'],
+    });
+    expect(map.places.find((place) => place.id === 'cell')).toMatchObject({
+      minutes: null,
+      locked: 'Торвин обещал показать, где спать, после ужина',
+    });
+    expect(map.roads).toEqual([
+      { from: 'courtyard', to: 'hall', open: true },
+      { from: 'courtyard', to: 'cell', open: false },
+    ]);
+  });
+
+  it('незнакомые персонажи на карте не отмечены', () => {
+    const state = withSession(roaming('hall', 1, 12), { flags: {} });
+    const courtyard = fortressMap(sessionOf(state)).places.find((p) => p.id === 'courtyard');
+    expect(courtyard?.people).toEqual([]);
+  });
+
+  it('путь через несколько мест: время суммируется, места отмечаются посещёнными', () => {
+    const state = withSession(roaming('hall', 1, 12), { flags: { knowsCell: true }, visited: [] });
+    expect(route(sessionOf(state), 'cell')).toEqual({ path: ['courtyard', 'cell'], minutes: 15 });
+    const walked = engine.choose(
+      state,
+      { text: { id: 'travel', to: 'cell' }, travel: 'cell' },
+      constant(0),
+    );
+    expect(sessionOf(walked)).toMatchObject({
+      locationId: 'cell',
+      time: atTime(1, 12, 15),
+      visited: ['courtyard', 'cell'],
+    });
+  });
+
+  it('в закрытое место пути нет', () => {
+    const state = roaming('hall', 1, 12);
+    expect(route(sessionOf(state), 'cell')).toBeNull();
+    const travel: Choice = { text: { id: 'travel', to: 'cell' }, travel: 'cell' };
+    expect(sessionOf(engine.choose(state, travel, constant(0))).locationId).toBe('hall');
+  });
+
+  it('событие по дороге прерывает путь', () => {
+    const state = withSession(roaming('cell', 2, 0, 55), {
+      events: ['dinner'],
+      flags: { knowsCell: true },
+    });
+    const travel: Choice = { text: { id: 'travel', to: 'hall' }, travel: 'hall' };
+    const session = sessionOf(engine.choose(state, travel, constant(0)));
+    // келья → двор (10 мин, 1:05): тревога начинается во дворе, до трапезной герой не доходит
+    expect(session).toMatchObject({
+      locationId: 'courtyard',
+      sceneId: 'st8',
+      time: atTime(2, 1, 5),
+    });
   });
 });

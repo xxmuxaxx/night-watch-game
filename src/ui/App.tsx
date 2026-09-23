@@ -13,6 +13,7 @@ import { LevelUp } from './screens/LevelUp';
 import { MainMenu } from './screens/MainMenu';
 import { SceneView } from './screens/SceneView';
 import { LoadView } from './screens/LoadView';
+import { MapView } from './screens/MapView';
 import { SettingsView } from './screens/SettingsView';
 import { currentHint } from './hints';
 import { useI18n } from './i18n';
@@ -39,10 +40,13 @@ export function App() {
   const [panel, setPanel] = useState<Panel | null>(null);
   const showJournal = canOpenJournal && panel === 'journal';
   const showChronicle = canOpenJournal && panel === 'chronicle';
+  const showMap = canOpenJournal && panel === 'map';
   // после смерти или выхода в меню новая партия начинается с закрытым журналом
   useEffect(() => {
     if (!canOpenJournal) {
-      setPanel((open) => (open === 'journal' || open === 'chronicle' ? null : open));
+      setPanel((open) =>
+        open === 'journal' || open === 'chronicle' || open === 'map' ? null : open,
+      );
     }
   }, [canOpenJournal]);
   // размер шрифта из настроек — на корневом элементе: от него считаются все rem
@@ -71,6 +75,7 @@ export function App() {
             {...(canOpenJournal
               ? {
                   onOpenJournal: () => setPanel('journal'),
+                  onOpenMap: () => setPanel('map'),
                 }
               : {})}
             onOpenSettings={() => setPanel('settings')}
@@ -91,6 +96,7 @@ export function App() {
           onSwitch={() => setPanel('chronicle')}
         />
       )}
+      {showMap && <MapView session={session} onClose={() => setPanel(null)} />}
       {showChronicle && (
         <ChronicleView
           entries={store.getChronicle()}

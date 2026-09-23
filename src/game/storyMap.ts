@@ -1,5 +1,5 @@
 // Карта сюжета для автора: все сцены, связи между ними и входы в сюжет (пролог, события,
-// разговоры, действия в локациях). Показывается в панели отладки; тупики и сцены без входа
+// разговоры, действия у точек интереса). Показывается в панели отладки; тупики и сцены без входа
 // подсвечиваются. Чистые функции — без DOM.
 import { EVENTS } from '@/content/events';
 import { LOCATIONS } from '@/content/locations';
@@ -54,9 +54,11 @@ function entries(): Map<SceneId, string> {
   for (const [id, event] of Object.entries(EVENTS)) result.set(event.scene, 'событие ' + id);
   for (const npc of Object.values(NPCS)) result.set(npc.talk.next, 'разговор: ' + npc.name);
   for (const place of Object.values(LOCATIONS)) {
-    for (const action of place.actions ?? []) {
-      for (const link of links(action)) {
-        if (link.to in SCENES) result.set(link.to, 'действие: ' + place.name);
+    for (const spot of Object.values(place.spots ?? {})) {
+      for (const action of spot.actions) {
+        for (const link of links(action)) {
+          if (link.to in SCENES) result.set(link.to, 'действие: ' + place.name + ', ' + spot.name);
+        }
       }
     }
   }

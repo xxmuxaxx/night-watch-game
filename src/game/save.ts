@@ -42,7 +42,7 @@ export interface SavedGame {
   /** Время записи, мс с 1970 года; у старых сохранений его нет. */
   savedAt: number | null;
 }
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -59,15 +59,20 @@ interface SaveData {
   relations: Relations;
   oneLife: boolean;
   daily: Record<string, number>;
+  /** Где герой побывал (места и точки интереса). */
+  visited: string[];
   /** Когда записано; необязательное поле, читается и без него. */
   savedAt?: number;
 }
+
+/** Формат версии 10: до отметок о посещённых местах. */
+type SaveV10 = Omit<SaveData, 'version' | 'visited'> & { version: 10 };
 
 /** Герой до версии 10: без защиты. */
 type HeroV9 = Omit<Hero, 'armorId'>;
 
 /** Формат версии 9: до защиты героя. */
-type SaveV9 = Omit<SaveData, 'version' | 'hero'> & { version: 9; hero: HeroV9 };
+type SaveV9 = Omit<SaveV10, 'version' | 'hero'> & { version: 9; hero: HeroV9 };
 
 /** Формат версии 8: до занятий раз в день. */
 type SaveV8 = Omit<SaveV9, 'version' | 'daily'> & { version: 8 };
@@ -243,15 +248,20 @@ function migrateV8(save: SaveV8): SaveV9 {
 }
 
 /** В версии 10 у героя появилась защита; до неё защиты не было. */
-function migrateV9(save: SaveV9): SaveData {
-  return { ...save, version: SAVE_VERSION, hero: { ...save.hero, armorId: 'none' } };
+function migrateV9(save: SaveV9): SaveV10 {
+  return { ...save, version: 10, hero: { ...save.hero, armorId: 'none' } };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 10. */
+/** В версии 11 появились отметки о посещённых местах: хотя бы текущее место герой видел. */
+function migrateV10(save: SaveV10): SaveData {
+  return { ...save, version: SAVE_VERSION, visited: [save.locationId] };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 11. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
   let save = raw as
-    SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveV7 | SaveV8 | SaveV9 | SaveData;
+    SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveV7 | SaveV8 | SaveV9 | SaveV10 | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
     if (!v3) return null;
@@ -264,6 +274,7 @@ export function migrate(raw: unknown): SaveData | null {
   if (save.version === 7) save = migrateV7(save);
   if (save.version === 8) save = migrateV8(save);
   if (save.version === 9) save = migrateV9(save);
+  if (save.version === 10) save = migrateV10(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 
@@ -279,7 +290,9 @@ function isValid(save: SaveData): boolean {
     isClassId(save.hero.classId) &&
     isWeaponId(save.hero.weaponId) &&
     save.hero.armorId in ARMORS &&
-    save.hero.inventory.every(isItemId)
+    save.hero.inventory.every(isItemId) &&
+    Array.isArray(save.visited) &&
+    save.visited.every((key) => typeof key === 'string')
   );
 }
 
@@ -313,6 +326,8 @@ function toSession(save: SaveData): Session {
     relations: save.relations,
     oneLife: save.oneLife,
     daily: save.daily,
+    spotId: null,
+    visited: save.visited,
     fight: null,
     notices: [],
   };
@@ -337,6 +352,7 @@ export function writeSave(
     relations: session.relations,
     oneLife: session.oneLife,
     daily: session.daily,
+    visited: session.visited,
     savedAt: now,
   };
   try {

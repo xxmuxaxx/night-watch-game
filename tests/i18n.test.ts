@@ -75,9 +75,14 @@ describe('перевод контента', () => {
       if (JOURNAL[id].notes.length !== EN.journal[id].notes.length) problems.push('записи ' + id);
     }
     for (const id of Object.keys(LOCATIONS) as LocationId[]) {
-      const actions = EN.locations[id].actions;
-      if (actions && actions.length !== LOCATIONS[id].actions?.length)
-        problems.push('действия ' + id);
+      const spots = LOCATIONS[id].spots ?? {};
+      for (const [spotId, spot] of Object.entries(EN.locations[id].spots ?? {})) {
+        const ru = spots[spotId];
+        if (!ru) problems.push('лишняя точка ' + id + '.' + spotId);
+        else if (spot.actions && spot.actions.length !== ru.actions.length) {
+          problems.push('действия ' + id + '.' + spotId);
+        }
+      }
     }
     expect(problems).toEqual([]);
   });

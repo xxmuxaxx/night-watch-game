@@ -21,6 +21,25 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
           'The courtyard is empty. Only the sentries walk the wall, the snow creaking under their boots.',
       })[time.period],
     locked: { cell: 'Torvin promised to show you where to sleep after supper' },
+    spots: {
+      drill: {
+        name: 'Drill ground',
+        text: ({ time }) =>
+          'A trampled patch by the barracks. On the rack stand shields and wooden swords hacked to splinters.' +
+          (time.hour >= 8 && time.hour < 17
+            ? ' Recruits spar in pairs while the elders shout at them.'
+            : ' It is empty now; only the wind chases the snow.'),
+      },
+      brazier: {
+        name: 'Brazier by the gate',
+        text: 'An iron brazier under a lean-to by the gate. In the evenings the sentries warm themselves beside it.',
+      },
+      stairs: {
+        name: 'Stairs to the wall',
+        text: 'A steep stone staircase leads up to the wall. At its foot a sentry shifts from foot to foot and eyes you.',
+        actions: [{ text: 'Climb the wall', disabled: 'Only the lookouts are allowed up there' }],
+      },
+    },
   },
   hall: {
     name: 'Mess hall',
@@ -30,6 +49,16 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
         : time.hour >= 18 && time.hour < 21
           ? 'The hall is full: spoons clatter, and the elders argue about something by the hearth.'
           : 'The long tables are empty. The cook bangs pots in the kitchen, and embers smoulder in the hearth.',
+    spots: {
+      kitchen: {
+        name: 'Kitchen',
+        text: 'Behind the partition: cauldrons, sacks of turnips and a cook red from the heat.',
+      },
+      hearth: {
+        name: 'Hearth',
+        text: 'A big hearth at the far end of the hall. Under the grate lies a thick layer of ash.',
+      },
+    },
   },
   cell: {
     name: 'Cell',
@@ -42,12 +71,23 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
           : time.hour >= 18
             ? '\nDusk is gathering outside. Soon the forest will sink into darkness all the way to the pass.'
             : ''),
-    actions: [
-      'Look out of the window',
-      'Look out of the window',
-      'Look out of the window',
-      'Open the rusty chest',
-    ],
+    spots: {
+      window: {
+        name: 'Window',
+        text: 'A narrow window glazed with cloudy mica. Beyond it lie the wall and the forest all the way to the pass.',
+        actions: ['Look out of the window', 'Look out of the window', 'Look out of the window'],
+      },
+      chest: {
+        name: 'Chest',
+        text: ({ flag }) =>
+          flag('foundKnife')
+            ? 'The chest is open. Nothing is left in it but rotten rags.'
+            : flag('triedChest')
+              ? 'The rusty lock holds fast. You cannot pry it open without a tool.'
+              : 'An old iron-bound chest. The lock is covered with red rust.',
+        actions: ['Open the rusty chest'],
+      },
+    },
   },
 };
 

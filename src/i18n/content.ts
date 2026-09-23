@@ -13,7 +13,7 @@ import { LOCATIONS, type LocationId } from '@/content/locations';
 import { NPCS, type NpcId } from '@/content/npcs';
 import { LEVEL_REWARDS } from '@/content/progression';
 import { ATTITUDES } from '@/content/relations';
-import { ROUTINE } from '@/content/chapters/routine';
+import { ROUTINE, type RoutineId } from '@/content/chapters/routine';
 import { SCENES } from '@/content/story';
 import { STAT_IDS, STAT_NAMES } from '@/content/stats';
 import { WEAPONS, type WeaponId } from '@/content/weapons';
@@ -45,11 +45,7 @@ export function contentPairs(): TextPair[] {
       add(choice.text, en?.choices[i], `${id}.choices[${i}]`);
     });
   }
-  for (const place of ['courtyard', 'hall'] as const) {
-    ROUTINE[place].forEach((choice, i) => {
-      add(choice.text, EN.routine[place][i], `ROUTINE.${place}[${i}]`);
-    });
-  }
+  for (const id of keys<RoutineId>(ROUTINE)) add(ROUTINE[id].text, EN.routine[id], 'ROUTINE.' + id);
   for (const id of keys<LocationId>(LOCATIONS)) {
     const place = LOCATIONS[id];
     const en = EN.locations[id];
@@ -57,9 +53,19 @@ export function contentPairs(): TextPair[] {
     add(place.text, en.text, id + '.text');
     for (const exit of place.exits)
       add(exit.locked, en.locked?.[exit.to], `${id}.exits.${exit.to}`);
-    place.actions?.forEach((choice, i) => {
-      add(choice.text, en.actions?.[i], `${id}.actions[${i}]`);
-    });
+    for (const [spotId, spot] of Object.entries(place.spots ?? {})) {
+      const where = id + '.' + spotId;
+      const enSpot = en.spots?.[spotId];
+      add(spot.name, enSpot?.name, where + '.name');
+      add(spot.text, enSpot?.text, where + '.text');
+      spot.actions.forEach((choice, i) => {
+        const action = enSpot?.actions?.[i];
+        const translated =
+          typeof action === 'object' ? action : { text: action, disabled: undefined };
+        add(choice.text, translated.text, `${where}.actions[${i}]`);
+        add(choice.disabled, translated.disabled, `${where}.actions[${i}].disabled`);
+      });
+    }
   }
   for (const id of keys<NpcId>(NPCS)) {
     const npc = NPCS[id];

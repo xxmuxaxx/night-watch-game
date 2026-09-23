@@ -21,10 +21,19 @@ interface Props {
   goal?: JournalView | undefined;
   /** Открыть журнал; не передаётся, когда журнал открыть нельзя (бой). */
   onOpenJournal?: () => void;
+  /** Открыть карту крепости; не передаётся, когда её открыть нельзя (бой). */
+  onOpenMap?: () => void;
   onOpenSettings?: () => void;
 }
 
-export function HeroPanel({ hero, onUseItem, goal, onOpenJournal, onOpenSettings }: Props) {
+export function HeroPanel({
+  hero,
+  onUseItem,
+  goal,
+  onOpenJournal,
+  onOpenMap,
+  onOpenSettings,
+}: Props) {
   const { t, name, msg } = useI18n();
   const cls = heroClass(hero.classId);
   const heroWeapon = weapon(hero.weaponId);
@@ -72,6 +81,16 @@ export function HeroPanel({ hero, onUseItem, goal, onOpenJournal, onOpenSettings
               {goal.hint && ': ' + goal.hint}
             </small>
           )}
+        </button>
+        <button
+          class="journal-button map-button"
+          disabled={!onOpenMap}
+          title={t.map.openInfo}
+          onClick={() => onOpenMap?.()}
+        >
+          <span class="journal-button__label">
+            {t.map.open} <kbd>M</kbd>
+          </span>
         </button>
         <dl class="stats">
           {rows.map(([label, value]) => (

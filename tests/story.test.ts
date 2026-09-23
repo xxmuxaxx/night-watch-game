@@ -35,12 +35,18 @@ const journalConditions: Condition[] = journal.flatMap((entry) => [
   ...(entry.done ? [entry.done] : []),
 ]);
 
-/** Все варианты игры: в сценах, действия в локациях и разговоры с персонажами. */
+/** Действия у точек интереса всех мест. */
+const spotActions: { where: string; choice: Choice }[] = Object.entries(LOCATIONS).flatMap(
+  ([id, place]) =>
+    Object.entries(place.spots ?? {}).flatMap(([spotId, spot]) =>
+      spot.actions.map((choice) => ({ where: id + '.' + spotId, choice })),
+    ),
+);
+
+/** Все варианты игры: в сценах, действия у точек интереса и разговоры с персонажами. */
 const choices: { where: string; choice: Choice }[] = [
   ...scenes.flatMap(([id, scene]) => scene.choices.map((choice) => ({ where: id, choice }))),
-  ...Object.entries(LOCATIONS).flatMap(([id, place]) =>
-    (place.actions ?? []).map((choice) => ({ where: id, choice })),
-  ),
+  ...spotActions,
   ...Object.entries(NPCS).map(([id, npc]) => ({ where: id, choice: npc.talk as Choice })),
 ];
 
@@ -65,12 +71,12 @@ describe('сюжет', () => {
     expect(broken).toEqual([]);
   });
 
-  it('все сцены достижимы: из пролога, событий, разговоров и действий в локациях', () => {
+  it('все сцены достижимы: из пролога, событий, разговоров и действий у точек интереса', () => {
     const roots: SceneId[] = [
       START_SCENE,
       ...events.map((event) => event.scene),
       ...npcs.map((npc) => npc.talk.next),
-      ...locations.flatMap((place) => (place.actions ?? []).flatMap(targets)),
+      ...spotActions.flatMap(({ choice }) => targets(choice)),
     ];
     const seen = new Set<SceneId>(roots);
     const queue = [...roots];

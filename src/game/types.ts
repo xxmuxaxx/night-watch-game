@@ -160,7 +160,10 @@ export type Message =
   | { id: 'slept'; hours: number; woke: boolean; healed: number }
   // варианты при свободном перемещении и причины, почему что-то недоступно
   | { id: 'move'; to: LocationId; minutes: number }
+  | { id: 'travel'; to: LocationId }
+  | { id: 'back' }
   | { id: 'closed' }
+  | { id: 'hours'; hours: Hours }
   | { id: 'wait' }
   | { id: 'sleep' }
   | { id: 'doneToday' }
@@ -249,6 +252,8 @@ interface ChoiceBase {
   give?: Loot;
   /** Показывать только в эти часы. */
   hours?: Hours;
+  /** Вне часов hours не прятать, а показывать закрытым с указанием часов (занятия по расписанию). */
+  showClosed?: boolean;
   /** Сколько минут занимает выбор. По умолчанию 0. */
   minutes?: number;
   /** Показать, но не давать выбрать; текст — причина (например, закрытый проход). */
@@ -292,6 +297,21 @@ export interface MoveChoice extends ChoiceBase {
   move: LocationId;
 }
 
+/** Дойти до места по карте через соседние места; событие по дороге прерывает путь. */
+export interface TravelChoice extends ChoiceBase {
+  travel: LocationId;
+}
+
+/** Подойти к точке интереса в текущем месте (варианты строятся из точек места). */
+export interface LookChoice extends ChoiceBase {
+  look: SpotId;
+}
+
+/** Отойти от точки интереса обратно к месту. */
+export interface BackChoice extends ChoiceBase {
+  back: true;
+}
+
 /** Подождать N минут; события могут прервать ожидание. */
 export interface WaitChoice extends ChoiceBase {
   wait: number;
@@ -312,6 +332,9 @@ export type Choice =
   | GameOverChoice
   | LeaveChoice
   | MoveChoice
+  | TravelChoice
+  | LookChoice
+  | BackChoice
   | WaitChoice
   | SleepChoice
   | InertChoice;
@@ -347,15 +370,37 @@ export interface Exit {
   locked?: string;
 }
 
+/** Точка интереса: то, к чему можно подойти в месте, — окно, сундук, жаровня. Ключ в месте — SpotId. */
+export type SpotId = string;
+
+export interface Spot {
+  name: string;
+  /** Что герой видит, подойдя. */
+  text: Text;
+  /** Своя картинка; без неё — картинка места. */
+  image?: Image;
+  /** Точка видна, только если решение принято (так открываются спрятанные места). */
+  if?: FlagId;
+  ifNot?: FlagId;
+  /** Точка видна только в эти часы. */
+  hours?: Hours;
+  /** Что можно сделать у точки. «Отойти» добавляется само. */
+  actions: readonly Choice[];
+}
+
 export interface Location {
   name: string;
   image: Image;
   text: Text;
   exits: readonly Exit[];
-  /** Действия на месте: сундук, окно и т. п. */
-  actions?: readonly Choice[];
+  /** Точки интереса по порядку показа. */
+  spots?: Readonly<Record<SpotId, Spot>>;
   /** Здесь можно спать. */
   bed?: boolean;
+  /** Положение на карте крепости (0–100 по ширине, 0–70 по высоте); без него места нет на карте. */
+  map?: { x: number; y: number };
+  /** Когда герой знает о месте: до этого его нет ни на карте, ни среди выходов. По умолчанию знает. */
+  known?: Condition;
 }
 
 /** Где персонаж бывает в какие часы. */
@@ -474,6 +519,10 @@ export interface Session {
   oneLife: boolean;
   /** Занятия раз в день (daily): в какой игровой день каждое было в последний раз. */
   daily: Record<string, number>;
+  /** Точка интереса, у которой стоит герой; null — он в месте целиком. Не сохраняется. */
+  spotId: SpotId | null;
+  /** Где герой уже побывал: места (LocationId) и точки («место.точка»); остальное помечено новым. */
+  visited: string[];
   fight: FightState | null;
   /** Сообщения о последнем выборе; видны только в сцене сразу после него. */
   notices: Notice[];
