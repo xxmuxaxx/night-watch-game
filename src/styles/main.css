@@ -1308,3 +1308,37 @@ html[data-font='large'] {
 .balance__cell--hard {
   background: rgba(200, 70, 60, 0.3);
 }
+.story-map__columns {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.story-map__column {
+  flex: 0 0 230px;
+}
+.story-map__column h5 {
+  margin: 0 0 6px;
+  color: #8fd18f;
+}
+.story-map__node {
+  display: block;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 4px 6px;
+  text-align: left;
+}
+.story-map__node small,
+.story-map__node em {
+  display: block;
+  color: #999;
+}
+.story-map__node em {
+  color: #8fb3d1;
+}
+.story-map__node.is-problem {
+  border-color: #c0504d;
+}
+.story-map__node.is-current {
+  border-color: #8fd18f;
+  background: #2a3a2a;
+}

@@ -18,6 +18,7 @@ import { formatTime } from '@/game/time';
 import type { GameState, StatId } from '@/game/types';
 import { useStore } from '../store';
 import { BalanceView } from './BalanceView';
+import { StoryMapView } from './StoryMapView';
 
 const SCENE_IDS = Object.keys(SCENES);
 const FLAG_IDS = Object.keys(FLAGS) as FlagId[];
@@ -31,6 +32,7 @@ export function DebugPanel({ state }: { state: GameState }) {
   const store = useStore();
   const [open, setOpen] = useState(false);
   const [balanceOpen, setBalanceOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -42,6 +44,18 @@ export function DebugPanel({ state }: { state: GameState }) {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  if (mapOpen) {
+    return (
+      <StoryMapView
+        current={state.session?.sceneId ?? null}
+        onJump={(id) => {
+          setMapOpen(false);
+          store.apply((s) => debug.jumpToScene(s, id));
+        }}
+        onClose={() => setMapOpen(false)}
+      />
+    );
+  }
   if (balanceOpen) {
     return <BalanceView hero={state.session?.hero} onClose={() => setBalanceOpen(false)} />;
   }
@@ -72,6 +86,7 @@ export function DebugPanel({ state }: { state: GameState }) {
 
       <section>
         <button onClick={() => setBalanceOpen(true)}>Баланс боя</button>
+        <button onClick={() => setMapOpen(true)}>Карта сюжета</button>
       </section>
 
       <section>
