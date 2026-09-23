@@ -39,7 +39,7 @@ export function SceneView({ session }: { session: Session }) {
         <Picture key={image} src={image} class="scene-image" />
       </div>
 
-      <div class="text fade-in" key={view}>
+      <div class="text fade-in" key={'text:' + view}>
         <p class="scene-meta">
           {place.name} · {formatTime(session.time)}
         </p>
@@ -59,7 +59,7 @@ export function SceneView({ session }: { session: Session }) {
         )}
       </div>
 
-      <ul class="select fade-in fade-in--late" key={view}>
+      <ul class="select fade-in fade-in--late" key={'choices:' + view}>
         {choices.map((choice, i) => (
           <li key={i}>
             <button
