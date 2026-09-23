@@ -20,6 +20,9 @@ export interface GameStore {
   closeFight(): void;
   applyItem(id: ItemId): void;
   chooseLevelReward(reward: LevelReward): void;
+  /** Применить произвольный переход (панель отладки); сохранение работает как обычно. */
+  apply(transition: (state: GameState) => GameState): void;
+  deleteSave(): void;
 }
 
 export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): GameStore {
@@ -59,6 +62,11 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
     closeFight: () => update(engine.closeFight(state)),
     applyItem: (id) => update(engine.applyItem(state, id)),
     chooseLevelReward: (reward) => update(engine.chooseLevelReward(state, reward)),
+    apply: (transition) => update(transition(state)),
+    deleteSave() {
+      deleteSave(storage);
+      listeners.forEach((listener) => listener());
+    },
   };
 }
 

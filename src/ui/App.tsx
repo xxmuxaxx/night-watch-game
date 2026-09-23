@@ -1,5 +1,6 @@
 import { isChoosingLevelReward } from '@/game/engine';
 import { HeroPanel } from './components/HeroPanel';
+import { DebugPanel } from './debug/DebugPanel';
 import { CreateHero } from './screens/CreateHero';
 import { FightView } from './screens/FightView';
 import { LevelUp } from './screens/LevelUp';
@@ -31,6 +32,7 @@ export function App() {
       {state.screen === 'createHero' && <CreateHero />}
       {inStory && session.fight && <FightView hero={session.hero} fight={session.fight} />}
       {inStory && isChoosingLevelReward(session) && <LevelUp hero={session.hero} />}
+      {import.meta.env.DEV && <DebugPanel state={state} />}
     </div>
   );
 }

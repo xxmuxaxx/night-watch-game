@@ -20,6 +20,8 @@ npx vitest run -t "подлый удар"       # tests whose name matches
 npm run format       # apply Prettier
 ```
 
+In `npm run dev` a debug panel (`src/ui/debug/DebugPanel.tsx`, toggled by the 🛠 button or the ` key) offers a quick start, a jump to any scene, flag toggles, hero HP/XP/stat/weapon/item edits, an instant fight win and save deletion. It is rendered only under `import.meta.env.DEV`, so it isn't in production builds. Its transitions live in `src/game/debug.ts` and go through `store.apply()`, so autosave still applies; when adding a new kind of game state (time, locations), add a matching control there.
+
 TypeScript is pinned to 6.0 because typescript-eslint doesn't support TypeScript 7 yet. If the dev server starts failing to resolve `@/…` imports after running tests alongside it, restart `npm run dev`.
 
 Functions whose names start with `use` are treated as hooks by the react-hooks lint rules, so name non-hook helpers otherwise (`consumeItem`, `applyItem`).
