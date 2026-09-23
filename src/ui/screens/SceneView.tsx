@@ -2,11 +2,11 @@ import { location } from '@/content/locations';
 import { NPCS } from '@/content/npcs';
 import { STAT_NAMES } from '@/content/stats';
 import { checkChance } from '@/game/checks';
-import { availableChoices, getScene, resolveImage, resolveText, textContext } from '@/game/engine';
-import { formatTime } from '@/game/time';
+import { availableChoices, getScene, resolveImage, textContext } from '@/game/engine';
 import type { Session } from '@/game/types';
 import { npcsHere } from '@/game/world';
 import { Picture } from '../components/Picture';
+import { useI18n } from '../i18n';
 import { useStore } from '../store';
 
 /**
@@ -15,6 +15,7 @@ import { useStore } from '../store';
  */
 export function SceneView({ session }: { session: Session }) {
   const store = useStore();
+  const { t, name, text: tx, label, msg, time } = useI18n();
   const ctx = textContext(session);
   const choices = availableChoices(session);
   const place = location(session.locationId);
@@ -23,8 +24,8 @@ export function SceneView({ session }: { session: Session }) {
   const npcs = scene ? [] : npcsHere(session).map((id) => NPCS[id]);
   const image = resolveImage(scene ? scene.image : place.image, ctx);
   const actor = scene ? scene.actor : npcs[0]?.portrait;
-  const title = scene ? scene.title : place.name;
-  const text = resolveText(scene ? scene.text : place.text, ctx);
+  const title = name(scene ? scene.title : place.name);
+  const text = tx(scene ? scene.text : place.text, ctx);
   // смена ключа перезапускает анимацию появления: новая сцена или новое место
   const view = session.sceneId ?? 'place:' + session.locationId;
 
@@ -41,13 +42,13 @@ export function SceneView({ session }: { session: Session }) {
 
       <div class="text fade-in" key={'text:' + view}>
         <p class="scene-meta">
-          {place.name} · {formatTime(session.time)}
+          {name(place.name)} · {time(session.time)}
         </p>
         {session.notices.length > 0 && (
           <div class="notices">
             {session.notices.map((notice, i) => (
               <p key={i} class={'notice notice--' + notice.tone}>
-                {notice.text}
+                {msg(notice.message)}
               </p>
             ))}
           </div>
@@ -55,7 +56,10 @@ export function SceneView({ session }: { session: Session }) {
         <h1>{title}</h1>
         <p class="scene-text">{text}</p>
         {npcs.length > 0 && (
-          <p class="scene-npcs">Здесь: {npcs.map((npc) => npc.name).join(', ')}</p>
+          <p class="scene-npcs">
+            {t.scene.here}
+            {npcs.map((npc) => name(npc.name)).join(', ')}
+          </p>
         )}
       </div>
 
@@ -69,13 +73,15 @@ export function SceneView({ session }: { session: Session }) {
             >
               {'check' in choice && (
                 <span class="check-tag">
-                  {STAT_NAMES[choice.check.stat]}{' '}
+                  {name(STAT_NAMES[choice.check.stat])}{' '}
                   {Math.round(checkChance(session.hero, choice.check) * 100)}%
                 </span>
               )}
               <span>
-                {resolveText(choice.text, ctx)}
-                {choice.disabled && <small class="choice__locked">{choice.disabled}</small>}
+                {label(choice.text, ctx)}
+                {choice.disabled && (
+                  <small class="choice__locked">{label(choice.disabled, ctx)}</small>
+                )}
               </span>
             </button>
           </li>

@@ -4,12 +4,15 @@
 import { createContext } from 'preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
 import type { SaveStorage } from '@/game/save';
+import { DEFAULT_LANG, isLang, type Lang } from '@/i18n';
 
 export const SETTINGS_KEY = 'nightwatch-settings';
 
 export type FontSize = 'small' | 'normal' | 'large';
 
 export interface Settings {
+  /** Язык интерфейса и сюжета. */
+  language: Lang;
   fontSize: FontSize;
   /** Звук включён. */
   sound: boolean;
@@ -22,6 +25,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  language: DEFAULT_LANG,
   fontSize: 'normal',
   sound: true,
   volume: 0.6,
@@ -39,7 +43,9 @@ function read(storage: SaveStorage): Settings {
   try {
     const raw: unknown = JSON.parse(storage.getItem(SETTINGS_KEY) ?? 'null');
     // неизвестные и недостающие поля заменяются значениями по умолчанию
-    return raw && typeof raw === 'object' ? { ...DEFAULT_SETTINGS, ...raw } : DEFAULT_SETTINGS;
+    if (!raw || typeof raw !== 'object') return DEFAULT_SETTINGS;
+    const settings: Settings = { ...DEFAULT_SETTINGS, ...raw };
+    return isLang(settings.language) ? settings : { ...settings, language: DEFAULT_LANG };
   } catch {
     return DEFAULT_SETTINGS;
   }

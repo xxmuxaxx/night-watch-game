@@ -50,7 +50,7 @@ describe('звуки', () => {
 
   it('итог проверки и новый уровень', () => {
     const checked = withSession(game, {
-      notices: [{ tone: 'success', text: 'Проверка: Ловкость — успех' }],
+      notices: [{ tone: 'success', message: { id: 'check', stat: 'agility', success: true } }],
       hero: { ...sessionOf(game).hero, levelUps: 1 },
     });
     expect(cuesBetween(game, checked)).toEqual(['success', 'levelup']);

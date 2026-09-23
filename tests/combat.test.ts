@@ -3,7 +3,7 @@ import { HERO_CLASSES } from '@/content/classes';
 import { CRIT_PER_WITS, DODGE_PER_AGILITY } from '@/content/combat';
 import { canUseSpecial, combatStats, playRound, startFight } from '@/game/combat';
 import type { EnemyDef } from '@/game/types';
-import { constant, sequence, testHero } from './helpers';
+import { constant, sequence, testHero, lines } from './helpers';
 
 // Порядок бросков в раунде атаки: оружие, точный удар, (если враг увёртлив) его уворот,
 // (враг) замах, уворот героя, урон врага.
@@ -42,7 +42,7 @@ describe('playRound', () => {
     );
     expect(fight.enemy.hp).toBe(30 - (2 + 2));
     expect(hero.hp).toBe(10 - 2);
-    expect(fight.log).toEqual([
+    expect(lines(fight.log)).toEqual([
       'Вы бьёте: Вася теряет 4 здоровья',
       'Вася бьёт в ответ: вы теряете 2 здоровья',
     ]);
@@ -65,14 +65,14 @@ describe('playRound', () => {
       sequence(0, 0.99, 0.1),
     );
     expect(fight.enemy.windingUp).toBe(true);
-    expect(fight.log.at(-1)).toBe('Вася замахивается для сильного удара!');
+    expect(lines(fight.log).at(-1)).toBe('Вася замахивается для сильного удара!');
 
     // парирование: урона нет, ответный удар — сила 2 + оружие 2
     ({ hero, fight } = playRound(hero, fight, 'defend', sequence(0.99)));
     expect(hero.hp).toBe(10);
     expect(fight.enemy.hp).toBe(30 - 2 - 4);
     expect(fight.enemy.windingUp).toBe(false);
-    expect(fight.log.slice(-2)).toEqual([
+    expect(lines(fight.log).slice(-2)).toEqual([
       'Вы готовитесь парировать',
       'Вы парируете сильный удар и бьёте в ответ: Вася теряет 4 здоровья',
     ]);
@@ -92,7 +92,7 @@ describe('playRound', () => {
     const armored = startFight({ ...DUMMY, armor: 2, windup: 0 }, 'next');
     const plain = playRound(testHero(), armored, 'attack', sequence(0.99, 0.99, 0.99, 0.99, 0));
     expect(plain.fight.enemy.hp).toBe(30 - (4 - 2));
-    expect(plain.fight.log[0]).toBe('Вы бьёте: Вася теряет 2 здоровья (доспех держит удар)');
+    expect(lines(plain.fight.log)[0]).toBe('Вы бьёте: Вася теряет 2 здоровья (доспех держит удар)');
 
     // подлый удар Разбойника всегда точный: 1 + 2 = 3, ×2 = 6, доспех не помогает
     const sneak = playRound(
@@ -102,7 +102,9 @@ describe('playRound', () => {
       sequence(0.99, 0.99, 0.99, 0.99, 0),
     );
     expect(sneak.fight.enemy.hp).toBe(30 - 6);
-    expect(sneak.fight.log[0]).toBe('Подлый удар! Вася теряет 6 здоровья (удар в щель доспеха)');
+    expect(lines(sneak.fight.log)[0]).toBe(
+      'Подлый удар! Вася теряет 6 здоровья (удар в щель доспеха)',
+    );
   });
 
   it('увёртливый враг уходит от удара, но не от приёма', () => {
@@ -110,7 +112,7 @@ describe('playRound', () => {
     // оружие, точный удар, уворот врага 0.1 < 0.5
     const missed = playRound(testHero(), agile, 'attack', sequence(0.99, 0.99, 0.1, 0.99, 0.99, 0));
     expect(missed.fight.enemy.hp).toBe(30);
-    expect(missed.fight.log[0]).toBe('Вася уходит от удара');
+    expect(lines(missed.fight.log)[0]).toBe('Вася уходит от удара');
     // приём: броска уворота врага нет
     const special = playRound(testHero(), agile, 'special', sequence(0.99, 0.99));
     expect(special.fight.enemy.hp).toBe(30 - 8);
@@ -149,7 +151,7 @@ describe('playRound', () => {
     expect(fight.enemy.hp).toBe(30 - 2 - 4);
     expect(hero.hp).toBe(10);
     expect(fight.enemy.windingUp).toBe(false);
-    expect(fight.log.at(-1)).toBe('Вы сбиваете замах: Вася оглушён и пропускает удар');
+    expect(lines(fight.log).at(-1)).toBe('Вы сбиваете замах: Вася оглушён и пропускает удар');
     expect(fight.cooldown).toBe(HERO_CLASSES.warrior.special.cooldown);
     expect(canUseSpecial(fight)).toBe(false);
   });
@@ -190,7 +192,7 @@ describe('playRound', () => {
       'special',
       sequence(0, 0.99, 0.99, 0.99, 0),
     );
-    expect(fight.log[0]).toBe('Подлый удар! Вася теряет 2 здоровья');
+    expect(lines(fight.log)[0]).toBe('Подлый удар! Вася теряет 2 здоровья');
     expect(fight.cooldown).toBe(HERO_CLASSES.rogue.special.cooldown);
   });
 
@@ -202,7 +204,7 @@ describe('playRound', () => {
       'defend',
       sequence(0.99, 0.4),
     );
-    expect(defended.fight.log.at(-1)).toBe('Вы уворачиваетесь от удара');
+    expect(lines(defended.fight.log).at(-1)).toBe('Вы уворачиваетесь от удара');
     const attacked = playRound(
       testHero('rogue'),
       startFight({ ...DUMMY, windup: 0 }, 'next'),
@@ -235,7 +237,7 @@ describe('playRound', () => {
     expect(after.inventory).toEqual([]);
     expect(after.hp).toBe(4 + 3 - 2);
     expect(fight.enemy.hp).toBe(30);
-    expect(fight.log[0]).toBe('Вы используете: Краюха хлеба (+3 здоровья)');
+    expect(lines(fight.log)[0]).toBe('Вы используете: Краюха хлеба (+3 здоровья)');
   });
 
   it('стёганка снимает 1 урона с удара врага, защита делит остаток', () => {
@@ -255,7 +257,7 @@ describe('playRound', () => {
     expect(after.inventory).toEqual([]);
     expect(after.hp).toBe(10);
     expect(fight.enemy.windingUp).toBe(false);
-    expect(fight.log.at(-1)).toBe('Вы сбиваете замах: Вася оглушён и пропускает удар');
+    expect(lines(fight.log).at(-1)).toBe('Вы сбиваете замах: Вася оглушён и пропускает удар');
   });
 
   it('предмета нет в сумке — раунд не играется', () => {

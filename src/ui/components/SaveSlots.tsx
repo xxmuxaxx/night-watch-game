@@ -1,7 +1,7 @@
 import { heroClass } from '@/content/classes';
 import { location } from '@/content/locations';
 import { MANUAL_SLOTS, SAVE_SLOTS, type SavedGame, type SaveSlot } from '@/game/save';
-import { formatTime } from '@/game/time';
+import { useI18n } from '../i18n';
 
 interface Props {
   saves: (SavedGame | null)[];
@@ -12,6 +12,7 @@ interface Props {
 
 /** Список ячеек сохранения: кто, где, когда. */
 export function SaveSlots({ saves, mode, onPick }: Props) {
+  const { t } = useI18n();
   const slots = mode === 'save' ? MANUAL_SLOTS : SAVE_SLOTS;
   return (
     <ul class="save-slots">
@@ -26,10 +27,14 @@ export function SaveSlots({ saves, mode, onPick }: Props) {
               onClick={() => onPick(slot)}
             >
               <span class="save-slot__title">
-                {slot === 'auto' ? 'Автосохранение' : 'Ячейка ' + slot}
-                {mode === 'save' && <small>{empty ? 'записать сюда' : 'перезаписать'}</small>}
+                {slot === 'auto' ? t.saves.auto : t.saves.slot(slot)}
+                {mode === 'save' && <small>{empty ? t.saves.writeHere : t.saves.overwrite}</small>}
               </span>
-              {saved ? <SaveSummary saved={saved} /> : <span class="save-slot__empty">Пусто</span>}
+              {saved ? (
+                <SaveSummary saved={saved} />
+              ) : (
+                <span class="save-slot__empty">{t.empty}</span>
+              )}
             </button>
           </li>
         );
@@ -39,17 +44,18 @@ export function SaveSlots({ saves, mode, onPick }: Props) {
 }
 
 function SaveSummary({ saved }: { saved: SavedGame }) {
+  const { t, name, time: formatTime } = useI18n();
   const { hero, locationId, time, oneLife } = saved.session;
   return (
     <span class="save-slot__info">
-      {hero.name}, {heroClass(hero.classId).title.toLowerCase()} {hero.level} уровня
-      {oneLife && ' · одна жизнь'}
+      {t.saves.hero(hero.name, name(heroClass(hero.classId).title), hero.level)}
+      {oneLife && t.saves.oneLife}
       <br />
-      {location(locationId).name} · {formatTime(time)}
+      {name(location(locationId).name)} · {formatTime(time)}
       {saved.savedAt !== null && (
         <>
           <br />
-          <small>Сохранено {new Date(saved.savedAt).toLocaleString('ru-RU')}</small>
+          <small>{t.saves.savedAt(new Date(saved.savedAt).toLocaleString(t.locale))}</small>
         </>
       )}
     </span>

@@ -52,7 +52,7 @@ export function winFight(state: GameState): GameState {
       fight: {
         ...fight,
         enemy: { ...fight.enemy, hp: 0 },
-        log: [...fight.log, '[отладка] победа'],
+        log: [...fight.log, { id: 'debugWin' }],
         result: 'win',
       },
     },

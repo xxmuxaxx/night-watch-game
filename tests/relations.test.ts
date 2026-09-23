@@ -3,7 +3,7 @@ import * as engine from '@/game/engine';
 import { attitude, changeRelations, people } from '@/game/relations';
 import { atTime } from '@/game/time';
 import type { Choice, GameState, Relations, Session } from '@/game/types';
-import { constant, sessionOf, withSession } from './helpers';
+import { constant, sessionOf, withSession, noticeTexts } from './helpers';
 
 function newGame(): GameState {
   return engine.startNewGame(engine.initialState, {
@@ -30,18 +30,18 @@ function go(state: GameState, next: string): GameState {
   return engine.choose(state, choice, constant(0.5));
 }
 
-const notices = (state: GameState) => sessionOf(state).notices.map((n) => n.text);
+const notices = (state: GameState) => noticeTexts(sessionOf(state).notices);
 
 describe('отношения', () => {
   it('меняются в пределах −5…5 и сообщают, стало лучше или хуже', () => {
-    expect(changeRelations({ vasya: 4 }, { vasya: 3, torvin: -1 })).toEqual({
-      relations: { vasya: 5, torvin: -1 },
-      notices: [
-        // в порядке персонажей в NPCS
-        { tone: 'fail', text: 'Торвин: отношение ухудшилось' },
-        { tone: 'success', text: 'Вася: отношение улучшилось' },
-      ],
-    });
+    const changed = changeRelations({ vasya: 4 }, { vasya: 3, torvin: -1 });
+    expect(changed.relations).toEqual({ vasya: 5, torvin: -1 });
+    expect(changed.notices.map((notice) => notice.tone)).toEqual(['fail', 'success']);
+    // в порядке персонажей в NPCS
+    expect(noticeTexts(changed.notices)).toEqual([
+      'Торвин: отношение ухудшилось',
+      'Вася: отношение улучшилось',
+    ]);
     // упёрлось в предел — сообщения нет
     expect(changeRelations({ vasya: 5 }, { vasya: 1 }).notices).toEqual([]);
   });

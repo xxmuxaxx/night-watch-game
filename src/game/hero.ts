@@ -1,8 +1,6 @@
-import { armor } from '@/content/armors';
 import { heroClass } from '@/content/classes';
 import { item } from '@/content/items';
-import { weapon } from '@/content/weapons';
-import type { ClassId, Hero, ItemId, Loot, Notice } from './types';
+import type { ClassId, Hero, ItemId, Loot, Message, Notice } from './types';
 
 export interface NewHero {
   name: string;
@@ -34,22 +32,22 @@ export function heal(hero: Hero, amount: number): Hero {
   return { ...hero, hp: Math.min(hero.maxHp, hero.hp + amount) };
 }
 
-/** Выдать добычу: оружие и защиту сразу на героя, предметы в сумку. Возвращает героя и сообщения «Получено: …». */
+/** Выдать добычу: оружие и защиту сразу на героя, предметы в сумку. Возвращает героя и сообщения о полученном. */
 export function giveLoot(hero: Hero, loot: Loot | undefined): { hero: Hero; notices: Notice[] } {
   if (!loot) return { hero, notices: [] };
   const notices: Notice[] = [];
   let next = hero;
   if (loot.weapon) {
     next = { ...next, weaponId: loot.weapon };
-    notices.push({ tone: 'info', text: 'Получено оружие: ' + weapon(loot.weapon).name });
+    notices.push({ tone: 'info', message: { id: 'gotWeapon', weapon: loot.weapon } });
   }
   if (loot.armor) {
     next = { ...next, armorId: loot.armor };
-    notices.push({ tone: 'info', text: 'Получена защита: ' + armor(loot.armor).name });
+    notices.push({ tone: 'info', message: { id: 'gotArmor', armor: loot.armor } });
   }
   for (const id of loot.items ?? []) {
     next = { ...next, inventory: [...next.inventory, id] };
-    notices.push({ tone: 'info', text: 'В сумке: ' + item(id).name });
+    notices.push({ tone: 'info', message: { id: 'gotItem', item: id } });
   }
   return { hero: next, notices };
 }
@@ -67,10 +65,10 @@ export function consumeItem(hero: Hero, id: ItemId): Hero {
 }
 
 /** Почему предмет сейчас нельзя использовать, или null, если можно. */
-export function itemBlocked(hero: Hero, id: ItemId, inFight: boolean): string | null {
+export function itemBlocked(hero: Hero, id: ItemId, inFight: boolean): Message | null {
   const def = item(id);
-  if (def.stun && !inFight) return 'Пригодится в бою';
-  if (!def.stun && hero.hp >= hero.maxHp) return 'Здоровье и так полное';
+  if (def.stun && !inFight) return { id: 'forFight' };
+  if (!def.stun && hero.hp >= hero.maxHp) return { id: 'fullHealth' };
   return null;
 }
 

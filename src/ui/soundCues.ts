@@ -55,8 +55,7 @@ export function cuesBetween(prev: GameState, next: GameState): Cue[] {
   // итоги проверок и новый уровень — по сообщениям
   if (after.notices !== before?.notices) {
     for (const notice of after.notices) {
-      if (notice.text.startsWith('Проверка:'))
-        cues.push(notice.tone === 'success' ? 'success' : 'fail');
+      if (notice.message.id === 'check') cues.push(notice.tone === 'success' ? 'success' : 'fail');
     }
   }
   if (after.hero.levelUps > (before?.hero.levelUps ?? 0)) cues.push('levelup');

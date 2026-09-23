@@ -1,5 +1,6 @@
 import { LEVEL_XP } from '@/content/progression';
 import { nextLevelXp } from '@/game/progression';
+import { useI18n } from '../i18n';
 
 interface Props {
   xp: number;
@@ -8,15 +9,14 @@ interface Props {
 
 /** Полоса опыта до следующего уровня; на наибольшем уровне — полная. */
 export function XpBar({ xp, level }: Props) {
+  const { t } = useI18n();
   const next = nextLevelXp(level);
   const from = LEVEL_XP[level - 1] ?? 0;
   const share = next === null ? 1 : (xp - from) / (next - from);
   return (
     <div class="xp">
       <div class="xp__fill" style={{ width: Math.round(Math.min(share, 1) * 100) + '%' }} />
-      <span class="xp__text">
-        {next === null ? 'Опыт: ' + xp + ' (наибольший уровень)' : 'Опыт: ' + xp + '/' + next}
-      </span>
+      <span class="xp__text">{t.hero.xp(xp, next)}</span>
     </div>
   );
 }

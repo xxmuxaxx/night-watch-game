@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as engine from '@/game/engine';
 import { activeGoals, journal, journalNotices } from '@/game/journal';
 import type { Flags, Session } from '@/game/types';
-import { sessionOf } from './helpers';
+import { sessionOf, noticeTexts } from './helpers';
 
 function newSession(patch: Partial<Session> = {}): Session {
   const state = engine.startNewGame(engine.initialState, {
@@ -55,7 +55,7 @@ describe('журнал', () => {
   it('сообщения: новая цель, новая зацепка, новая запись, выполненная цель', () => {
     const before = withFlags({ joined: true });
     const texts = (flags: Flags) =>
-      journalNotices(before, withFlags({ joined: true, ...flags })).map((n) => n.text);
+      noticeTexts(journalNotices(before, withFlags({ joined: true, ...flags })));
     expect(texts({})).toEqual([]);
     expect(texts({ vasyaFriend: true })).toEqual(['Журнал: новая зацепка «Пропавшие новобранцы»']);
     expect(texts({ ate: true })).toEqual(['Журнал: новая запись в «Первый вечер»']);
@@ -70,8 +70,6 @@ describe('журнал', () => {
       .find((choice) => 'next' in choice && choice.next === 'st7_1');
     if (!window) throw new Error('Нет окна');
     const after = engine.choose(state, window, () => 0.5);
-    expect(sessionOf(after).notices.map((n) => n.text)).toEqual([
-      'Журнал: новая зацепка «Огни в лесу»',
-    ]);
+    expect(noticeTexts(sessionOf(after).notices)).toEqual(['Журнал: новая зацепка «Огни в лесу»']);
   });
 });

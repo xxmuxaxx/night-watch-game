@@ -101,50 +101,40 @@ export function playRound(
     current = consumeItem(hero, action.item);
     heroHp = current.hp;
     stun = item(action.item).stun ?? false;
-    log.push(
-      'Вы используете: ' + item(action.item).name + ' (' + item(action.item).description + ')',
-    );
+    log.push({ id: 'itemUsed', item: action.item });
   } else if (action === 'defend') {
-    log.push(enemy.windingUp ? 'Вы готовитесь парировать' : 'Вы встаёте в защиту');
+    log.push({ id: 'defend', parry: enemy.windingUp });
   } else {
     let damage = hero.stats.strength + randomInt(rng, weapon(hero.weaponId).damage);
     let isCrit = chance(rng, stats.crit);
-    let label = 'Вы бьёте: ';
     if (action === 'special') {
       cooldown = special.cooldown + 1; // +1: этот ход тоже вычтется в конце раунда
       damage *= special.damage ?? 1;
       if (special.crit) isCrit = true;
       stun = special.stun ?? false;
-      label = special.name + '! ';
     }
-    if (isCrit && action !== 'special') label = 'Точный удар! ';
     if (isCrit) damage *= 2;
     // от приёма не увернуться
     if (enemy.dodge > 0 && action !== 'special' && chance(rng, enemy.dodge)) {
-      log.push(enemy.name + ' уходит от удара');
+      log.push({ id: 'enemyDodged', enemy: enemy.name });
     } else {
       const dealt = strikeDamage(damage, enemy, isCrit);
       enemy.hp -= dealt;
-      log.push(
-        label +
-          enemy.name +
-          ' теряет ' +
-          dealt +
-          ' здоровья' +
-          (enemy.armor > 0 && !isCrit ? ' (доспех держит удар)' : '') +
-          (enemy.armor > 0 && isCrit ? ' (удар в щель доспеха)' : ''),
-      );
+      log.push({
+        id: 'hit',
+        enemy: enemy.name,
+        damage: dealt,
+        special: action === 'special' ? hero.classId : null,
+        crit: isCrit,
+        armor: enemy.armor > 0 ? (isCrit ? 'pierced' : 'held') : null,
+      });
       if (enemy.hp <= 0) return finish('win');
     }
   }
 
   // Ответ врага
   if (stun) {
-    log.push(
-      enemy.windingUp
-        ? 'Вы сбиваете замах: ' + enemy.name + ' оглушён и пропускает удар'
-        : enemy.name + ' оглушён и пропускает удар',
-    );
+    log.push({ id: 'stunned', enemy: enemy.name, brokeWindup: enemy.windingUp });
     enemy.windingUp = false;
     return finish(null);
   }
@@ -160,25 +150,19 @@ export function playRound(
       false,
     );
     enemy.hp -= counter;
-    log.push(
-      'Вы парируете сильный удар и бьёте в ответ: ' +
-        enemy.name +
-        ' теряет ' +
-        counter +
-        ' здоровья',
-    );
+    log.push({ id: 'parried', enemy: enemy.name, damage: counter });
     return finish(enemy.hp <= 0 ? 'win' : null);
   }
   if (!heavy && chance(rng, enemy.windup)) {
     enemy.windingUp = true;
-    log.push(enemy.name + ' замахивается для сильного удара!');
+    log.push({ id: 'windup', enemy: enemy.name });
     return finish(null);
   }
 
   enemy.windingUp = false;
   const dodge = defending ? stats.dodge * 2 : stats.dodge;
   if (chance(rng, dodge)) {
-    log.push(heavy ? 'Вы уворачиваетесь от сильного удара!' : 'Вы уворачиваетесь от удара');
+    log.push({ id: 'dodged', heavy });
     return finish(null);
   }
   // защита героя снимает свою долю, потом блок делит остаток пополам
@@ -189,19 +173,9 @@ export function playRound(
   if (defending) damage = Math.floor(damage / 2);
   heroHp -= damage;
   if (damage > 0) {
-    log.push(
-      (heavy ? enemy.name + ' обрушивает сильный удар' : enemy.name + ' бьёт в ответ') +
-        (defending ? ' по вашей защите' : '') +
-        ': вы теряете ' +
-        damage +
-        ' здоровья',
-    );
+    log.push({ id: 'enemyHit', enemy: enemy.name, heavy, defending, damage });
   } else {
-    log.push(
-      defending
-        ? 'Вы принимаете удар на защиту и не теряете здоровья'
-        : enemy.name + ' промахивается',
-    );
+    log.push(defending ? { id: 'blocked' } : { id: 'enemyMissed', enemy: enemy.name });
   }
   return finish(heroHp <= 0 ? 'lose' : null);
 }

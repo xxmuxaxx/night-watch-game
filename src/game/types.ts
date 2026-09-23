@@ -5,11 +5,12 @@ import type { ClassId } from '@/content/classes';
 import type { EventId } from '@/content/events';
 import type { FlagId } from '@/content/flags';
 import type { ItemId } from '@/content/items';
+import type { JournalId } from '@/content/journal';
 import type { LocationId } from '@/content/locations';
 import type { NpcId } from '@/content/npcs';
 import type { WeaponId } from '@/content/weapons';
 
-export type { ArmorId, ClassId, EventId, FlagId, ItemId, LocationId, NpcId, WeaponId };
+export type { ArmorId, ClassId, EventId, FlagId, ItemId, JournalId, LocationId, NpcId, WeaponId };
 
 /** Случайное число в [0, 1). В игре — Math.random, в тестах — заранее заданная последовательность. */
 export type Rng = () => number;
@@ -136,6 +137,60 @@ export interface TextContext {
 /** Текст сцены или варианта: строка или функция от героя и решений. `\n` — новая строка. */
 export type Text = string | ((ctx: TextContext) => string);
 
+/** Перевод текста контента на язык игрока (src/i18n); по умолчанию текст остаётся русским. */
+export type Translate = (text: Text) => Text;
+
+/**
+ * Сообщение игры: итог проверки, добыча, строка боевого лога, подпись созданного движком варианта.
+ * Движок не собирает строки сам — интерфейс переводит сообщение на язык игрока (src/i18n).
+ * Имена врагов (enemy) — русские строки из контента, интерфейс переводит и их.
+ */
+export type Message =
+  // итоги выбора
+  | { id: 'xp'; amount: number }
+  | { id: 'levelUp' }
+  | { id: 'check'; stat: StatId; success: boolean }
+  | { id: 'itemUsed'; item: ItemId }
+  | { id: 'retry' }
+  | { id: 'gotWeapon'; weapon: WeaponId }
+  | { id: 'gotArmor'; armor: ArmorId }
+  | { id: 'gotItem'; item: ItemId }
+  | { id: 'journal'; entry: JournalId; change: 'goal' | 'lead' | 'note' | 'done' }
+  | { id: 'relation'; npc: NpcId; better: boolean }
+  | { id: 'slept'; hours: number; woke: boolean; healed: number }
+  // варианты при свободном перемещении и причины, почему что-то недоступно
+  | { id: 'move'; to: LocationId; minutes: number }
+  | { id: 'closed' }
+  | { id: 'wait' }
+  | { id: 'sleep' }
+  | { id: 'doneToday' }
+  | { id: 'forFight' }
+  | { id: 'fullHealth' }
+  // боевой лог
+  | { id: 'defend'; parry: boolean }
+  | {
+      id: 'hit';
+      enemy: string;
+      damage: number;
+      /** Приём класса (его название) или обычный удар. */
+      special: ClassId | null;
+      crit: boolean;
+      /** Доспех врага: удержал удар или удар прошёл в щель. */
+      armor: 'held' | 'pierced' | null;
+    }
+  | { id: 'enemyDodged'; enemy: string }
+  | { id: 'stunned'; enemy: string; brokeWindup: boolean }
+  | { id: 'parried'; enemy: string; damage: number }
+  | { id: 'windup'; enemy: string }
+  | { id: 'dodged'; heavy: boolean }
+  | { id: 'enemyHit'; enemy: string; heavy: boolean; defending: boolean; damage: number }
+  | { id: 'blocked' }
+  | { id: 'enemyMissed'; enemy: string }
+  | { id: 'debugWin' };
+
+/** Подпись варианта: текст из контента или сообщение движка. */
+export type Label = Text | Message;
+
 /** Картинка: путь или функция — чтобы менять её от места и времени суток. */
 export type Image = string | ((ctx: TextContext) => string);
 
@@ -177,7 +232,7 @@ export interface StatCheck {
 }
 
 interface ChoiceBase {
-  text: Text;
+  text: Label;
   /** Запомнить решения при выборе. */
   set?: Flags;
   /** Показывать, только если решение принято. */
@@ -197,7 +252,7 @@ interface ChoiceBase {
   /** Сколько минут занимает выбор. По умолчанию 0. */
   minutes?: number;
   /** Показать, но не давать выбрать; текст — причина (например, закрытый проход). */
-  disabled?: string;
+  disabled?: Label;
   /** Занятие раз в день: после выбора до конца игровых суток вариант недоступен. */
   daily?: string;
   /** Опыт за выбор. */
@@ -387,7 +442,7 @@ export interface FightState {
   enemy: Enemy;
   /** Сколько ходов осталось до приёма класса. */
   cooldown: number;
-  log: string[];
+  log: Message[];
   result: 'win' | 'lose' | null;
   /** Куда перейти после победы. */
   winScene: SceneId;
@@ -400,7 +455,7 @@ export interface FightState {
 /** Короткое сообщение над текстом сцены: итог проверки, добыча, опыт. */
 export interface Notice {
   tone: 'success' | 'fail' | 'info';
-  text: string;
+  message: Message;
 }
 
 /** Текущая партия: герой, где он и что успел решить. */

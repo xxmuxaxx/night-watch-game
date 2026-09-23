@@ -1,5 +1,19 @@
 import { createHero } from '@/game/hero';
-import type { ClassId, GameState, Hero, Rng, Session } from '@/game/types';
+import type { ClassId, GameState, Hero, Message, Notice, Rng, Session } from '@/game/types';
+import { i18n } from '@/i18n';
+
+/** Русский перевод: тесты сверяют тексты так, как их видит игрок. */
+export const ru = i18n('ru');
+
+/** Сообщения по-русски. */
+export function lines(messages: readonly Message[]): string[] {
+  return messages.map(ru.msg);
+}
+
+/** Тексты сообщений над сценой по-русски. */
+export function noticeTexts(notices: readonly Notice[]): string[] {
+  return notices.map((notice) => ru.msg(notice.message));
+}
 
 /** Генератор, выдающий заданные числа по очереди; если они кончились — тест упадёт. */
 export function sequence(...values: number[]): Rng {

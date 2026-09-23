@@ -2,7 +2,7 @@
 import { NPCS, type NpcId } from '@/content/npcs';
 import { ATTITUDES, RELATION_MAX, RELATION_MIN } from '@/content/relations';
 import { meetsCondition, resolveText, textContext } from './context';
-import type { Notice, Relations, Session } from './types';
+import type { Notice, Relations, Session, Translate } from './types';
 
 const NPC_IDS = Object.keys(NPCS) as NpcId[];
 
@@ -34,7 +34,7 @@ export function changeRelations(
     const better = after > before;
     notices.push({
       tone: better ? 'success' : 'fail',
-      text: NPCS[id].name + ': отношение ' + (better ? 'улучшилось' : 'ухудшилось'),
+      message: { id: 'relation', npc: id, better },
     });
   }
   return { relations: next, notices };
@@ -50,19 +50,19 @@ export interface PersonView {
   about: string;
 }
 
-/** Знакомые герою персонажи. */
-export function people(session: Session): PersonView[] {
+/** Знакомые герою персонажи; tr переводит тексты на язык игрока. */
+export function people(session: Session, tr: Translate = (text) => text): PersonView[] {
   const ctx = textContext(session);
   return NPC_IDS.filter((id) => meetsCondition(NPCS[id].known, session)).map((id) => {
     const npc = NPCS[id];
     const value = relationOf(session.relations, id);
     return {
       id,
-      name: npc.name,
+      name: resolveText(tr(npc.name), ctx),
       portrait: npc.portrait,
       value,
-      attitude: attitude(value),
-      about: resolveText(npc.about, ctx),
+      attitude: resolveText(tr(attitude(value)), ctx),
+      about: resolveText(tr(npc.about), ctx),
     };
   });
 }

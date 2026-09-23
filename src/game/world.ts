@@ -1,7 +1,7 @@
 // Свободное перемещение: локации, персонажи по расписанию, течение времени и сюжетные события.
 // Когда session.sceneId === null, герой не в сцене, а в локации; варианты строятся здесь.
 import { EVENTS, type EventId } from '@/content/events';
-import { location, LOCATIONS } from '@/content/locations';
+import { location } from '@/content/locations';
 import { NPCS, type NpcId } from '@/content/npcs';
 import { getScene, isAvailable, textContext, withDaily } from './context';
 import { heal } from './hero';
@@ -38,14 +38,14 @@ export function roamChoices(session: Session): Choice[] {
   const exits = place.exits.map((exit): Choice => {
     const open = !exit.if || ctx.flag(exit.if);
     const choice: Choice = {
-      text: 'Пойти: ' + LOCATIONS[exit.to].name + ' (' + exit.minutes + ' мин)',
+      text: { id: 'move', to: exit.to, minutes: exit.minutes },
       move: exit.to,
       minutes: exit.minutes,
     };
-    return open ? choice : { ...choice, disabled: exit.locked ?? 'Закрыто' };
+    return open ? choice : { ...choice, disabled: exit.locked ?? { id: 'closed' } };
   });
-  const rest: Choice[] = [{ text: 'Подождать час', wait: 60 }];
-  if (place.bed) rest.push({ text: 'Лечь спать до утра', sleep: true });
+  const rest: Choice[] = [{ text: { id: 'wait' }, wait: 60 }];
+  if (place.bed) rest.push({ text: { id: 'sleep' }, sleep: true });
   return [...talks, ...actions, ...exits, ...rest];
 }
 
@@ -129,12 +129,7 @@ export function sleep(session: Session): { session: Session; notices: Notice[] }
   const notices: Notice[] = [
     {
       tone: 'info',
-      text:
-        'Вы проспали ' +
-        hours +
-        ' ч' +
-        (result.session.sceneId !== null ? ' и проснулись' : '') +
-        (healed > 0 ? ' (+' + healed + ' здоровья)' : ''),
+      message: { id: 'slept', hours, woke: result.session.sceneId !== null, healed },
     },
   ];
   return { session: { ...result.session, hero }, notices };

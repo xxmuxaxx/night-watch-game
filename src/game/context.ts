@@ -74,7 +74,7 @@ export function isAvailable(choice: Choice, ctx: TextContext): boolean {
 /** Занятие раз в день, которое сегодня уже было, показывается закрытым. */
 export function withDaily(choice: Choice, session: Session): Choice {
   if (!choice.daily || session.daily[choice.daily] !== toGameTime(session.time).day) return choice;
-  return { ...choice, disabled: 'Сегодня вы это уже делали' };
+  return { ...choice, disabled: { id: 'doneToday' } };
 }
 
 /** Сцена смерти: в ней есть «Конец игры». Такие сцены не сохраняются. */

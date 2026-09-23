@@ -13,13 +13,13 @@ const game = engine.startNewGame(engine.initialState, {
 
 describe('подсказки', () => {
   it('в начале игры — про журнал, потом — ничего', () => {
-    expect(currentHint(game, [])?.id).toBe('journal');
+    expect(currentHint(game, [])).toBe('journal');
     expect(currentHint(game, ['journal'])).toBeNull();
   });
 
   it('при свободном перемещении — про распорядок', () => {
     const roaming = withSession(game, { sceneId: null, locationId: 'courtyard' });
-    expect(currentHint(roaming, ['journal'])?.id).toBe('roaming');
+    expect(currentHint(roaming, ['journal'])).toBe('roaming');
   });
 
   it('в бою при замахе врага — про парирование, и она важнее остальных', () => {
@@ -27,7 +27,7 @@ describe('подсказки', () => {
     const state = withSession(game, {
       fight: { ...fight, enemy: { ...fight.enemy, windingUp: true } },
     });
-    expect(currentHint(state, [])?.id).toBe('parry');
+    expect(currentHint(state, [])).toBe('parry');
   });
 
   it('не мешает выбору награды за уровень и не показывается в меню', () => {
@@ -48,5 +48,14 @@ describe('настройки', () => {
     });
     storage.setItem(SETTINGS_KEY, '{broken');
     expect(createSettingsStore(storage).get()).toEqual(DEFAULT_SETTINGS);
+  });
+
+  it('язык по умолчанию русский; неизвестный язык заменяется им', () => {
+    const storage = memoryStorage();
+    expect(createSettingsStore(storage).get().language).toBe('ru');
+    createSettingsStore(storage).update({ language: 'en' });
+    expect(createSettingsStore(storage).get().language).toBe('en');
+    storage.setItem(SETTINGS_KEY, JSON.stringify({ language: 'de' }));
+    expect(createSettingsStore(storage).get().language).toBe('ru');
   });
 });

@@ -124,11 +124,7 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
       record(engine.closeFight(state), session && fightEntry(session));
     },
     retryFight() {
-      const entry = state.session && fightEntry(state.session);
-      record(
-        engine.retryFight(state),
-        entry && { ...entry, choice: 'Поражение, ещё одна попытка' },
-      );
+      record(engine.retryFight(state), state.session && fightEntry(state.session, true));
     },
     exitToMenu: () => update(engine.gameOver(), true),
     applyItem: (id) => update(engine.applyItem(state, id)),

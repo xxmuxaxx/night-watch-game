@@ -14,8 +14,8 @@ import * as debug from '@/game/debug';
 import { heal } from '@/game/hero';
 import { addXp } from '@/game/progression';
 import { attitude, relationOf } from '@/game/relations';
-import { formatTime } from '@/game/time';
 import type { GameState, StatId } from '@/game/types';
+import { i18n } from '@/i18n';
 import { useStore } from '../store';
 import { BalanceView } from './BalanceView';
 import { StoryMapView } from './StoryMapView';
@@ -124,7 +124,7 @@ export function DebugPanel({ state }: { state: GameState }) {
           </section>
 
           <section>
-            <h5>Мир: {formatTime(session.time)}</h5>
+            <h5>Мир: {i18n('ru').time(session.time)}</h5>
             <div class="debug-row">
               <span>Место</span>
               <select

@@ -1,4 +1,3 @@
-import { STAT_NAMES } from '@/content/stats';
 import { chance } from './random';
 import type { Hero, Notice, Rng, StatCheck } from './types';
 
@@ -18,7 +17,7 @@ export function rollCheck(
     success,
     notice: {
       tone: success ? 'success' : 'fail',
-      text: 'Проверка: ' + STAT_NAMES[check.stat] + ' — ' + (success ? 'успех' : 'провал'),
+      message: { id: 'check', stat: check.stat, success },
     },
   };
 }

@@ -15,6 +15,7 @@ import { SceneView } from './screens/SceneView';
 import { LoadView } from './screens/LoadView';
 import { SettingsView } from './screens/SettingsView';
 import { currentHint } from './hints';
+import { useI18n } from './i18n';
 import { useSettings } from './settings';
 import { useGameState, useStore } from './store';
 import { useAudio } from './useAudio';
@@ -25,6 +26,7 @@ export function App() {
   const store = useStore();
   const state = useGameState();
   const [settings, updateSettings] = useSettings();
+  const { tr } = useI18n();
   useAudio(state, settings);
   const session = state.session;
   const inStory = state.screen === 'story' && session;
@@ -47,6 +49,9 @@ export function App() {
   useEffect(() => {
     document.documentElement.dataset['font'] = settings.fontSize;
   }, [settings.fontSize]);
+  useEffect(() => {
+    document.documentElement.lang = settings.language;
+  }, [settings.language]);
   const hint = settings.hints && !panel ? currentHint(state, settings.seenHints) : null;
   useKeyboard(store, {
     panel,
@@ -62,7 +67,7 @@ export function App() {
           <HeroPanel
             hero={session.hero}
             {...(session.fight ? {} : { onUseItem: (id) => store.applyItem(id) })}
-            goal={activeGoals(session)[0]}
+            goal={activeGoals(session, tr)[0]}
             {...(canOpenJournal
               ? {
                   onOpenJournal: () => setPanel('journal'),
@@ -80,8 +85,8 @@ export function App() {
       {inStory && isChoosingLevelReward(session) && <LevelUp hero={session.hero} />}
       {showJournal && (
         <Journal
-          entries={journal(session)}
-          people={people(session)}
+          entries={journal(session, tr)}
+          people={people(session, tr)}
           onClose={() => setPanel(null)}
           onSwitch={() => setPanel('chronicle')}
         />
@@ -110,7 +115,7 @@ export function App() {
       {hint && (
         <HintToast
           hint={hint}
-          onClose={() => updateSettings({ seenHints: [...settings.seenHints, hint.id] })}
+          onClose={() => updateSettings({ seenHints: [...settings.seenHints, hint] })}
         />
       )}
       {import.meta.env.DEV && <DebugPanel state={state} />}

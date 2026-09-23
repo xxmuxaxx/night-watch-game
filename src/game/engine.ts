@@ -1,6 +1,5 @@
 // Переходы состояния игры. Все функции чистые: получают состояние и возвращают новое.
 // Побочные эффекты (сохранение, отрисовка) — в src/ui/store.ts. Локации, время и события — в world.ts.
-import { item } from '@/content/items';
 import { CHECK_XP } from '@/content/progression';
 import { START_LOCATION, START_SCENE, START_TIME } from '@/content/story';
 import { rollCheck } from './checks';
@@ -99,8 +98,8 @@ export function gameOver(): GameState {
 function gainXp(hero: Hero, amount: number, notices: Notice[]): Hero {
   if (amount <= 0) return hero;
   const next = addXp(hero, amount);
-  notices.push({ tone: 'info', text: '+' + amount + ' опыта' });
-  if (next.level > hero.level) notices.push({ tone: 'success', text: 'Новый уровень!' });
+  notices.push({ tone: 'info', message: { id: 'xp', amount } });
+  if (next.level > hero.level) notices.push({ tone: 'success', message: { id: 'levelUp' } });
   return next;
 }
 
@@ -197,9 +196,7 @@ export function applyItem(state: GameState, id: ItemId): GameState {
   if (!session || session.fight || !hasItem(session.hero, id)) return state;
   if (itemBlocked(session.hero, id, false)) return state;
   const hero = consumeItem(session.hero, id);
-  const notices: Notice[] = [
-    { tone: 'info', text: 'Вы используете: ' + item(id).name + ' (' + item(id).description + ')' },
-  ];
+  const notices: Notice[] = [{ tone: 'info', message: { id: 'itemUsed', item: id } }];
   return { ...state, session: { ...session, hero, notices } };
 }
 
@@ -229,7 +226,7 @@ export function retryFight(state: GameState): GameState {
   const session = state.session;
   const retry = session?.fight?.retry;
   if (!session || !retry || !canRetryFight(session)) return state;
-  const notices: Notice[] = [{ tone: 'info', text: 'Вы собираетесь с силами. Ещё одна попытка.' }];
+  const notices: Notice[] = [{ tone: 'info', message: { id: 'retry' } }];
   return { ...state, session: { ...retry, fight: null, notices } };
 }
 

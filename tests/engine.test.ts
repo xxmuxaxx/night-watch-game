@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as engine from '@/game/engine';
 import { itemBlocked } from '@/game/hero';
 import type { Choice, GameState } from '@/game/types';
-import { constant, sequence, sessionOf, withSession } from './helpers';
+import { constant, noticeTexts, ru, sequence, sessionOf, withSession } from './helpers';
 
 function newGame(classId: 'warrior' | 'rogue' = 'warrior'): GameState {
   return engine.startNewGame(engine.initialState, {
@@ -18,7 +18,7 @@ function pick(state: GameState, fragment: string): Choice {
   const ctx = engine.textContext(session);
   const choice = engine
     .availableChoices(session)
-    .find((c) => engine.resolveText(c.text, ctx).includes(fragment));
+    .find((c) => ru.label(c.text, ctx).includes(fragment));
   if (!choice) throw new Error('Нет варианта «' + fragment + '» в сцене ' + session.sceneId);
   return choice;
 }
@@ -39,7 +39,7 @@ function winFight(state: GameState): GameState {
   return engine.closeFight(s);
 }
 
-const texts = (state: GameState) => sessionOf(state).notices.map((n) => n.text);
+const texts = (state: GameState) => noticeTexts(sessionOf(state).notices);
 
 describe('новая игра', () => {
   it('начинается с первой сцены без решений, опыта и добычи', () => {
@@ -134,8 +134,9 @@ describe('choose', () => {
     const fail = engine.choose(state, pick(state, 'Поднырнуть'), constant(0.9));
     expect(fail.session).toMatchObject({ sceneId: 'st2_1', flags: {}, hero: { xp: 0 } });
     expect(sessionOf(fail).notices).toEqual([
-      { tone: 'fail', text: 'Проверка: Ловкость — провал' },
+      { tone: 'fail', message: { id: 'check', stat: 'agility', success: false } },
     ]);
+    expect(texts(fail)).toEqual(['Проверка: Ловкость — провал']);
   });
 
   it('сундук: при успехе нож в руки, при провале второй попытки нет', () => {
@@ -210,7 +211,7 @@ describe('предметы', () => {
     const state = withSession(newGame(), {
       hero: { ...sessionOf(newGame()).hero, hp: 3, inventory: ['ash'] },
     });
-    expect(itemBlocked(sessionOf(state).hero, 'ash', false)).toBe('Пригодится в бою');
+    expect(itemBlocked(sessionOf(state).hero, 'ash', false)).toEqual({ id: 'forFight' });
     expect(itemBlocked(sessionOf(state).hero, 'ash', true)).toBeNull();
     expect(engine.applyItem(state, 'ash')).toBe(state);
   });

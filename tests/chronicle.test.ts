@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CHRONICLE_LIMIT } from '@/ui/chronicle';
-import { createGameStore } from '@/ui/store';
-import { memoryStorage } from './helpers';
+import { i18n } from '@/i18n';
+import { CHRONICLE_LIMIT, chronicleLine } from '@/ui/chronicle';
+import { createGameStore, type GameStore } from '@/ui/store';
+import { memoryStorage, ru } from './helpers';
 
 function newStore() {
   const store = createGameStore(memoryStorage(), () => 0.5);
@@ -10,11 +11,16 @@ function newStore() {
   return store;
 }
 
+/** Летопись так, как её видит игрок на языке lang. */
+function read(store: GameStore, lang: 'ru' | 'en' = 'ru') {
+  return store.getChronicle().map((entry) => chronicleLine(entry, lang === 'ru' ? ru : i18n(lang)));
+}
+
 describe('летопись', () => {
   it('записывает сцену, её текст и выбор', () => {
     const store = newStore();
     store.choose({ text: 'Подойти к воротам', next: 'st1' });
-    expect(store.getChronicle()).toEqual([
+    expect(read(store)).toEqual([
       {
         time: 'День 1 · 16:00 · день',
         title: 'Вот и всё...',
@@ -47,6 +53,20 @@ describe('летопись', () => {
     store.choose({ text: 'Драться', fight: { name: 'Тень', portrait: '', hp: 1 }, next: 'st3' });
     store.fightAction('attack');
     store.closeFight();
-    expect(store.getChronicle().at(-1)).toMatchObject({ title: 'Бой: Тень', choice: 'Победа' });
+    expect(read(store).at(-1)).toMatchObject({ title: 'Бой: Тень', choice: 'Победа' });
+  });
+
+  it('переводится вместе с языком игры', () => {
+    const store = newStore();
+    store.choose({ text: 'Подойти к воротам', next: 'st1' });
+    expect(read(store, 'en')).toEqual([
+      {
+        time: 'Day 1 · 16:00 · afternoon',
+        title: 'So this is it...',
+        text: 'Your life will soon be over. And a new one will begin...',
+        choice: 'Walk up to the gate',
+        notices: ['Journal: new goal “A new life”'],
+      },
+    ]);
   });
 });

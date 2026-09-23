@@ -3,7 +3,7 @@ import * as engine from '@/game/engine';
 import { atTime } from '@/game/time';
 import type { Choice, GameState } from '@/game/types';
 import { npcsHere } from '@/game/world';
-import { constant, sessionOf, withSession } from './helpers';
+import { constant, sessionOf, withSession, noticeTexts, ru } from './helpers';
 
 function newGame(): GameState {
   return engine.startNewGame(engine.initialState, {
@@ -16,7 +16,7 @@ function newGame(): GameState {
 function choiceTexts(state: GameState): string[] {
   const session = sessionOf(state);
   const ctx = engine.textContext(session);
-  return engine.availableChoices(session).map((c) => engine.resolveText(c.text, ctx));
+  return engine.availableChoices(session).map((c) => ru.label(c.text, ctx));
 }
 
 function pick(state: GameState, fragment: string): Choice {
@@ -24,7 +24,7 @@ function pick(state: GameState, fragment: string): Choice {
   const ctx = engine.textContext(session);
   const choice = engine
     .availableChoices(session)
-    .find((c) => engine.resolveText(c.text, ctx).includes(fragment));
+    .find((c) => ru.label(c.text, ctx).includes(fragment));
   if (!choice)
     throw new Error('Нет варианта «' + fragment + '»: ' + choiceTexts(state).join(' | '));
   return choice;
@@ -150,7 +150,7 @@ describe('события', () => {
     const session = sessionOf(state);
     expect(session).toMatchObject({ sceneId: 'st8', time: atTime(2, 1) });
     expect(session.hero.hp).toBe(3 + 3); // 21:30 → 01:00: три полных часа
-    expect(session.notices.map((n) => n.text)).toEqual([
+    expect(noticeTexts(session.notices)).toEqual([
       'Вы проспали 3 ч и проснулись (+3 здоровья)',
       'Журнал: новая цель «Тревога»',
     ]);
@@ -187,10 +187,10 @@ describe('распорядок дня', () => {
       time: atTime(1, 12),
       hero: { xp: 5 },
     });
-    expect(sessionOf(state).notices.map((n) => n.text)).toContain('+5 опыта');
+    expect(noticeTexts(sessionOf(state).notices)).toContain('+5 опыта');
 
     state = play(state, 'Перевести дух');
-    expect(pick(state, 'Тренироваться').disabled).toBe('Сегодня вы это уже делали');
+    expect(pick(state, 'Тренироваться').disabled).toEqual({ id: 'doneToday' });
     expect(engine.choose(state, pick(state, 'Тренироваться'), constant(0))).toBe(state);
 
     const tomorrow = withSession(state, { time: atTime(2, 10) });
