@@ -4,12 +4,14 @@ import { useEffect, useState } from 'preact/hooks';
 import { CLASS_IDS, HERO_CLASSES } from '@/content/classes';
 import { FLAGS, type FlagId } from '@/content/flags';
 import { ITEMS, type ItemId } from '@/content/items';
+import { LOCATIONS, type LocationId } from '@/content/locations';
 import { STAT_IDS, STAT_NAMES } from '@/content/stats';
 import { SCENES } from '@/content/story';
 import { WEAPONS, type WeaponId } from '@/content/weapons';
 import * as debug from '@/game/debug';
 import { heal } from '@/game/hero';
 import { addXp } from '@/game/progression';
+import { formatTime } from '@/game/time';
 import type { GameState, StatId } from '@/game/types';
 import { useStore } from '../store';
 
@@ -17,6 +19,7 @@ const SCENE_IDS = Object.keys(SCENES);
 const FLAG_IDS = Object.keys(FLAGS) as FlagId[];
 const ITEM_IDS = Object.keys(ITEMS) as ItemId[];
 const WEAPON_IDS = Object.keys(WEAPONS) as WeaponId[];
+const LOCATION_IDS = Object.keys(LOCATIONS) as LocationId[];
 
 export function DebugPanel({ state }: { state: GameState }) {
   const store = useStore();
@@ -71,9 +74,15 @@ export function DebugPanel({ state }: { state: GameState }) {
           <section>
             <h5>Сцена</h5>
             <select
-              value={session.sceneId}
-              onChange={(e) => store.apply((s) => debug.jumpToScene(s, e.currentTarget.value))}
+              value={session.sceneId ?? ''}
+              onChange={(e) => {
+                const id = e.currentTarget.value;
+                store.apply((s) =>
+                  id ? debug.jumpToScene(s, id) : debug.goToLocation(s, session.locationId),
+                );
+              }}
             >
+              <option value="">— свободное перемещение —</option>
               {SCENE_IDS.map((id) => (
                 <option key={id} value={id}>
                   {id} — {SCENES[id]?.title}
@@ -83,6 +92,31 @@ export function DebugPanel({ state }: { state: GameState }) {
             {session.fight && !session.fight.result && (
               <button onClick={() => store.apply(debug.winFight)}>Победить в бою</button>
             )}
+          </section>
+
+          <section>
+            <h5>Мир: {formatTime(session.time)}</h5>
+            <div class="debug-row">
+              <span>Место</span>
+              <select
+                value={session.locationId}
+                onChange={(e) =>
+                  store.apply((s) => debug.goToLocation(s, e.currentTarget.value as LocationId))
+                }
+              >
+                {LOCATION_IDS.map((id) => (
+                  <option key={id} value={id}>
+                    {LOCATIONS[id].name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div class="debug-row">
+              <button onClick={() => store.apply((s) => debug.passHours(s, 1))}>+1 ч</button>
+              <button onClick={() => store.apply((s) => debug.passHours(s, 6))}>+6 ч</button>
+              <button onClick={() => store.apply(debug.resetEvents)}>Сбросить события</button>
+            </div>
+            <div>События: {session.events.length ? session.events.join(', ') : 'нет'}</div>
           </section>
 
           <section>

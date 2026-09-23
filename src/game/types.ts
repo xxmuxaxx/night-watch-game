@@ -1,11 +1,14 @@
 // Общие типы игры. Идентификаторы решений, классов, оружия и предметов задаёт контент (src/content),
 // поэтому опечатка в имени решения или предмета — ошибка компиляции.
 import type { ClassId } from '@/content/classes';
+import type { EventId } from '@/content/events';
 import type { FlagId } from '@/content/flags';
 import type { ItemId } from '@/content/items';
+import type { LocationId } from '@/content/locations';
+import type { NpcId } from '@/content/npcs';
 import type { WeaponId } from '@/content/weapons';
 
-export type { ClassId, FlagId, ItemId, WeaponId };
+export type { ClassId, EventId, FlagId, ItemId, LocationId, NpcId, WeaponId };
 
 /** Случайное число в [0, 1). В игре — Math.random, в тестах — заранее заданная последовательность. */
 export type Rng = () => number;
@@ -78,6 +81,22 @@ export interface Hero {
 /** Награда за новый уровень. */
 export type LevelReward = { stat: StatId } | { maxHp: number };
 
+// --- Время ---
+
+/** Часть суток: утро 6–12, день 12–18, вечер 18–22, ночь 22–6. */
+export type Period = 'morning' | 'day' | 'evening' | 'night';
+
+/** Момент игрового времени. В состоянии время хранится числом минут от полуночи первого дня. */
+export interface GameTime {
+  day: number;
+  hour: number;
+  minute: number;
+  period: Period;
+}
+
+/** Промежуток часов [с, до); может переходить через полночь, например [22, 6]. */
+export type Hours = readonly [number, number];
+
 // --- Сюжет ---
 
 export type SceneId = string;
@@ -86,6 +105,9 @@ export type Flags = Partial<Record<FlagId, true>>;
 export interface TextContext {
   hero: Hero;
   flag: (id: FlagId) => boolean;
+  time: GameTime;
+  /** Где сейчас герой. */
+  location: LocationId;
 }
 
 /** Текст сцены или варианта: строка или функция от героя и решений. `\n` — новая строка. */
@@ -107,7 +129,7 @@ export interface EnemyDef {
 /** Что герой получает: оружие берётся в руки сразу, предметы кладутся в сумку. */
 export interface Loot {
   weapon?: WeaponId;
-  items?: ItemId[];
+  items?: readonly ItemId[];
 }
 
 export interface StatCheck {
@@ -133,6 +155,12 @@ interface ChoiceBase {
   heal?: number;
   /** Добыча при выборе. */
   give?: Loot;
+  /** Показывать только в эти часы. */
+  hours?: Hours;
+  /** Сколько минут занимает выбор. По умолчанию 0. */
+  minutes?: number;
+  /** Показать, но не давать выбрать; текст — причина (например, закрытый проход). */
+  disabled?: string;
 }
 
 /** Перейти в сцену. */
@@ -158,10 +186,39 @@ export interface GameOverChoice extends ChoiceBase {
   gameOver: true;
 }
 
+/** Закончить сцену и вернуться к свободному перемещению: в текущей локации (true) или в указанной. */
+export interface LeaveChoice extends ChoiceBase {
+  leave: true | LocationId;
+}
+
+/** Перейти в соседнюю локацию (варианты строятся из выходов локации). */
+export interface MoveChoice extends ChoiceBase {
+  move: LocationId;
+}
+
+/** Подождать N минут; события могут прервать ожидание. */
+export interface WaitChoice extends ChoiceBase {
+  wait: number;
+}
+
+/** Спать до утра, восстанавливая здоровье; события могут разбудить. */
+export interface SleepChoice extends ChoiceBase {
+  sleep: true;
+}
+
 /** Без действия: например, конец написанного сюжета. */
 export type InertChoice = ChoiceBase;
 
-export type Choice = GoChoice | FightChoice | CheckChoice | GameOverChoice | InertChoice;
+export type Choice =
+  | GoChoice
+  | FightChoice
+  | CheckChoice
+  | GameOverChoice
+  | LeaveChoice
+  | MoveChoice
+  | WaitChoice
+  | SleepChoice
+  | InertChoice;
 
 export interface Scene {
   image: string;
@@ -170,6 +227,62 @@ export interface Scene {
   title: string;
   text: Text;
   choices: Choice[];
+  /** Где происходит сцена: вход в неё переносит героя сюда. */
+  location?: LocationId;
+  /** Решения, которые запоминаются при входе в сцену. */
+  set?: Flags;
+}
+
+// --- Мир ---
+
+/** Выход из локации в соседнюю. */
+export interface Exit {
+  to: LocationId;
+  minutes: number;
+  /** Открыт, только если решение принято; иначе показан закрытым с подсказкой locked. */
+  if?: FlagId;
+  locked?: string;
+}
+
+export interface Location {
+  name: string;
+  /** Картинка; функция — чтобы менять её от времени суток. */
+  image: string | ((ctx: TextContext) => string);
+  text: Text;
+  exits: readonly Exit[];
+  /** Действия на месте: сундук, окно и т. п. */
+  actions?: readonly Choice[];
+  /** Здесь можно спать. */
+  bed?: boolean;
+}
+
+/** Где персонаж бывает в какие часы. */
+export interface NpcShift {
+  location: LocationId;
+  hours: Hours;
+}
+
+export interface Npc {
+  name: string;
+  portrait: string;
+  schedule: readonly NpcShift[];
+  /** Разговор: вариант, который появляется в локации, когда персонаж там. */
+  talk: GoChoice;
+}
+
+/**
+ * Сюжетное событие: сцена, которая начинается сама, когда выполнены условия.
+ * Срабатывает один раз. Проверяется при входе в локацию и по ходу времени.
+ */
+export interface StoryEvent {
+  scene: SceneId;
+  /** Где; без location — где угодно. */
+  location?: LocationId;
+  hours?: Hours;
+  /** Не раньше этого дня. */
+  fromDay?: number;
+  if?: FlagId;
+  ifNot?: FlagId;
 }
 
 // --- Бой ---
@@ -210,7 +323,13 @@ export interface Notice {
 /** Текущая партия: герой, где он и что успел решить. */
 export interface Session {
   hero: Hero;
-  sceneId: SceneId;
+  /** Текущая сцена; null — свободное перемещение по локации. */
+  sceneId: SceneId | null;
+  locationId: LocationId;
+  /** Минуты от полуночи первого дня. */
+  time: number;
+  /** Уже случившиеся события. */
+  events: EventId[];
   flags: Flags;
   fight: FightState | null;
   /** Сообщения о последнем выборе; видны только в сцене сразу после него. */

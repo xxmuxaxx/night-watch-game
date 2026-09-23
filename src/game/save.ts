@@ -1,19 +1,45 @@
 // Сохранение партии в localStorage. Формат версионирован: старые сохранения переводятся
 // в текущий формат (migrate), а сохранения со сценой или классом, которых больше нет, отбрасываются.
 import { HERO_CLASSES } from '@/content/classes';
+import { EVENTS } from '@/content/events';
 import { ITEMS } from '@/content/items';
+import { LOCATIONS } from '@/content/locations';
+import { START_TIME } from '@/content/story';
 import { WEAPONS } from '@/content/weapons';
-import { getScene, hasScene, isDeathScene } from './engine';
-import type { ClassId, Flags, Hero, ItemId, SceneId, Session, WeaponId } from './types';
+import { getScene, hasScene, isDeathScene } from './context';
+import { atTime } from './time';
+import type {
+  ClassId,
+  EventId,
+  Flags,
+  Hero,
+  ItemId,
+  LocationId,
+  SceneId,
+  Session,
+  WeaponId,
+} from './types';
 
 export const SAVE_KEY = 'nightwatch-save';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 interface SaveData {
   version: typeof SAVE_VERSION;
+  /** null — свободное перемещение по локации. */
+  sceneId: SceneId | null;
+  locationId: LocationId;
+  time: number;
+  events: EventId[];
+  hero: Hero;
+  flags: Flags;
+}
+
+/** Формат версии 4: до локаций, времени и событий. */
+interface SaveV4 {
+  version: 4;
   sceneId: SceneId;
   hero: Hero;
   flags: Flags;
@@ -88,30 +114,71 @@ function migrateV2(save: SaveV2): SaveV3 | null {
   };
 }
 
-function migrateV3(save: SaveV3): SaveData {
+function migrateV3(save: SaveV3): SaveV4 {
   return {
     ...save,
-    version: SAVE_VERSION,
+    version: 4,
     hero: { ...save.hero, inventory: [], xp: 0, level: 1, levelUps: 0 },
   };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → 3 → 4. */
+/**
+ * До версии 5 глава была линейной. Место, время и случившиеся события восстанавливаем
+ * по сцене, на которой остановился игрок.
+ */
+function migrateV4(save: SaveV4): SaveData {
+  const id = save.sceneId;
+  const base = { ...save, version: SAVE_VERSION } as const;
+  if (id.startsWith('st6')) {
+    return { ...base, locationId: 'hall', time: atTime(1, 18, 30), events: ['dinner'] };
+  }
+  if (id.startsWith('st7')) {
+    return {
+      ...base,
+      locationId: 'cell',
+      time: atTime(1, 21, 30),
+      events: ['dinner'],
+      flags: { ...save.flags, knowsCell: true },
+    };
+  }
+  if (id === 'st8' || id === 'st9') {
+    return {
+      ...base,
+      locationId: 'cell',
+      time: atTime(2, 1),
+      events: ['dinner', 'alarm'],
+      flags: { ...save.flags, knowsCell: true },
+    };
+  }
+  const beforeGate = ['st0', 'st1', 'st2', 'st2_1', 'st3'].includes(id);
+  return {
+    ...base,
+    locationId: beforeGate ? 'gate' : 'courtyard',
+    time: START_TIME + (beforeGate ? 15 : 45),
+    events: [],
+  };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → 3 → 4 → 5. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
-  let save = raw as SaveV2 | SaveV3 | SaveData;
+  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
     if (!v3) return null;
     save = v3;
   }
   if (save.version === 3) save = migrateV3(save);
+  if (save.version === 4) save = migrateV4(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 
 function isValid(save: SaveData): boolean {
   return (
-    hasScene(save.sceneId) &&
+    (save.sceneId === null || hasScene(save.sceneId)) &&
+    save.locationId in LOCATIONS &&
+    typeof save.time === 'number' &&
+    save.events.every((id) => id in EVENTS) &&
     isClassId(save.hero.classId) &&
     isWeaponId(save.hero.weaponId) &&
     save.hero.inventory.every(isItemId)
@@ -122,7 +189,16 @@ export function readSave(storage: SaveStorage): Session | null {
   try {
     const save = migrate(JSON.parse(storage.getItem(SAVE_KEY) ?? 'null'));
     if (!save || !isValid(save)) return null;
-    return { hero: save.hero, sceneId: save.sceneId, flags: save.flags, fight: null, notices: [] };
+    return {
+      hero: save.hero,
+      sceneId: save.sceneId,
+      locationId: save.locationId,
+      time: save.time,
+      events: save.events,
+      flags: save.flags,
+      fight: null,
+      notices: [],
+    };
   } catch {
     return null;
   }
@@ -130,10 +206,13 @@ export function readSave(storage: SaveStorage): Session | null {
 
 /** Сохранить партию. Сцены смерти не сохраняются. */
 export function writeSave(storage: SaveStorage, session: Session): void {
-  if (isDeathScene(getScene(session.sceneId))) return;
+  if (session.sceneId !== null && isDeathScene(getScene(session.sceneId))) return;
   const save: SaveData = {
     version: SAVE_VERSION,
     sceneId: session.sceneId,
+    locationId: session.locationId,
+    time: session.time,
+    events: session.events,
     hero: session.hero,
     flags: session.flags,
   };

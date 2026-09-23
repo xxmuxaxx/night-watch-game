@@ -20,7 +20,7 @@ npx vitest run -t "подлый удар"       # tests whose name matches
 npm run format       # apply Prettier
 ```
 
-In `npm run dev` a debug panel (`src/ui/debug/DebugPanel.tsx`, toggled by the 🛠 button or the ` key) offers a quick start, a jump to any scene, flag toggles, hero HP/XP/stat/weapon/item edits, an instant fight win and save deletion. It is rendered only under `import.meta.env.DEV`, so it isn't in production builds. Its transitions live in `src/game/debug.ts` and go through `store.apply()`, so autosave still applies; when adding a new kind of game state (time, locations), add a matching control there.
+In `npm run dev` a debug panel (`src/ui/debug/DebugPanel.tsx`, toggled by the 🛠 button or the ` key) offers a quick start, a jump to any scene or to free roaming, a jump to any location, time skips (+1 h / +6 h, events fire as in play), resetting fired events, flag toggles, hero HP/XP/stat/weapon/item edits, an instant fight win and save deletion. It is rendered only under `import.meta.env.DEV`, so it isn't in production builds. Its transitions live in `src/game/debug.ts` and go through `store.apply()`, so autosave still applies; when adding a new kind of game state (time, locations), add a matching control there.
 
 TypeScript is pinned to 6.0 because typescript-eslint doesn't support TypeScript 7 yet. If the dev server starts failing to resolve `@/…` imports after running tests alongside it, restart `npm run dev`.
 
@@ -30,9 +30,15 @@ Functions whose names start with `use` are treated as hooks by the react-hooks l
 
 Three layers, each depending only on the ones before it:
 
-- **`src/content/`: data.** The story (`chapters/*.ts`, merged in `story.ts` with `START_SCENE`), hero classes, weapons, items, stat names, portraits, progression (`progression.ts`: XP rewards, level thresholds, level-up rewards) and the registry of decision flags (`flags.ts`). Ids for flags, classes, weapons and items are derived from these registries (`keyof typeof …`), so a typo in a flag or class id is a compile error. A new flag must be added to `FLAGS` before use.
-- **`src/game/`: pure logic, no DOM.** `types.ts` holds all shared types. `engine.ts` holds state transitions (`choose`, `fightAction`, `closeFight`, `startNewGame`, …) that take a `GameState` and return a new one without mutating it. `combat.ts` (`playRound`), `checks.ts`, `hero.ts` (loot, items) and `progression.ts` (XP, levels) do the same for their parts, and `save.ts` holds the versioned save format. Anything random takes an `Rng` (`() => number`) parameter instead of calling `Math.random`, which is how tests pin outcomes.
+- **`src/content/`: data.** The story (`chapters/*.ts`, merged in `story.ts` with `START_SCENE`), locations (`locations.ts`: `LocationId` is a hand-written union because exits reference it), NPCs with schedules (`npcs.ts`), story events (`events.ts`), hero classes, weapons, items, stat names, portraits, progression (`progression.ts`: XP rewards, level thresholds, level-up rewards) and the registry of decision flags (`flags.ts`). Ids for flags, classes, weapons and items are derived from these registries (`keyof typeof …`), so a typo in a flag or class id is a compile error. A new flag must be added to `FLAGS` before use.
+- **`src/game/`: pure logic, no DOM.** `types.ts` holds all shared types. `engine.ts` holds state transitions (`choose`, `fightAction`, `closeFight`, `startNewGame`, …) that take a `GameState` and return a new one without mutating it. `world.ts` (locations, NPC presence, events, time passing), `time.ts`, `combat.ts` (`playRound`), `checks.ts`, `hero.ts` (loot, items) and `progression.ts` (XP, levels) do the same for their parts; `context.ts` holds helpers shared by the engine and the world (`getScene`, `textContext`, `isAvailable`) so they don't import each other, and `save.ts` holds the versioned save format. Anything random takes an `Rng` (`() => number`) parameter instead of calling `Math.random`, which is how tests pin outcomes.
 - **`src/ui/`: Preact.** `store.ts` wraps the engine: it holds the `GameState`, applies transitions and performs side effects: it autosaves after every change while in the story and not in a fight (a fight isn't saved; reloading restarts it from the scene before), and deletes the save when the game returns to the menu after death. Components read state with `useGameState()` and call store methods; they never mutate state. `App.tsx` renders the scene and hero panel with overlays for the menu, hero creation, the fight and the level-up reward. `useKeyboard.ts` maps 1–9 to choices, 1–4 to level-up rewards, and 1/2/3/4, Enter and Space to fight actions (4 is the first bag item).
+
+### World and time
+
+A session is either in a scene (`sceneId` set) or roaming a location (`sceneId === null`). Time is `session.time`, minutes since midnight of day 1 (`time.ts`: `atTime`, `toGameTime`, `inHours`; periods are morning 6–12, day 12–18, evening 18–22, night 22–6). The game starts at `START_SCENE` / `START_TIME` / `START_LOCATION` in `story.ts`.
+
+While roaming, `roamChoices()` builds the choices: talks with NPCs whose `schedule` puts them here now, the location's `actions`, exits (an exit with `if` stays visible but disabled with its `locked` hint until the flag is set — soft unlocking), "wait an hour" and, where `bed` is set, "sleep until morning" (+1 HP per hour slept). Story events (`events.ts`) start a scene by themselves when the hero is in their `location` within their `hours` (plus `fromDay`, `if`, `ifNot`); each fires once (`session.events`) and only while roaming. Waiting and sleeping advance time in 15-minute steps aligned to the quarter hour and stop when an event starts; moving checks events on arrival. Scenes can set `location` (entering moves the hero there) and `set` (flags recorded on entering). Text functions also get `time` and `location`, so a scene can read differently by hour or place.
 
 ### Scenes
 
@@ -41,10 +47,12 @@ A scene is `{ image, actor?, title, text, choices }`. `text` and choice `text` a
 - `{ next }`: go to a scene.
 - `{ fight: EnemyDef, next }`: fight; winning goes to `next`, losing is game over. `EnemyDef` has `hp` (default 10), `damage` (default 0–2), `xp` (default `FIGHT_XP`, 10, granted when the win is closed) and `windup` (the chance the enemy winds up instead of striking; the next strike is doubled).
 - `{ check: { stat, difficulty, set?, give?, xp? }, next, fail }`: a stat check. The chance is 50% + 15% per point above `difficulty`, clamped to 5–95%, and is shown on the button. `check.set`, `check.give` and `check.xp` (default `CHECK_XP`, 5) apply only on success. Results, loot and XP gains are `session.notices`, shown above the next scene's text and cleared by the next choice.
+- `{ leave: true | LocationId }`: end the scene and roam here (or at that location).
+- `{ move }`, `{ wait }`, `{ sleep }`: generated for roaming; not normally written in scenes.
 - `{ gameOver: true }`: game over. A scene containing one is a death scene and is never saved.
 - No action: the choice does nothing (for example, the end of written content).
 
-Any choice may also have `set` (flags recorded on pick), `if` / `ifNot` (show only when a flag is or isn't set) `heal: N` (restore up to N HP, capped at max) and `give: { weapon?, items? }` (a weapon is equipped at once, items go to the bag). Scene ids are plain strings unique across chapters; `tests/story.test.ts` checks that every link target exists, every scene is reachable, every image file exists in `public/` and every flag used in `if` / `ifNot` is set somewhere.
+Any choice may also have `set` (flags recorded on pick), `if` / `ifNot` (show only when a flag is or isn't set) `heal: N` (restore up to N HP, capped at max) `give: { weapon?, items? }` (a weapon is equipped at once, items go to the bag), `minutes` (time the choice takes, default 0), `hours` (shown only within these hours) and `disabled` (shown but not selectable, with the reason). Scene ids are plain strings unique across chapters; `tests/story.test.ts` checks that every link target exists, every scene is reachable, every image file exists in `public/` and every flag used in `if` / `ifNot` (in choices, exits and events) is set somewhere, every event scene exists and exits are two-way. Reachability counts the prologue, event scenes, NPC talks and location actions as entry points.
 
 ### Combat
 
@@ -56,7 +64,7 @@ XP comes from fights and successful checks; `addXp` raises `level` by the `LEVEL
 
 ### Saves
 
-`localStorage` key `nightwatch-save`, format version 4: `{ version, sceneId, hero, flags }`. `migrate()` upgrades step by step: version 2 (the pre-TypeScript game: `stage`, `class: 'Warrior'`, `src`, `hp`/`currentHp`) → 3 → 4 (adds `inventory`, `xp`, `level`, `levelUps`). Saves with an unknown scene, class, weapon or item are ignored. When the save format changes, bump `SAVE_VERSION` and add a migration step instead of breaking old saves.
+`localStorage` key `nightwatch-save`, format version 5: `{ version, sceneId, locationId, time, events, hero, flags }`. `migrate()` upgrades step by step: version 2 (the pre-TypeScript game: `stage`, `class: 'Warrior'`, `src`, `hp`/`currentHp`) → 3 → 4 (adds `inventory`, `xp`, `level`, `levelUps`) → 5 (adds location, time and fired events, reconstructed from the scene the linear chapter stopped at). Saves with an unknown scene, location, event, class, weapon or item are ignored. When the save format changes, bump `SAVE_VERSION` and add a migration step instead of breaking old saves.
 
 ## Assets and design
 

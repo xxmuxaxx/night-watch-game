@@ -1,7 +1,8 @@
 // Переходы для панели отладки (только в режиме разработки). Как и движок — чистые функции,
 // но без игровых правил: прыгают в любую сцену и меняют героя напрямую.
 import { startNewGame } from './engine';
-import type { ClassId, FlagId, Flags, GameState, Hero, SceneId } from './types';
+import type { ClassId, FlagId, Flags, GameState, Hero, LocationId, SceneId } from './types';
+import { passTime } from './world';
 
 /** Сразу начать игру, минуя меню и создание героя. */
 export function quickStart(state: GameState, classId: ClassId): GameState {
@@ -47,4 +48,28 @@ export function winFight(state: GameState): GameState {
       },
     },
   };
+}
+
+/** Оказаться в локации (свободное перемещение) без событий и затрат времени. */
+export function goToLocation(state: GameState, locationId: LocationId): GameState {
+  if (!state.session) return state;
+  return {
+    ...state,
+    session: { ...state.session, sceneId: null, locationId, fight: null, notices: [] },
+  };
+}
+
+/** Промотать время; при свободном перемещении события срабатывают как в игре. */
+export function passHours(state: GameState, hours: number): GameState {
+  const session = state.session;
+  if (!session || session.fight) return state;
+  const until = session.time + hours * 60;
+  if (session.sceneId !== null) return { ...state, session: { ...session, time: until } };
+  return { ...state, session: passTime(session, until).session };
+}
+
+/** Забыть случившиеся события, чтобы они сработали снова. */
+export function resetEvents(state: GameState): GameState {
+  if (!state.session) return state;
+  return { ...state, session: { ...state.session, events: [] } };
 }

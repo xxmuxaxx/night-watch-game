@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { deleteSave, readSave, SAVE_KEY, writeSave } from '@/game/save';
 import type { Session } from '@/game/types';
+import { atTime } from '@/game/time';
 import { createGameStore } from '@/ui/store';
 import { memoryStorage, testHero } from './helpers';
 
@@ -8,6 +9,9 @@ function session(overrides: Partial<Session> = {}): Session {
   return {
     hero: testHero('rogue'),
     sceneId: 'st5',
+    locationId: 'courtyard',
+    time: atTime(1, 16, 30),
+    events: [],
     flags: { askedToLeave: true },
     fight: null,
     notices: [],
@@ -49,7 +53,7 @@ describe('writeSave / readSave', () => {
   });
 });
 
-describe('миграция сохранений версий 2 и 3', () => {
+describe('миграция старых сохранений', () => {
   const v2 = {
     version: 2,
     stage: 'st7',
@@ -85,7 +89,11 @@ describe('миграция сохранений версий 2 и 3', () => {
         levelUps: 0,
       },
       sceneId: 'st7',
-      flags: { ate: true },
+      // до версии 5 глава была линейной: место, время и события восстанавливаются по сцене
+      locationId: 'cell',
+      time: atTime(1, 21, 30),
+      events: ['dinner'],
+      flags: { ate: true, knowsCell: true },
       fight: null,
       notices: [],
     });
@@ -124,9 +132,24 @@ describe('миграция сохранений версий 2 и 3', () => {
     expect(readSave(storage)).toBeNull();
   });
 
+  it('версия 4: тревога — ночь второго дня, ужин и тревога уже были', () => {
+    const storage = memoryStorage();
+    storage.setItem(
+      SAVE_KEY,
+      JSON.stringify({ version: 4, sceneId: 'st8', hero: testHero(), flags: { ate: true } }),
+    );
+    expect(readSave(storage)).toMatchObject({
+      sceneId: 'st8',
+      locationId: 'cell',
+      time: atTime(2, 1),
+      events: ['dinner', 'alarm'],
+      flags: { ate: true, knowsCell: true },
+    });
+  });
+
   it('загружает сохранение без решений', () => {
     const storage = memoryStorage();
-    storage.setItem(SAVE_KEY, JSON.stringify({ ...v2, flags: undefined }));
+    storage.setItem(SAVE_KEY, JSON.stringify({ ...v2, stage: 'st5', flags: undefined }));
     expect(readSave(storage)?.flags).toEqual({});
   });
 });
@@ -156,6 +179,13 @@ describe('автосохранение в хранилище интерфейс�
     store.choose({ text: 'Конец игры', gameOver: true });
     expect(store.getState().screen).toBe('menu');
     expect(store.hasSave()).toBe(false);
+  });
+
+  it('сохраняет свободное перемещение: место и время', () => {
+    const storage = memoryStorage();
+    const roaming = session({ sceneId: null, locationId: 'hall', time: atTime(1, 17) });
+    writeSave(storage, roaming);
+    expect(readSave(storage)).toEqual(roaming);
   });
 
   it('загрузка продолжает с сохранённой сцены', () => {

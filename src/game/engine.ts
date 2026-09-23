@@ -1,64 +1,35 @@
 // Переходы состояния игры. Все функции чистые: получают состояние и возвращают новое.
-// Побочные эффекты (сохранение, отрисовка) — в src/ui/store.ts.
+// Побочные эффекты (сохранение, отрисовка) — в src/ui/store.ts. Локации, время и события — в world.ts.
 import { item } from '@/content/items';
 import { CHECK_XP } from '@/content/progression';
-import { SCENES, START_SCENE } from '@/content/story';
+import { START_LOCATION, START_SCENE, START_TIME } from '@/content/story';
 import { rollCheck } from './checks';
 import { playRound, startFight } from './combat';
+import { getScene, isAvailable, textContext } from './context';
 import { consumeItem, createHero, giveLoot, hasItem, heal, type NewHero } from './hero';
 import { addXp, applyLevelReward } from './progression';
 import type {
   Choice,
   FightAction,
-  FlagId,
   GameState,
   Hero,
   ItemId,
   LevelReward,
   Notice,
   Rng,
-  Scene,
-  SceneId,
   Session,
-  Text,
-  TextContext,
 } from './types';
+import { enterScene, leaveScene, moveTo, roamChoices, sleep, wait } from './world';
+
+export { getScene, hasScene, isAvailable, isDeathScene, resolveText, textContext } from './context';
 
 export const initialState: GameState = { screen: 'menu', session: null };
 
-export function getScene(id: SceneId): Scene {
-  const scene = SCENES[id];
-  if (!scene) throw new Error('Нет сцены ' + id);
-  return scene;
-}
-
-export function hasScene(id: SceneId): boolean {
-  return id in SCENES;
-}
-
-export function textContext(session: Session): TextContext {
-  return {
-    hero: session.hero,
-    flag: (id: FlagId) => session.flags[id] === true,
-  };
-}
-
-export function resolveText(text: Text, ctx: TextContext): string {
-  return typeof text === 'function' ? text(ctx) : text;
-}
-
-export function isAvailable(choice: Choice, ctx: TextContext): boolean {
-  return (!choice.if || ctx.flag(choice.if)) && (!choice.ifNot || !ctx.flag(choice.ifNot));
-}
-
+/** Варианты сейчас: в сцене — её варианты, в локации — разговоры, действия, выходы, ожидание. */
 export function availableChoices(session: Session): Choice[] {
+  if (session.sceneId === null) return roamChoices(session);
   const ctx = textContext(session);
   return getScene(session.sceneId).choices.filter((choice) => isAvailable(choice, ctx));
-}
-
-/** Сцена смерти: в ней есть «Конец игры». Такие сцены не сохраняются. */
-export function isDeathScene(scene: Scene): boolean {
-  return scene.choices.some((choice) => 'gameOver' in choice);
 }
 
 /** Нужно выбрать награду за новый уровень (окно поверх сцены; не во время боя). */
@@ -76,6 +47,9 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
   const session: Session = {
     hero: createHero(newHero),
     sceneId: START_SCENE,
+    locationId: START_LOCATION,
+    time: START_TIME,
+    events: [],
     flags: {},
     fight: null,
     notices: [],
@@ -102,44 +76,60 @@ function gainXp(hero: Hero, amount: number, notices: Notice[]): Hero {
   return next;
 }
 
-// --- Сюжет ---
+// --- Сюжет и перемещение ---
 
-/** Выбрать вариант ответа в текущей сцене. */
+/** Выбрать вариант: в сцене или в локации. */
 export function choose(state: GameState, choice: Choice, rng: Rng): GameState {
   const current = state.session;
-  if (!current || current.fight || isChoosingLevelReward(current)) return state;
+  if (!current || current.fight || isChoosingLevelReward(current) || choice.disabled) return state;
 
   const notices: Notice[] = [];
-  const flags = { ...current.flags, ...choice.set };
   let hero = current.hero;
   if (choice.heal) hero = heal(hero, choice.heal);
   const loot = giveLoot(hero, choice.give);
   hero = loot.hero;
   notices.push(...loot.notices);
 
+  // Общие последствия любого выбора: решения, лечение, добыча, потраченное время
+  let session: Session = {
+    ...current,
+    hero,
+    flags: { ...current.flags, ...choice.set },
+    time: current.time + (choice.minutes ?? 0),
+    notices,
+  };
+
   if ('check' in choice) {
-    const { success, notice } = rollCheck(hero, choice.check, rng);
+    const { success, notice } = rollCheck(session.hero, choice.check, rng);
     notices.unshift(notice);
     if (success) {
-      Object.assign(flags, choice.check.set);
-      const checkLoot = giveLoot(hero, choice.check.give);
-      hero = gainXp(checkLoot.hero, choice.check.xp ?? CHECK_XP, notices);
+      const checkLoot = giveLoot(session.hero, choice.check.give);
+      session = {
+        ...session,
+        flags: { ...session.flags, ...choice.check.set },
+        hero: gainXp(checkLoot.hero, choice.check.xp ?? CHECK_XP, notices),
+      };
       notices.push(...checkLoot.notices);
     }
-    const sceneId = success ? choice.next : choice.fail;
-    return { ...state, session: { ...current, hero, flags, sceneId, notices } };
+    return { ...state, session: enterScene(session, success ? choice.next : choice.fail) };
   }
   if ('fight' in choice) {
     const fight = startFight(choice.fight, choice.next);
-    return { ...state, session: { ...current, hero, flags, fight, notices: [] } };
+    return { ...state, session: { ...session, fight, notices: [] } };
   }
-  if ('gameOver' in choice) {
-    return gameOver();
+  if ('gameOver' in choice) return gameOver();
+  if ('leave' in choice) return { ...state, session: leaveScene(session, choice.leave) };
+  if ('move' in choice) return { ...state, session: moveTo(session, choice.move) };
+  if ('wait' in choice) {
+    const result = wait(session, choice.wait);
+    return { ...state, session: { ...result.session, notices: [...notices, ...result.notices] } };
   }
-  if ('next' in choice) {
-    return { ...state, session: { ...current, hero, flags, sceneId: choice.next, notices } };
+  if ('sleep' in choice) {
+    const result = sleep(session);
+    return { ...state, session: { ...result.session, notices: [...notices, ...result.notices] } };
   }
-  return { ...state, session: { ...current, hero, flags } };
+  if ('next' in choice) return { ...state, session: enterScene(session, choice.next) };
+  return { ...state, session: { ...session, notices: current.notices } };
 }
 
 /** Использовать предмет из сумки вне боя. */
@@ -177,5 +167,8 @@ export function closeFight(state: GameState): GameState {
   if (fight.result === 'lose') return gameOver();
   const notices: Notice[] = [];
   const hero = gainXp(session.hero, fight.enemy.xp, notices);
-  return { ...state, session: { ...session, hero, fight: null, sceneId: fight.winScene, notices } };
+  return {
+    ...state,
+    session: enterScene({ ...session, hero, fight: null, notices }, fight.winScene),
+  };
 }

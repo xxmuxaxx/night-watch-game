@@ -134,6 +134,17 @@ img {
   margin: 0;
   white-space: pre-line;
 }
+.scene-meta {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.scene-npcs {
+  margin: 10px 0 0;
+  font-style: italic;
+  color: var(--accent-2);
+}
 
 /*  ВАРИАНТЫ ОТВЕТА: нумеруются, выбираются кликом или клавишами 1–9  */
 .select {
@@ -204,7 +215,17 @@ img {
   color: var(--accent-2);
   background: rgba(217, 146, 59, 0.14);
 }
-.choice:hover,
+.choice:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.choice__locked {
+  display: block;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--muted);
+}
+.choice:hover:not(:disabled),
 .choice:focus-visible {
   background: rgba(217, 146, 59, 0.12);
   border-color: var(--accent);

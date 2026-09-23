@@ -1,29 +1,46 @@
+import { location } from '@/content/locations';
+import { NPCS } from '@/content/npcs';
 import { STAT_NAMES } from '@/content/stats';
 import { checkChance } from '@/game/checks';
 import { availableChoices, getScene, resolveText, textContext } from '@/game/engine';
+import { formatTime } from '@/game/time';
 import type { Session } from '@/game/types';
+import { npcsHere } from '@/game/world';
 import { Picture } from '../components/Picture';
 import { useStore } from '../store';
 
-/** Сцена: картинка, портрет собеседника, итог проверки, текст и пронумерованные варианты. */
+/**
+ * Экран истории: сцена (картинка, собеседник, текст, варианты) или, когда сцены нет,
+ * локация — описание, кто рядом, разговоры, действия, выходы, ожидание и сон.
+ */
 export function SceneView({ session }: { session: Session }) {
   const store = useStore();
-  const scene = getScene(session.sceneId);
   const ctx = textContext(session);
   const choices = availableChoices(session);
+  const place = location(session.locationId);
+
+  const scene = session.sceneId === null ? null : getScene(session.sceneId);
+  const npcs = scene ? [] : npcsHere(session).map((id) => NPCS[id]);
+  const image = scene ? scene.image : resolveImage(place.image, ctx);
+  const actor = scene ? scene.actor : npcs[0]?.portrait;
+  const title = scene ? scene.title : place.name;
+  const text = resolveText(scene ? scene.text : place.text, ctx);
 
   return (
     <main class="event-container">
       <div class="image-container">
-        {scene.actor && (
+        {actor && (
           <div class="actor-image">
-            <Picture key={scene.actor} src={scene.actor} />
+            <Picture key={actor} src={actor} />
           </div>
         )}
-        <Picture key={scene.image} src={scene.image} class="scene-image" />
+        <Picture key={image} src={image} class="scene-image" />
       </div>
 
       <div class="text">
+        <p class="scene-meta">
+          {place.name} · {formatTime(session.time)}
+        </p>
         {session.notices.length > 0 && (
           <div class="notices">
             {session.notices.map((notice, i) => (
@@ -33,25 +50,42 @@ export function SceneView({ session }: { session: Session }) {
             ))}
           </div>
         )}
-        <h1>{scene.title}</h1>
-        <p class="scene-text">{resolveText(scene.text, ctx)}</p>
+        <h1>{title}</h1>
+        <p class="scene-text">{text}</p>
+        {npcs.length > 0 && (
+          <p class="scene-npcs">Здесь: {npcs.map((npc) => npc.name).join(', ')}</p>
+        )}
       </div>
 
       <ul class="select">
         {choices.map((choice, i) => (
           <li key={i}>
-            <button class="choice" onClick={() => store.choose(choice)}>
+            <button
+              class="choice"
+              disabled={choice.disabled !== undefined}
+              onClick={() => store.choose(choice)}
+            >
               {'check' in choice && (
                 <span class="check-tag">
                   {STAT_NAMES[choice.check.stat]}{' '}
                   {Math.round(checkChance(session.hero, choice.check) * 100)}%
                 </span>
               )}
-              <span>{resolveText(choice.text, ctx)}</span>
+              <span>
+                {resolveText(choice.text, ctx)}
+                {choice.disabled && <small class="choice__locked">{choice.disabled}</small>}
+              </span>
             </button>
           </li>
         ))}
       </ul>
     </main>
   );
+}
+
+function resolveImage(
+  image: string | ((ctx: ReturnType<typeof textContext>) => string),
+  ctx: ReturnType<typeof textContext>,
+): string {
+  return typeof image === 'function' ? image(ctx) : image;
 }

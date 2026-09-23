@@ -86,9 +86,9 @@ describe('choose', () => {
   it('if / ifNot показывают варианты по решениям', () => {
     let state = withSession(newGame(), { sceneId: 'st8' });
     const choiceTexts = (s: GameState) => engine.availableChoices(sessionOf(s)).map((c) => c.text);
-    expect(choiceTexts(state)).toEqual(['Выбежать к воротам одному']);
+    expect(choiceTexts(state)).toEqual(['Бежать к воротам одному']);
     state = withSession(state, { flags: { vasyaFriend: true } });
-    expect(choiceTexts(state)).toEqual(['Выбежать вместе с Васей']);
+    expect(choiceTexts(state)).toEqual(['Бежать к воротам вместе с Васей']);
   });
 
   it('проверка: успех ведёт в next, запоминает check.set и даёт опыт', () => {
@@ -112,7 +112,11 @@ describe('choose', () => {
   });
 
   it('сундук: при успехе нож в руки, при провале второй попытки нет', () => {
-    const inCell = withSession(newGame(), { sceneId: 'st7' });
+    const inCell = withSession(newGame(), {
+      sceneId: null,
+      locationId: 'cell',
+      flags: { knowsCell: true },
+    });
     const opened = engine.choose(inCell, pick(inCell, 'сундук'), constant(0.1));
     expect(opened.session).toMatchObject({ sceneId: 'st7_2', hero: { weaponId: 'knife', xp: 5 } });
     expect(texts(opened)).toContain('Получено оружие: Старый нож');
@@ -120,7 +124,8 @@ describe('choose', () => {
     let failed = engine.choose(inCell, pick(inCell, 'сундук'), constant(0.99));
     expect(failed.session).toMatchObject({ sceneId: 'st7_3', flags: { triedChest: true } });
     expect(failed.session?.hero.weaponId).toBe('fists');
-    failed = play(failed, 'окно');
+    failed = play(failed, 'Отойти');
+    expect(failed.session?.sceneId).toBeNull();
     expect(() => pick(failed, 'сундук')).toThrow();
   });
 });
@@ -128,7 +133,8 @@ describe('choose', () => {
 describe('опыт и уровни', () => {
   it('новый уровень: награда на выбор, до выбора сюжет стоит', () => {
     let state = withSession(newGame(), {
-      sceneId: 'st7',
+      sceneId: null,
+      locationId: 'cell',
       hero: { ...sessionOf(newGame()).hero, xp: 15, hp: 4 },
     });
     state = engine.choose(state, pick(state, 'сундук'), constant(0.1)); // +5 → 20 опыта
@@ -136,7 +142,7 @@ describe('опыт и уровни', () => {
     expect(texts(state)).toContain('Новый уровень!');
     expect(engine.isChoosingLevelReward(sessionOf(state))).toBe(true);
     // пока награда не выбрана, варианты сцены не работают
-    expect(engine.choose(state, pick(state, 'Лечь спать'), constant(0))).toBe(state);
+    expect(engine.choose(state, pick(state, 'Отойти'), constant(0))).toBe(state);
 
     state = engine.chooseLevelReward(state, { stat: 'agility' });
     expect(state.session?.hero).toMatchObject({
