@@ -135,6 +135,16 @@ export const chapter1: Record<string, Scene> = {
         next: 'st5_2',
       },
       { text: 'Где мне поесть и поспать?', ifNot: 'knowsCell', next: 'st5_3' },
+      // симпатия Торвина — стёганка
+      {
+        text: 'Говорят, ночами на стене холодно. Не найдётся чего-нибудь тёплого?',
+        ifNot: 'gotJacket',
+        ifRelation: { npc: 'torvin', min: 1 },
+        minutes: 10,
+        set: { gotJacket: true },
+        give: { armor: 'jacket' },
+        next: 'torvin_jacket',
+      },
       // Торвин отвечает честно, только если симпатизирует герою
       {
         text: 'Рассказать про огни в лесу',
@@ -177,6 +187,13 @@ export const chapter1: Record<string, Scene> = {
     title: 'Порядки',
     text: '— Ужин в трапезной, как стемнеет, — Торвин кивает на длинное здание с дымящей трубой. — Приходи, а после ужина покажу, где будешь спать. Пока осмотрись, только к стене не суйся: наверх пускают дозорных.',
     choices: [{ text: 'Осмотреться', leave: 'courtyard' }],
+  },
+  torvin_jacket: {
+    image: HERE,
+    actor: 'img/portrait-mentor.jpg',
+    title: 'Стёганка',
+    text: 'Торвин хмыкает, уходит и возвращается со старой стёганкой: вытертой, в заплатах, но толстой и тёплой.\n— Носи. От стрелы не спасёт, а от кулака и от холода — вполне.',
+    choices: [{ text: 'Спасибо', next: 'torvin_talk' }],
   },
   torvin_lights_trust: {
     image: HERE,

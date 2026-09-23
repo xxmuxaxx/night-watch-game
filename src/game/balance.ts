@@ -3,12 +3,14 @@
 // (playRound), так что любая правка боя или врага сразу видна в цифрах.
 // Таблица — в панели отладки («Баланс боя»), проверки порогов — в tests/balance.test.ts.
 import { ENEMIES, type EnemyId } from '@/content/enemies';
+import { item } from '@/content/items';
 import { LEVEL_XP } from '@/content/progression';
 import { canUseSpecial, playRound, startFight } from './combat';
 import { createHero } from './hero';
 import { addXp, applyLevelReward } from './progression';
 import { seededRng } from './random';
 import type {
+  ArmorId,
   ClassId,
   EnemyDef,
   FightAction,
@@ -26,7 +28,7 @@ export const STRATEGIES = {
   /** Внимательный игрок: парирует замах, лечится при малом здоровье, не забывает про приём. */
   smart: (hero, fight) => {
     if (fight.enemy.windingUp) return 'defend';
-    const food = hero.inventory[0];
+    const food = hero.inventory.find((id) => item(id).heal);
     if (food && hero.hp <= hero.maxHp * 0.4) return { item: food };
     return canUseSpecial(fight) ? 'special' : 'attack';
   },
@@ -108,7 +110,7 @@ export interface HeroPreset {
 /** Герой нужного уровня с выбранными наградами за уровни, оружием и сумкой. */
 export function buildHero(
   classId: ClassId,
-  options: { weapon?: WeaponId; rewards?: LevelReward[]; items?: ItemId[] } = {},
+  options: { weapon?: WeaponId; armor?: ArmorId; rewards?: LevelReward[]; items?: ItemId[] } = {},
 ): Hero {
   const rewards = options.rewards ?? [];
   let hero = createHero({ name: 'Тест', classId, portrait: '' });
@@ -117,6 +119,7 @@ export function buildHero(
   return {
     ...hero,
     weaponId: options.weapon ?? 'fists',
+    armorId: options.armor ?? 'none',
     inventory: [...(options.items ?? [])],
   };
 }
@@ -126,6 +129,10 @@ export const HERO_PRESETS: HeroPreset[] = [
   { label: 'Разбойник 1, кулаки', hero: buildHero('rogue') },
   { label: 'Воин 1, нож', hero: buildHero('warrior', { weapon: 'knife' }) },
   { label: 'Разбойник 1, нож', hero: buildHero('rogue', { weapon: 'knife' }) },
+  {
+    label: 'Воин 1, нож, стёганка',
+    hero: buildHero('warrior', { weapon: 'knife', armor: 'jacket' }),
+  },
   {
     label: 'Воин 3: сила, здоровье; нож',
     hero: buildHero('warrior', {

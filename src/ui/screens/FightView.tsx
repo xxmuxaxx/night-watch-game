@@ -3,7 +3,7 @@ import { heroClass } from '@/content/classes';
 import { item } from '@/content/items';
 import { canUseSpecial } from '@/game/combat';
 import { canRetryFight } from '@/game/engine';
-import { inventoryCounts } from '@/game/hero';
+import { inventoryCounts, itemBlocked } from '@/game/hero';
 import type { FightState, Session } from '@/game/types';
 import { HpBar } from '../components/HpBar';
 import { Picture } from '../components/Picture';
@@ -76,9 +76,12 @@ export function FightView({ session }: Props) {
                 <button
                   key={id}
                   class="action action--item"
-                  disabled={hero.hp >= hero.maxHp}
+                  disabled={itemBlocked(hero, id, true) !== null}
                   title={
-                    hero.hp >= hero.maxHp ? 'Здоровье и так полное' : 'Вместо удара; враг ответит'
+                    itemBlocked(hero, id, true) ??
+                    (item(id).stun
+                      ? 'Вместо удара; враг пропустит ход'
+                      : 'Вместо удара; враг ответит')
                   }
                   onClick={() => store.fightAction({ item: id })}
                 >

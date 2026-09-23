@@ -86,6 +86,7 @@ describe('миграция старых сохранений', () => {
         hp: 5,
         maxHp: 8,
         weaponId: 'fists',
+        armorId: 'none',
         inventory: [],
         xp: 0,
         level: 1,

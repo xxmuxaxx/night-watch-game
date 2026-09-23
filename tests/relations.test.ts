@@ -88,6 +88,16 @@ describe('отношения', () => {
     expect(choicesTo(go(trusted, 'torvin_talk'), 'torvin_lights_trust')).toHaveLength(0);
   });
 
+  it('симпатия Торвина — стёганка, один раз', () => {
+    const talk = (relations: Relations) =>
+      withSession(newGame(), { sceneId: 'torvin_talk', flags: { joined: true }, relations });
+    expect(choicesTo(talk({}), 'torvin_jacket')).toEqual([]);
+    const jacket = go(talk({ torvin: 1 }), 'torvin_jacket');
+    expect(sessionOf(jacket).hero.armorId).toBe('jacket');
+    expect(notices(jacket)).toContain('Получена защита: Стёганка');
+    expect(choicesTo(go(jacket, 'torvin_talk'), 'torvin_jacket')).toEqual([]);
+  });
+
   it('с Васей можно помириться по его расписанию, извиниться — один раз', () => {
     const state = roaming({
       locationId: 'courtyard',

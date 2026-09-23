@@ -1,5 +1,6 @@
 // Сохранение партии в localStorage. Формат версионирован: старые сохранения переводятся
 // в текущий формат (migrate), а сохранения со сценой или классом, которых больше нет, отбрасываются.
+import { ARMORS } from '@/content/armors';
 import { HERO_CLASSES } from '@/content/classes';
 import { EVENTS } from '@/content/events';
 import { ITEMS } from '@/content/items';
@@ -23,7 +24,7 @@ import type {
 } from './types';
 
 export const SAVE_KEY = 'nightwatch-save';
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -42,8 +43,14 @@ interface SaveData {
   daily: Record<string, number>;
 }
 
+/** Герой до версии 10: без защиты. */
+type HeroV9 = Omit<Hero, 'armorId'>;
+
+/** Формат версии 9: до защиты героя. */
+type SaveV9 = Omit<SaveData, 'version' | 'hero'> & { version: 9; hero: HeroV9 };
+
 /** Формат версии 8: до занятий раз в день. */
-type SaveV8 = Omit<SaveData, 'version' | 'daily'> & { version: 8 };
+type SaveV8 = Omit<SaveV9, 'version' | 'daily'> & { version: 8 };
 
 /** Формат версии 7: до режима «Одна жизнь». */
 type SaveV7 = Omit<SaveV8, 'version' | 'oneLife'> & { version: 7 };
@@ -58,7 +65,7 @@ type SaveV5 = Omit<SaveV6, 'version'> & { version: 5 };
 interface SaveV4 {
   version: 4;
   sceneId: SceneId;
-  hero: Hero;
+  hero: HeroV9;
   flags: Flags;
 }
 
@@ -66,7 +73,7 @@ interface SaveV4 {
 interface SaveV3 {
   version: 3;
   sceneId: SceneId;
-  hero: Omit<Hero, 'inventory' | 'xp' | 'level' | 'levelUps'>;
+  hero: Omit<HeroV9, 'inventory' | 'xp' | 'level' | 'levelUps'>;
   flags: Flags;
 }
 
@@ -211,14 +218,20 @@ function migrateV7(save: SaveV7): SaveV8 {
 }
 
 /** В версии 9 появились занятия раз в день; старые партии их ещё не делали. */
-function migrateV8(save: SaveV8): SaveData {
-  return { ...save, version: SAVE_VERSION, daily: {} };
+function migrateV8(save: SaveV8): SaveV9 {
+  return { ...save, version: 9, daily: {} };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 9. */
+/** В версии 10 у героя появилась защита; до неё защиты не было. */
+function migrateV9(save: SaveV9): SaveData {
+  return { ...save, version: SAVE_VERSION, hero: { ...save.hero, armorId: 'none' } };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 10. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
-  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveV7 | SaveV8 | SaveData;
+  let save = raw as
+    SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveV7 | SaveV8 | SaveV9 | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
     if (!v3) return null;
@@ -230,6 +243,7 @@ export function migrate(raw: unknown): SaveData | null {
   if (save.version === 6) save = migrateV6(save);
   if (save.version === 7) save = migrateV7(save);
   if (save.version === 8) save = migrateV8(save);
+  if (save.version === 9) save = migrateV9(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 
@@ -244,6 +258,7 @@ function isValid(save: SaveData): boolean {
     ) &&
     isClassId(save.hero.classId) &&
     isWeaponId(save.hero.weaponId) &&
+    save.hero.armorId in ARMORS &&
     save.hero.inventory.every(isItemId)
   );
 }

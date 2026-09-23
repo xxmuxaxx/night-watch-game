@@ -31,6 +31,13 @@ export const ROUTINE = {
       give: { items: ['bread'] },
       next: 'routine_kitchen',
     },
+    {
+      text: 'Набрать золы из очага (в бою — в глаза врагу)',
+      daily: 'ash',
+      minutes: 10,
+      give: { items: ['ash'] },
+      next: 'routine_ash',
+    },
   ],
 } satisfies Record<string, Choice[]>;
 
@@ -53,6 +60,12 @@ export const routine: Record<string, Scene> = {
     title: 'Кухня',
     text: 'Полтора часа вы чистите репу и таскаете воду. Повар, красный и злой, под конец всё-таки суёт вам краюху хлеба:\n— Заслужил. Остальным не говори.',
     choices: [{ text: 'Вернуться в зал', leave: true }],
+  },
+  routine_ash: {
+    image: 'img/scene-hall.jpg',
+    title: 'Зола',
+    text: 'Вы набираете в тряпицу горсть остывшей золы. Старый трактирный приём: швырни её в глаза — и противник на миг ослепнет.',
+    choices: [{ text: 'Отойти от очага', leave: true }],
   },
   routine_brazier: {
     image: 'img/scene-courtyard.jpg',

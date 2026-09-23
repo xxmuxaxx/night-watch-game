@@ -3,8 +3,9 @@ import { heroClass } from '@/content/classes';
 import { item } from '@/content/items';
 import { STAT_IDS, STAT_NAMES } from '@/content/stats';
 import { weapon } from '@/content/weapons';
+import { armor } from '@/content/armors';
 import { combatStats } from '@/game/combat';
-import { inventoryCounts } from '@/game/hero';
+import { inventoryCounts, itemBlocked } from '@/game/hero';
 import type { JournalView } from '@/game/journal';
 import type { Hero, ItemId } from '@/game/types';
 import { percent } from '../format';
@@ -28,6 +29,11 @@ export function HeroPanel({ hero, onUseItem, goal, onOpenJournal }: Props) {
   const rows: [string, string | number][] = [
     ...STAT_IDS.map((stat): [string, number] => [STAT_NAMES[stat], hero.stats[stat]]),
     ['Оружие', `${heroWeapon.name} (${heroWeapon.damage.min}–${heroWeapon.damage.max})`],
+    [
+      'Защита',
+      armor(hero.armorId).name +
+        (hero.armorId === 'none' ? '' : ' (−' + armor(hero.armorId).armor + ' урона)'),
+    ],
     ['Точный удар', percent(chances.crit)],
     ['Уклонение', percent(chances.dodge)],
     ['Приём', cls.special.name],
@@ -74,22 +80,25 @@ export function HeroPanel({ hero, onUseItem, goal, onOpenJournal }: Props) {
             <p class="bag__empty">Пусто</p>
           ) : (
             <ul>
-              {bag.map(({ id, count }) => (
-                <li key={id}>
-                  <button
-                    class="bag__item"
-                    disabled={!onUseItem || hero.hp >= hero.maxHp}
-                    title={hero.hp >= hero.maxHp ? 'Здоровье и так полное' : 'Использовать'}
-                    onClick={() => onUseItem?.(id)}
-                  >
-                    <span>
-                      {item(id).name}
-                      {count > 1 && ' ×' + count}
-                    </span>
-                    <small>{item(id).description}</small>
-                  </button>
-                </li>
-              ))}
+              {bag.map(({ id, count }) => {
+                const blocked = itemBlocked(hero, id, false);
+                return (
+                  <li key={id}>
+                    <button
+                      class="bag__item"
+                      disabled={!onUseItem || blocked !== null}
+                      title={blocked ?? 'Использовать'}
+                      onClick={() => onUseItem?.(id)}
+                    >
+                      <span>
+                        {item(id).name}
+                        {count > 1 && ' ×' + count}
+                      </span>
+                      <small>{item(id).description}</small>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

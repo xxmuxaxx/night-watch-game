@@ -6,7 +6,15 @@ import { START_LOCATION, START_SCENE, START_TIME } from '@/content/story';
 import { rollCheck } from './checks';
 import { playRound, startFight } from './combat';
 import { getScene, isAvailable, textContext, withDaily } from './context';
-import { consumeItem, createHero, giveLoot, hasItem, heal, type NewHero } from './hero';
+import {
+  consumeItem,
+  createHero,
+  giveLoot,
+  hasItem,
+  heal,
+  itemBlocked,
+  type NewHero,
+} from './hero';
 import { journalNotices } from './journal';
 import { addXp, applyLevelReward } from './progression';
 import { changeRelations } from './relations';
@@ -187,6 +195,7 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
 export function applyItem(state: GameState, id: ItemId): GameState {
   const session = state.session;
   if (!session || session.fight || !hasItem(session.hero, id)) return state;
+  if (itemBlocked(session.hero, id, false)) return state;
   const hero = consumeItem(session.hero, id);
   const notices: Notice[] = [
     { tone: 'info', text: 'Вы используете: ' + item(id).name + ' (' + item(id).description + ')' },

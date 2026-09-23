@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as engine from '@/game/engine';
+import { itemBlocked } from '@/game/hero';
 import type { Choice, GameState } from '@/game/types';
 import { constant, sequence, sessionOf, withSession } from './helpers';
 
@@ -183,6 +184,15 @@ describe('предметы', () => {
   it('нельзя использовать предмет, которого нет', () => {
     const state = newGame();
     expect(engine.applyItem(state, 'bread')).toBe(state);
+  });
+
+  it('золу вне боя не использовать — она пригодится в бою', () => {
+    const state = withSession(newGame(), {
+      hero: { ...sessionOf(newGame()).hero, hp: 3, inventory: ['ash'] },
+    });
+    expect(itemBlocked(sessionOf(state).hero, 'ash', false)).toBe('Пригодится в бою');
+    expect(itemBlocked(sessionOf(state).hero, 'ash', true)).toBeNull();
+    expect(engine.applyItem(state, 'ash')).toBe(state);
   });
 });
 

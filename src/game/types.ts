@@ -1,5 +1,6 @@
 // Общие типы игры. Идентификаторы решений, классов, оружия и предметов задаёт контент (src/content),
 // поэтому опечатка в имени решения или предмета — ошибка компиляции.
+import type { ArmorId } from '@/content/armors';
 import type { ClassId } from '@/content/classes';
 import type { EventId } from '@/content/events';
 import type { FlagId } from '@/content/flags';
@@ -8,7 +9,7 @@ import type { LocationId } from '@/content/locations';
 import type { NpcId } from '@/content/npcs';
 import type { WeaponId } from '@/content/weapons';
 
-export type { ClassId, EventId, FlagId, ItemId, LocationId, NpcId, WeaponId };
+export type { ArmorId, ClassId, EventId, FlagId, ItemId, LocationId, NpcId, WeaponId };
 
 /** Случайное число в [0, 1). В игре — Math.random, в тестах — заранее заданная последовательность. */
 export type Rng = () => number;
@@ -53,12 +54,21 @@ export interface Weapon {
   damage: Range;
 }
 
+/** Защита героя. */
+export interface Armor {
+  name: string;
+  /** Столько урона снимается с каждого удара врага. */
+  armor: number;
+}
+
 export interface Item {
   name: string;
   /** Короткое пояснение для сумки, например «+3 здоровья». */
   description: string;
   /** Сколько здоровья восстанавливает (не выше максимума). */
-  heal: number;
+  heal?: number;
+  /** Только в бою: враг пропускает ответный удар и теряет замах. */
+  stun?: boolean;
 }
 
 export interface Hero {
@@ -70,6 +80,7 @@ export interface Hero {
   hp: number;
   maxHp: number;
   weaponId: WeaponId;
+  armorId: ArmorId;
   /** Предметы в сумке; одинаковые повторяются. */
   inventory: ItemId[];
   xp: number;
@@ -145,9 +156,10 @@ export interface EnemyDef {
   xp?: number;
 }
 
-/** Что герой получает: оружие берётся в руки сразу, предметы кладутся в сумку. */
+/** Что герой получает: оружие и защита надеваются сразу, предметы кладутся в сумку. */
 export interface Loot {
   weapon?: WeaponId;
+  armor?: ArmorId;
   items?: readonly ItemId[];
 }
 

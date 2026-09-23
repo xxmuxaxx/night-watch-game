@@ -7,7 +7,9 @@
 // Враг с шансом windup замахивается вместо удара, и следующий его удар двойной;
 // защита его парирует, оглушение (stun) сбивает. Доспех врага (armor) снимает урон с каждого
 // удара героя, кроме точного; увёртливый враг (dodge) уходит от обычных ударов, но не от приёма.
-// Шансы точного удара и уворота героя растут с чутьём и ловкостью (combatStats).
+// Шансы точного удара и уворота героя растут с чутьём и ловкостью (combatStats); защита героя
+// (armorId) снимает урон с каждого удара врага. Предмет со stun (зола) оглушает, как приём.
+import { armor } from '@/content/armors';
 import { heroClass } from '@/content/classes';
 import { CRIT_PER_WITS, DODGE_PER_AGILITY, MAX_CHANCE } from '@/content/combat';
 import { item } from '@/content/items';
@@ -98,6 +100,7 @@ export function playRound(
   if (typeof action === 'object') {
     current = consumeItem(hero, action.item);
     heroHp = current.hp;
+    stun = item(action.item).stun ?? false;
     log.push(
       'Вы используете: ' + item(action.item).name + ' (' + item(action.item).description + ')',
     );
@@ -178,7 +181,11 @@ export function playRound(
     log.push(heavy ? 'Вы уворачиваетесь от сильного удара!' : 'Вы уворачиваетесь от удара');
     return finish(null);
   }
-  let damage = randomInt(rng, enemy.damage) * (heavy ? 2 : 1);
+  // защита героя снимает свою долю, потом блок делит остаток пополам
+  let damage = Math.max(
+    0,
+    randomInt(rng, enemy.damage) * (heavy ? 2 : 1) - armor(hero.armorId).armor,
+  );
   if (defending) damage = Math.floor(damage / 2);
   heroHp -= damage;
   if (damage > 0) {

@@ -1,6 +1,7 @@
 // Панель отладки: только в режиме разработки (npm run dev), в сборку для игроков не попадает.
 // Открывается кнопкой в левом нижнем углу или клавишей ` (Ё).
 import { useEffect, useState } from 'preact/hooks';
+import { ARMORS, type ArmorId } from '@/content/armors';
 import { CLASS_IDS, HERO_CLASSES } from '@/content/classes';
 import { FLAGS, type FlagId } from '@/content/flags';
 import { ITEMS, type ItemId } from '@/content/items';
@@ -22,6 +23,7 @@ const SCENE_IDS = Object.keys(SCENES);
 const FLAG_IDS = Object.keys(FLAGS) as FlagId[];
 const ITEM_IDS = Object.keys(ITEMS) as ItemId[];
 const WEAPON_IDS = Object.keys(WEAPONS) as WeaponId[];
+const ARMOR_IDS = Object.keys(ARMORS) as ArmorId[];
 const LOCATION_IDS = Object.keys(LOCATIONS) as LocationId[];
 const NPC_IDS = Object.keys(NPCS) as NpcId[];
 
@@ -181,6 +183,26 @@ export function DebugPanel({ state }: { state: GameState }) {
                 {WEAPON_IDS.map((id) => (
                   <option key={id} value={id}>
                     {WEAPONS[id].name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div class="debug-row">
+              <span>Защита</span>
+              <select
+                value={hero.armorId}
+                onChange={(e) =>
+                  store.apply((s) =>
+                    debug.updateHero(s, (h) => ({
+                      ...h,
+                      armorId: e.currentTarget.value as ArmorId,
+                    })),
+                  )
+                }
+              >
+                {ARMOR_IDS.map((id) => (
+                  <option key={id} value={id}>
+                    {ARMORS[id].name}
                   </option>
                 ))}
               </select>

@@ -238,6 +238,26 @@ describe('playRound', () => {
     expect(fight.log[0]).toBe('Вы используете: Краюха хлеба (+3 здоровья)');
   });
 
+  it('стёганка снимает 1 урона с удара врага, защита делит остаток', () => {
+    const jacket = testHero('warrior', { armorId: 'jacket' });
+    const fight = startFight({ ...DUMMY, windup: 0 }, 'next');
+    // урон врага 2 − 1 = 1
+    expect(playRound(jacket, fight, 'attack', sequence(0.99, 0.99, 0.99, 0.99, 0)).hero.hp).toBe(9);
+    // в защите: (2 − 1) / 2 = 0
+    expect(playRound(jacket, fight, 'defend', sequence(0.99, 0.99, 0)).hero.hp).toBe(10);
+  });
+
+  it('горсть золы оглушает: враг пропускает удар и теряет замах', () => {
+    const hero = testHero('warrior', { inventory: ['ash'] });
+    const first = playRound(hero, startFight(DUMMY, 'next'), 'attack', sequence(0, 0.99, 0.1));
+    expect(first.fight.enemy.windingUp).toBe(true);
+    const { hero: after, fight } = playRound(first.hero, first.fight, { item: 'ash' }, constant(0));
+    expect(after.inventory).toEqual([]);
+    expect(after.hp).toBe(10);
+    expect(fight.enemy.windingUp).toBe(false);
+    expect(fight.log.at(-1)).toBe('Вы сбиваете замах: Вася оглушён и пропускает удар');
+  });
+
   it('предмета нет в сумке — раунд не играется', () => {
     const fight = startFight(DUMMY, 'next');
     expect(playRound(testHero(), fight, { item: 'bread' }, constant(0)).fight).toBe(fight);
