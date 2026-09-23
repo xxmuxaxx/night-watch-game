@@ -33,7 +33,8 @@ export function journal(session: Session): JournalView[] {
           .filter((note) => meetsCondition(note, session))
           .map((note) => resolveText(note.text, ctx)),
         done,
-        hint: entry.hint && !done ? resolveText(entry.hint, ctx) : null,
+        // пустая строка — подсказки сейчас нет
+        hint: (entry.hint && !done && resolveText(entry.hint, ctx)) || null,
       },
     ];
   });

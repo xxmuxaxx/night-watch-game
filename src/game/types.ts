@@ -125,6 +125,9 @@ export interface TextContext {
 /** Текст сцены или варианта: строка или функция от героя и решений. `\n` — новая строка. */
 export type Text = string | ((ctx: TextContext) => string);
 
+/** Картинка: путь или функция — чтобы менять её от места и времени суток. */
+export type Image = string | ((ctx: TextContext) => string);
+
 export interface EnemyDef {
   name: string;
   portrait: string;
@@ -239,7 +242,7 @@ export type Choice =
   | InertChoice;
 
 export interface Scene {
-  image: string;
+  image: Image;
   /** Портрет собеседника поверх картинки сцены. */
   actor?: string;
   title: string;
@@ -266,8 +269,7 @@ export interface Exit {
 
 export interface Location {
   name: string;
-  /** Картинка; функция — чтобы менять её от времени суток. */
-  image: string | ((ctx: TextContext) => string);
+  image: Image;
   text: Text;
   exits: readonly Exit[];
   /** Действия на месте: сундук, окно и т. п. */
@@ -331,7 +333,7 @@ export interface JournalEntry extends Condition {
   title: string;
   /** Записи по порядку; видны те, чьё условие выполнено. */
   notes: readonly JournalNote[];
-  /** Подсказка, пока цель не выполнена: куда идти и когда. */
+  /** Подсказка, пока цель не выполнена: куда идти и когда. Пустая строка — подсказки нет. */
   hint?: Text;
   /** Цель выполнена. */
   done?: Condition;

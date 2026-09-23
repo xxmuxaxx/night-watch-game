@@ -2,7 +2,7 @@ import { location } from '@/content/locations';
 import { NPCS } from '@/content/npcs';
 import { STAT_NAMES } from '@/content/stats';
 import { checkChance } from '@/game/checks';
-import { availableChoices, getScene, resolveText, textContext } from '@/game/engine';
+import { availableChoices, getScene, resolveImage, resolveText, textContext } from '@/game/engine';
 import { formatTime } from '@/game/time';
 import type { Session } from '@/game/types';
 import { npcsHere } from '@/game/world';
@@ -21,7 +21,7 @@ export function SceneView({ session }: { session: Session }) {
 
   const scene = session.sceneId === null ? null : getScene(session.sceneId);
   const npcs = scene ? [] : npcsHere(session).map((id) => NPCS[id]);
-  const image = scene ? scene.image : resolveImage(place.image, ctx);
+  const image = resolveImage(scene ? scene.image : place.image, ctx);
   const actor = scene ? scene.actor : npcs[0]?.portrait;
   const title = scene ? scene.title : place.name;
   const text = resolveText(scene ? scene.text : place.text, ctx);
@@ -81,11 +81,4 @@ export function SceneView({ session }: { session: Session }) {
       </ul>
     </main>
   );
-}
-
-function resolveImage(
-  image: string | ((ctx: ReturnType<typeof textContext>) => string),
-  ctx: ReturnType<typeof textContext>,
-): string {
-  return typeof image === 'function' ? image(ctx) : image;
 }

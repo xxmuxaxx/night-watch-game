@@ -4,7 +4,8 @@
 // окно и сундук — действия в келье (src/content/locations.ts). Решения — в src/content/flags.ts.
 // Отношения: Торвин ценит послушание (ужин вовремя +1, опоздание −1, «не хочу служить» −1),
 // Вася — уважение (подсечка −1, рукопожатие +2, извинение +1, молча уйти −1).
-import type { EnemyDef, Scene } from '@/game/types';
+import { LOCATIONS } from '@/content/locations';
+import type { EnemyDef, Image, Scene } from '@/game/types';
 
 const VASYA: EnemyDef = {
   name: 'Вася',
@@ -12,6 +13,12 @@ const VASYA: EnemyDef = {
   hp: 10,
   damage: { min: 0, max: 2 },
   windup: 0.3,
+};
+
+/** Картинка места, где сейчас герой: для разговоров, которые бывают и во дворе, и в трапезной. */
+const HERE: Image = (ctx) => {
+  const image = LOCATIONS[ctx.location].image;
+  return typeof image === 'function' ? image(ctx) : image;
 };
 
 export const chapter1: Record<string, Scene> = {
@@ -115,7 +122,7 @@ export const chapter1: Record<string, Scene> = {
     ],
   },
   torvin_talk: {
-    image: 'img/scene-courtyard.jpg',
+    image: HERE,
     actor: 'img/portrait-mentor.jpg',
     title: 'Торвин',
     text: ({ hero, relation }) =>
@@ -158,28 +165,28 @@ export const chapter1: Record<string, Scene> = {
     ],
   },
   st5_1: {
-    image: 'img/scene-courtyard.jpg',
+    image: HERE,
     actor: 'img/portrait-mentor.jpg',
     title: 'Край мира',
     text: '— Северный рубеж. Последняя крепость перед перевалом. Дальше только лес да горы, и никаких королей.\nТорвин смотрит на тёмную полосу леса за стеной.\n— Днём там тихо. А ночью… ночью увидишь сам. Для того стража и стоит здесь триста лет.',
     choices: [{ text: 'Понятно', next: 'torvin_talk' }],
   },
   st5_2: {
-    image: 'img/scene-courtyard.jpg',
+    image: HERE,
     actor: 'img/portrait-mentor.jpg',
     title: 'Выбор без выбора',
     text: '— Ворота здесь открываются только внутрь, — усмехается Торвин без злобы. — Лучников на стене ты видел.\nОн хлопает вас по плечу.\n— Но не спеши записывать нас в тюремщиков. Тут кормят досыта и спят под крышей. Многим там, откуда их привезли, и это не светило.',
     choices: [{ text: 'Понятно', next: 'torvin_talk' }],
   },
   st5_3: {
-    image: 'img/scene-courtyard.jpg',
+    image: HERE,
     actor: 'img/portrait-mentor.jpg',
     title: 'Порядки',
     text: '— Ужин в трапезной, как стемнеет, — Торвин кивает на длинное здание с дымящей трубой. — Приходи, а после ужина покажу, где будешь спать. Пока осмотрись, только к стене не суйся: наверх пускают дозорных.',
     choices: [{ text: 'Осмотреться', leave: 'courtyard' }],
   },
   torvin_lights_trust: {
-    image: 'img/scene-hall.jpg',
+    image: HERE,
     actor: 'img/portrait-mentor.jpg',
     set: { torvinWarned: true },
     title: 'Не всё, что ходит по лесу',
@@ -187,14 +194,14 @@ export const chapter1: Record<string, Scene> = {
     choices: [{ text: 'Понял', next: 'torvin_talk' }],
   },
   torvin_lights_cold: {
-    image: 'img/scene-hall.jpg',
+    image: HERE,
     actor: 'img/portrait-mentor.jpg',
     title: 'Мерещится',
     text: '— Огни? — Торвин пожимает плечами. — Мерещится с непривычки: снег, луна, усталость. Иди-ка ты спать, новобранец.\nОн отворачивается слишком поспешно.',
     choices: [{ text: 'Ладно', next: 'torvin_talk' }],
   },
   torvin_late: {
-    image: 'img/scene-courtyard.jpg',
+    image: HERE,
     actor: 'img/portrait-mentor.jpg',
     relation: { torvin: -1 },
     title: 'Торвин нашёл вас',
@@ -204,7 +211,7 @@ export const chapter1: Record<string, Scene> = {
 
   // --- Вася: разговор по его расписанию ---
   vasya_talk: {
-    image: 'img/scene-courtyard.jpg',
+    image: HERE,
     actor: 'img/portrait-vasya.jpg',
     title: 'Вася',
     text: ({ relation }) =>
@@ -226,7 +233,7 @@ export const chapter1: Record<string, Scene> = {
     ],
   },
   vasya_sorry: {
-    image: 'img/scene-courtyard.jpg',
+    image: HERE,
     actor: 'img/portrait-vasya.jpg',
     title: 'Без обид',
     text: ({ flag }) =>

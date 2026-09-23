@@ -5,6 +5,7 @@ import type {
   Choice,
   Condition,
   FlagId,
+  Image,
   NpcId,
   RelationCondition,
   Scene,
@@ -54,6 +55,10 @@ export function meetsRelation(condition: RelationCondition, ctx: TextContext): b
 
 export function resolveText(text: Text, ctx: TextContext): string {
   return typeof text === 'function' ? text(ctx) : text;
+}
+
+export function resolveImage(image: Image, ctx: TextContext): string {
+  return typeof image === 'function' ? image(ctx) : image;
 }
 
 /** Показывать ли вариант: решения (if / ifNot), отношения (ifRelation) и часы (hours). */

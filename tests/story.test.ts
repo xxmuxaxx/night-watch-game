@@ -8,7 +8,19 @@ import { LOCATIONS } from '@/content/locations';
 import { NPCS } from '@/content/npcs';
 import { HERO_PORTRAITS } from '@/content/portraits';
 import { SCENES, START_SCENE } from '@/content/story';
-import type { Choice, Condition, FlagId, JournalEntry, SceneId, StoryEvent } from '@/game/types';
+import * as engine from '@/game/engine';
+import { atTime } from '@/game/time';
+import { sessionOf } from './helpers';
+import type {
+  Choice,
+  Condition,
+  FlagId,
+  Image,
+  JournalEntry,
+  LocationId,
+  SceneId,
+  StoryEvent,
+} from '@/game/types';
 
 const scenes = Object.entries(SCENES);
 const locations = Object.values(LOCATIONS);
@@ -76,11 +88,26 @@ describe('сюжет', () => {
 
   it('все картинки лежат в public/', () => {
     const images = new Set<string>(HERO_PORTRAITS);
+    // картинка-функция проверяется во всех местах и во все части суток
+    const game = engine.startNewGame(engine.initialState, {
+      name: 'Тест',
+      classId: 'warrior',
+      portrait: 'img/hero-1.jpg',
+    });
+    const contexts = (Object.keys(LOCATIONS) as LocationId[]).flatMap((locationId) =>
+      [3, 9, 15, 20].map((hour) =>
+        engine.textContext({ ...sessionOf(game), locationId, time: atTime(1, hour) }),
+      ),
+    );
+    const add = (image: Image) => {
+      if (typeof image === 'string') images.add(image);
+      else for (const ctx of contexts) images.add(image(ctx));
+    };
     for (const [, scene] of scenes) {
-      images.add(scene.image);
+      add(scene.image);
       if (scene.actor) images.add(scene.actor);
     }
-    for (const place of locations) if (typeof place.image === 'string') images.add(place.image);
+    for (const place of locations) add(place.image);
     for (const npc of npcs) images.add(npc.portrait);
     for (const { choice } of choices) if ('fight' in choice) images.add(choice.fight.portrait);
     const missing = [...images].filter((path) => !existsSync(resolve('public', path)));

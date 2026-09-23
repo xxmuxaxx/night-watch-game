@@ -50,7 +50,7 @@ Each NPC has an attitude towards the hero, `session.relations[npcId]`, from −5
 
 ### Scenes
 
-A scene is `{ image, actor?, title, text, choices }`. `text` and choice `text` are a string or a function of `{ hero, flag, time, location, relation }`; `\n` renders as a line break. Choices are a union discriminated by which key is present (engine checks with `in`):
+A scene is `{ image, actor?, title, text, choices }`. `image` (like a location's) may be a function of the same context as text: chapter 1's `HERE` shows the picture of wherever the hero is, for talks that happen in more than one place. `text` and choice `text` are a string or a function of `{ hero, flag, time, location, relation }`; `\n` renders as a line break. Choices are a union discriminated by which key is present (engine checks with `in`):
 
 - `{ next }`: go to a scene.
 - `{ fight: EnemyDef, next }`: fight; winning goes to `next`, losing is game over. `EnemyDef` has `hp` (default 10), `damage` (default 0–2), `xp` (default `FIGHT_XP`, 10, granted when the win is closed) and `windup` (the chance the enemy winds up instead of striking; the next strike is doubled).

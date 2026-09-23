@@ -23,7 +23,15 @@ import type {
 } from './types';
 import { enterScene, leaveScene, moveTo, roamChoices, sleep, wait } from './world';
 
-export { getScene, hasScene, isAvailable, isDeathScene, resolveText, textContext } from './context';
+export {
+  getScene,
+  hasScene,
+  isAvailable,
+  isDeathScene,
+  resolveImage,
+  resolveText,
+  textContext,
+} from './context';
 
 export const initialState: GameState = { screen: 'menu', session: null };
 
