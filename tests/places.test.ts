@@ -62,7 +62,10 @@ describe('двор у ворот', () => {
       expect.stringContaining('Эрик и Мартин'),
     ]);
     // второй раз не читается
-    expect(texts(withSession(play(state, 0.5, 'Отойти'), { spotId: 'board' }))).toEqual(['Отойти']);
+    expect(texts(withSession(play(state, 0.5, 'Отойти'), { spotId: 'board' }))).toEqual([
+      'Узнать свой наряд на сегодня',
+      'Отойти',
+    ]);
   });
 
   it('Стенли: тот дозор провожал Торвин', () => {

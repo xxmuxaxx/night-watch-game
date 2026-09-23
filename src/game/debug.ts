@@ -84,10 +84,10 @@ export function passHours(state: GameState, hours: number): GameState {
   return { ...state, session: passTime(session, until).session };
 }
 
-/** Забыть занятия раз в день, чтобы их можно было повторить сегодня. */
+/** Забыть занятия раз в день и наряды, чтобы их можно было повторить сегодня. */
 export function resetDaily(state: GameState): GameState {
   if (!state.session) return state;
-  return { ...state, session: { ...state.session, daily: {} } };
+  return { ...state, session: { ...state.session, daily: {}, duties: [] } };
 }
 
 /** Забыть, где герой побывал и о чём спрашивал: места, точки и темы снова помечены новыми. */

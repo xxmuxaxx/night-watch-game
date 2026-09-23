@@ -48,6 +48,17 @@ export const JOURNAL: Record<JournalId, JournalText> = {
         ? ''
         : 'Tell Torvin? In the evenings he is in the mess hall, until 22:00',
   },
+  duty: {
+    title: 'Today’s duty',
+    notes: [
+      'Firewood for the kitchen: chop it and carry it to the cook in the mess hall.',
+      'The smithy: help Halvar, haul coal for him.',
+      'The drill ground: clean the shields and practice swords.',
+      'The barracks: sweep up and shake out the mattresses.',
+      'A watch at the gate with Stanley, at the guardhouse, from 8 to 20.',
+    ],
+    hint: 'Get it done before night, or Torvin will ask',
+  },
   missing: {
     title: 'The missing recruits',
     notes: [

@@ -85,6 +85,16 @@ export const LOCATIONS: Record<LocationId, Location> = {
           ROUTINE.sparVasya,
           ROUTINE.sparTorvinFirst,
           ROUTINE.sparTorvin,
+          {
+            text: 'Вычистить щиты и учебные мечи (1 ч, наряд)',
+            duty: 'weapons',
+            hours: [6, 21],
+            showClosed: true,
+            minutes: 60,
+            xp: 5,
+            relation: { torvin: 1 },
+            next: 'duty_weapons_done',
+          },
         ],
       },
       stairs: {
@@ -126,6 +136,15 @@ export const LOCATIONS: Record<LocationId, Location> = {
             minutes: 10,
             next: 'gate_stanley',
           },
+          {
+            text: 'Отстоять смену у ворот со Стенли (2 ч, наряд)',
+            duty: 'gate',
+            hours: [8, 20],
+            showClosed: true,
+            minutes: 120,
+            xp: 8,
+            next: 'duty_gate_done',
+          },
         ],
       },
       board: {
@@ -138,6 +157,14 @@ export const LOCATIONS: Record<LocationId, Location> = {
             set: { readBoard: true },
             minutes: 5,
             next: 'gate_board',
+          },
+          {
+            text: 'Узнать свой наряд на сегодня',
+            takeDuty: true,
+            hours: [6, 12],
+            showClosed: true,
+            daily: 'duty',
+            minutes: 5,
           },
         ],
       },
@@ -163,7 +190,19 @@ export const LOCATIONS: Record<LocationId, Location> = {
       kitchen: {
         name: 'Кухня',
         text: 'За перегородкой — котлы, мешки с репой и красный от жара повар.',
-        actions: [ROUTINE.kitchen],
+        actions: [
+          ROUTINE.kitchen,
+          {
+            text: 'Наколоть дров для кухни (1 ч, наряд)',
+            duty: 'firewood',
+            hours: [6, 21],
+            showClosed: true,
+            minutes: 60,
+            xp: 5,
+            give: { items: ['bread'] },
+            next: 'duty_firewood_done',
+          },
+        ],
       },
       hearth: {
         name: 'Очаг',
@@ -188,7 +227,17 @@ export const LOCATIONS: Record<LocationId, Location> = {
         text: ({ relation }) =>
           'Нары у самой печки — лучшее место, и Вася явно им гордится. Под изголовьем свёрнута куртка, сверху лежит деревянная ложка.' +
           (relation('vasya') >= 1 ? ' Вася говорил: если что, заходи.' : ''),
-        actions: [],
+        actions: [
+          {
+            text: 'Вымести казарму и вытряхнуть тюфяки (1 ч, наряд)',
+            duty: 'barracks',
+            hours: [6, 21],
+            showClosed: true,
+            minutes: 60,
+            xp: 5,
+            next: 'duty_barracks_done',
+          },
+        ],
       },
       emptyBunks: {
         name: 'Пустые нары',
@@ -231,6 +280,17 @@ export const LOCATIONS: Record<LocationId, Location> = {
             set: { sawLantern: true },
             minutes: 5,
             next: 'smithy_lantern',
+          },
+          {
+            text: 'Перетаскать уголь для Хальвара (1,5 ч, наряд)',
+            duty: 'smithy',
+            hours: [7, 22],
+            showClosed: true,
+            minutes: 90,
+            xp: 5,
+            set: { metSmith: true },
+            relation: { smith: 1 },
+            next: 'duty_smithy_done',
           },
         ],
       },

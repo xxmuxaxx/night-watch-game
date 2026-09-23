@@ -1,6 +1,7 @@
 // Карта сюжета для автора: все сцены, связи между ними и входы в сюжет (пролог, события,
 // разговоры, действия у точек интереса). Показывается в панели отладки; тупики и сцены без входа
 // подсвечиваются. Чистые функции — без DOM.
+import { DUTIES, NO_DUTY_SCENE } from '@/content/duties';
 import { EVENTS } from '@/content/events';
 import { LOCATIONS } from '@/content/locations';
 import { NPCS } from '@/content/npcs';
@@ -47,6 +48,14 @@ function links(choice: Choice): MapLink[] {
     ];
   }
   if ('next' in choice) return [{ to: choice.next, kind: 'next', label }];
+  if ('takeDuty' in choice) {
+    // наряд выпадает случайно — связь с каждой сценой у доски
+    return [...Object.values(DUTIES).map((duty) => duty.scene), NO_DUTY_SCENE].map((to) => ({
+      to,
+      kind: 'next' as const,
+      label: label + ' (наряд)',
+    }));
+  }
   if ('leave' in choice) {
     return [{ to: choice.leave === true ? 'место' : choice.leave, kind: 'leave', label }];
   }

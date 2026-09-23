@@ -4,6 +4,7 @@ import { inHours, toGameTime } from './time';
 import type {
   Choice,
   Condition,
+  DutyRecord,
   FlagId,
   Image,
   NpcId,
@@ -26,13 +27,21 @@ export function hasScene(id: SceneId): boolean {
 }
 
 export function textContext(session: Session): TextContext {
+  const duty = todayDuty(session);
   return {
     hero: session.hero,
     flag: (id: FlagId) => session.flags[id] === true,
     time: toGameTime(session.time),
     location: session.locationId,
     relation: (id: NpcId) => session.relations[id] ?? 0,
+    duty: duty?.status === 'active' ? duty.id : null,
   };
+}
+
+/** Наряд, выданный сегодня, если он есть. */
+export function todayDuty(session: Session): DutyRecord | null {
+  const day = toGameTime(session.time).day;
+  return session.duties.find((duty) => duty.day === day) ?? null;
 }
 
 /** Условие по решениям и событиям (журнал, знакомые персонажи). */
@@ -41,8 +50,16 @@ export function meetsCondition(condition: Condition, session: Session): boolean 
     (!condition.if || session.flags[condition.if] === true) &&
     (!condition.ifNot || session.flags[condition.ifNot] !== true) &&
     (!condition.ifAny || condition.ifAny.some((flag) => session.flags[flag] === true)) &&
-    (!condition.event || session.events.includes(condition.event))
+    (!condition.event || session.events.includes(condition.event)) &&
+    (!condition.duty || meetsDuty(condition.duty, todayDuty(session)))
   );
+}
+
+function meetsDuty(wanted: NonNullable<Condition['duty']>, duty: DutyRecord | null): boolean {
+  if (!duty) return false;
+  if (wanted === 'taken') return true;
+  if (wanted === 'done') return duty.status === 'done';
+  return duty.id === wanted;
 }
 
 /** Отношение персонажа в пределах min–max. */
@@ -71,6 +88,7 @@ export function isAvailable(choice: Choice, ctx: TextContext): boolean {
     (!choice.if || ctx.flag(choice.if)) &&
     (!choice.ifNot || !ctx.flag(choice.ifNot)) &&
     (!choice.ifRelation || meetsRelation(choice.ifRelation, ctx)) &&
+    (!choice.duty || ctx.duty === choice.duty) &&
     (!choice.hours || choice.showClosed === true || inHours(ctx.time, choice.hours))
   );
 }

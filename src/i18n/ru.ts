@@ -44,6 +44,7 @@ const messages: MessageFormats = {
     }
   },
   relation: (m, n) => n.npc(m.npc) + ': отношение ' + (m.better ? 'улучшилось' : 'ухудшилось'),
+  dutyMissed: () => 'Вчерашний наряд так и не выполнен',
   slept: (m) =>
     'Вы проспали ' +
     m.hours +

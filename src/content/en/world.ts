@@ -1,4 +1,5 @@
 // Места и персонажи на английском: src/content/locations.ts и src/content/npcs.ts.
+import { ROUTINE } from './routine';
 import type { LocationId } from '@/content/locations';
 import type { NpcId } from '@/content/npcs';
 import type { LocationText, NpcText } from './types';
@@ -34,6 +35,14 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
           (time.hour >= 8 && time.hour < 17
             ? ' Recruits spar in pairs while the elders shout at them.'
             : ' It is empty now; only the wind chases the snow.'),
+        actions: [
+          ROUTINE.training,
+          ROUTINE.sparRecruit,
+          ROUTINE.sparVasya,
+          ROUTINE.sparTorvinFirst,
+          ROUTINE.sparTorvin,
+          'Clean the shields and practice swords (1 h, duty)',
+        ],
       },
       stairs: {
         name: 'Stairs to the wall',
@@ -59,12 +68,15 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
       guardhouse: {
         name: 'Guardhouse',
         text: 'A low door beside the gate arch. On a bench by the winch sits Stanley, the one who opened the gate for you.',
-        actions: ['Ask Stanley whether the gate is ever opened at night'],
+        actions: [
+          'Ask Stanley whether the gate is ever opened at night',
+          'Stand a watch at the gate with Stanley (2 h, duty)',
+        ],
       },
       board: {
         name: 'Duty board',
         text: 'A darkened board under a lean-to. Sheets are nailed to it: who stands guard when, who goes on watch to the pass.',
-        actions: ['Read the duty lists'],
+        actions: ['Read the duty lists', 'Find out your duty for today'],
       },
       brazier: {
         name: 'Brazier by the gate',
@@ -84,6 +96,7 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
       kitchen: {
         name: 'Kitchen',
         text: 'Behind the partition: cauldrons, sacks of turnips and a cook red from the heat.',
+        actions: [ROUTINE.kitchen, 'Chop firewood for the kitchen (1 h, duty)'],
       },
       hearth: {
         name: 'Hearth',
@@ -104,6 +117,7 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
         text: ({ relation }) =>
           'The bunk right by the stove, the best spot, and Vasya is clearly proud of it. A rolled-up jacket lies at the head, a wooden spoon on top.' +
           (relation('vasya') >= 1 ? ' Vasya said to drop by any time.' : ''),
+        actions: ['Sweep the barracks and shake out the mattresses (1 h, duty)'],
       },
       emptyBunks: {
         name: 'Empty bunks',
@@ -126,7 +140,7 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
       bench: {
         name: 'Workbench',
         text: 'Tongs, chisels, files, scraps of iron. An unfinished lantern lies at the edge.',
-        actions: ['Examine the lantern'],
+        actions: ['Examine the lantern', 'Haul coal for Halvar (1.5 h, duty)'],
       },
     },
   },

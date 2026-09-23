@@ -1,6 +1,7 @@
 // Английский перевод контента. Русский контент — основной; как перевод сопоставляется с ним,
 // описано в src/i18n/content.ts.
 import { chapter1 } from './chapter1';
+import { duties } from './duties';
 import { places } from './places';
 import { routine, ROUTINE } from './routine';
 import { talks } from './talks';
@@ -9,7 +10,13 @@ import { JOURNAL } from './journal';
 import type { SceneText } from './types';
 import { LOCATIONS, NPCS } from './world';
 
-const scenes: Record<string, SceneText> = { ...chapter1, ...places, ...routine, ...talks };
+const scenes: Record<string, SceneText> = {
+  ...chapter1,
+  ...places,
+  ...routine,
+  ...talks,
+  ...duties,
+};
 
 export const EN = {
   scenes,

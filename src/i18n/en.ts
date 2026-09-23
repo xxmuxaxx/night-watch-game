@@ -40,6 +40,7 @@ const messages: MessageFormats = {
     }
   },
   relation: (m, n) => n.npc(m.npc) + ' thinks ' + (m.better ? 'better' : 'worse') + ' of you',
+  dutyMissed: () => 'Yesterday’s duty was never done',
   slept: (m) =>
     'You slept ' +
     m.hours +

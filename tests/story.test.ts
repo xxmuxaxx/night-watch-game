@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ENEMIES } from '@/content/enemies';
+import { DUTIES, NO_DUTY_SCENE } from '@/content/duties';
 import { EVENTS } from '@/content/events';
 import { JOURNAL } from '@/content/journal';
 import { LOCATIONS } from '@/content/locations';
@@ -62,6 +63,10 @@ function targets(choice: Choice): SceneId[] {
     ...('next' in choice ? [choice.next] : []),
     ...('fail' in choice ? [choice.fail] : []),
     ...('lose' in choice && choice.lose ? [choice.lose] : []),
+    // доска нарядов ведёт в сцену выпавшего наряда
+    ...('takeDuty' in choice
+      ? [...Object.values(DUTIES).map((duty) => duty.scene), NO_DUTY_SCENE]
+      : []),
   ];
 }
 
@@ -173,6 +178,15 @@ describe('сюжет', () => {
       .filter(({ where, choice }) => !choice.topic?.startsWith(talkOf.get(where) + '.'))
       .map(({ where, choice }) => where + ': ' + choice.topic);
     expect(misplaced).toEqual([]);
+  });
+
+  it('у каждого наряда ровно одна работа, и её сцена — не сцена у доски', () => {
+    const work = choices.filter(({ choice }) => choice.duty !== undefined);
+    expect(work.map(({ choice }) => choice.duty).sort()).toEqual(Object.keys(DUTIES).sort());
+    const boardScenes: SceneId[] = Object.values(DUTIES).map((duty) => duty.scene);
+    expect(
+      work.flatMap(({ choice }) => targets(choice)).filter((t) => boardScenes.includes(t)),
+    ).toEqual([]);
   });
 
   it('выходы из локаций ведут в существующие места и взаимны', () => {

@@ -14,6 +14,7 @@ import {
   itemBlocked,
   type NewHero,
 } from './hero';
+import { finishDuty, settleDuties, takeDuty } from './duties';
 import { journalNotices } from './journal';
 import { addXp, applyLevelReward } from './progression';
 import { changeRelations } from './relations';
@@ -87,6 +88,7 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
     spotId: null,
     visited: [],
     asked: [],
+    duties: [],
     fight: null,
     notices: [],
   };
@@ -134,7 +136,11 @@ function withJournalNotices(before: Session | null, state: GameState): GameState
 
 /** Выбрать вариант: в сцене или в локации. */
 export function choose(state: GameState, choice: Choice, rng: Rng): GameState {
-  return withJournalNotices(state.session, applyChoice(state, choice, rng));
+  const next = applyChoice(state, choice, rng);
+  if (next === state) return state;
+  // день мог смениться — невыполненный вчерашний наряд становится пропущенным
+  const session = next.session && settleDuties(next.session);
+  return withJournalNotices(state.session, { ...next, session });
 }
 
 function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
@@ -166,6 +172,7 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
         ? [...current.asked, choice.topic]
         : current.asked,
     time: current.time + (choice.minutes ?? 0),
+    duties: choice.duty ? finishDuty(current.duties, choice.duty) : current.duties,
     notices,
   };
 
@@ -195,6 +202,10 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
   if ('move' in choice) return { ...state, session: moveTo(session, choice.move) };
   if ('travel' in choice) return { ...state, session: travel(session, choice.travel) };
   if ('look' in choice) return { ...state, session: lookAt(session, choice.look) };
+  if ('takeDuty' in choice) {
+    const taken = takeDuty(session, rng);
+    return { ...state, session: enterScene(taken.session, taken.scene) };
+  }
   if ('back' in choice) return { ...state, session: stepBack(session) };
   if ('wait' in choice) {
     const result = wait(session, choice.wait);

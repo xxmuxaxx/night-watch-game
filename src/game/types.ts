@@ -2,6 +2,7 @@
 // поэтому опечатка в имени решения или предмета — ошибка компиляции.
 import type { ArmorId } from '@/content/armors';
 import type { ClassId } from '@/content/classes';
+import type { DutyId } from '@/content/duties';
 import type { EventId } from '@/content/events';
 import type { FlagId } from '@/content/flags';
 import type { ItemId } from '@/content/items';
@@ -10,7 +11,18 @@ import type { LocationId } from '@/content/locations';
 import type { NpcId } from '@/content/npcs';
 import type { WeaponId } from '@/content/weapons';
 
-export type { ArmorId, ClassId, EventId, FlagId, ItemId, JournalId, LocationId, NpcId, WeaponId };
+export type {
+  ArmorId,
+  ClassId,
+  DutyId,
+  EventId,
+  FlagId,
+  ItemId,
+  JournalId,
+  LocationId,
+  NpcId,
+  WeaponId,
+};
 
 /** Случайное число в [0, 1). В игре — Math.random, в тестах — заранее заданная последовательность. */
 export type Rng = () => number;
@@ -132,6 +144,8 @@ export interface TextContext {
   location: LocationId;
   /** Отношение персонажа к герою (0, если оно не менялось). */
   relation: (id: NpcId) => number;
+  /** Сегодняшний наряд, пока он не выполнен; null — наряда нет или он сделан. */
+  duty: DutyId | null;
 }
 
 /** Текст сцены или варианта: строка или функция от героя и решений. `\n` — новая строка. */
@@ -158,6 +172,7 @@ export type Message =
   | { id: 'journal'; entry: JournalId; change: 'goal' | 'lead' | 'note' | 'done' }
   | { id: 'relation'; npc: NpcId; better: boolean }
   | { id: 'slept'; hours: number; woke: boolean; healed: number }
+  | { id: 'dutyMissed' }
   // варианты при свободном перемещении и причины, почему что-то недоступно
   | { id: 'move'; to: LocationId; minutes: number }
   | { id: 'travel'; to: LocationId }
@@ -267,6 +282,8 @@ interface ChoiceBase {
    * спрошена, вариант помечен «новое», а разговор с персонажем в месте — тоже.
    */
   topic?: string;
+  /** Работа по наряду: видна, только пока это сегодняшний невыполненный наряд; выбор его выполняет. */
+  duty?: DutyId;
 }
 
 /** Перейти в сцену. */
@@ -331,6 +348,11 @@ export interface SleepChoice extends ChoiceBase {
   sleep: true;
 }
 
+/** Узнать у доски наряд на сегодня: движок выбирает его и переходит в его сцену. */
+export interface TakeDutyChoice extends ChoiceBase {
+  takeDuty: true;
+}
+
 /** Без действия: например, конец написанного сюжета. */
 export type InertChoice = ChoiceBase;
 
@@ -346,6 +368,7 @@ export type Choice =
   | BackChoice
   | WaitChoice
   | SleepChoice
+  | TakeDutyChoice
   | InertChoice;
 
 export interface Scene {
@@ -456,6 +479,8 @@ export interface Condition {
   /** Принято хотя бы одно из решений: когда к одному и тому же ведут разные пути. */
   ifAny?: readonly FlagId[];
   event?: EventId;
+  /** Сегодняшний наряд: какой-нибудь взят (taken), выполнен (done) или это именно он. */
+  duty?: 'taken' | 'done' | DutyId;
 }
 
 export interface JournalNote extends Condition {
@@ -518,6 +543,19 @@ export interface Notice {
   message: Message;
 }
 
+/** Наряд на день (src/content/duties.ts). */
+export interface Duty {
+  /** Сцена у доски, где герой узнаёт наряд. */
+  scene: SceneId;
+}
+
+/** Наряд, выданный герою: active — ещё не сделан, missed — день кончился, а он не сделан. */
+export interface DutyRecord {
+  id: DutyId;
+  day: number;
+  status: 'active' | 'done' | 'missed';
+}
+
 /** Текущая партия: герой, где он и что успел решить. */
 export interface Session {
   hero: Hero;
@@ -540,6 +578,8 @@ export interface Session {
   visited: string[];
   /** Темы разговоров (topic), о которых герой уже спрашивал. */
   asked: string[];
+  /** Наряды по дням: какой, в какой день и чем кончился. */
+  duties: DutyRecord[];
   fight: FightState | null;
   /** Сообщения о последнем выборе; видны только в сцене сразу после него. */
   notices: Notice[];

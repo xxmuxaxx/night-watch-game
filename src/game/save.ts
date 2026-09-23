@@ -2,6 +2,7 @@
 // в текущий формат (migrate), а сохранения со сценой или классом, которых больше нет, отбрасываются.
 import { ARMORS } from '@/content/armors';
 import { HERO_CLASSES } from '@/content/classes';
+import { DUTIES } from '@/content/duties';
 import { EVENTS } from '@/content/events';
 import { ITEMS } from '@/content/items';
 import { LOCATIONS } from '@/content/locations';
@@ -12,6 +13,7 @@ import { getScene, hasScene, isDeathScene } from './context';
 import { atTime } from './time';
 import type {
   ClassId,
+  DutyRecord,
   EventId,
   Flags,
   Hero,
@@ -42,7 +44,7 @@ export interface SavedGame {
   /** Время записи, мс с 1970 года; у старых сохранений его нет. */
   savedAt: number | null;
 }
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -63,12 +65,17 @@ interface SaveData {
   visited: string[];
   /** О чём герой уже спрашивал (темы разговоров). */
   asked: string[];
+  /** Выданные наряды. */
+  duties: DutyRecord[];
   /** Когда записано; необязательное поле, читается и без него. */
   savedAt?: number;
 }
 
+/** Формат версии 12: до нарядов. */
+type SaveV12 = Omit<SaveData, 'version' | 'duties'> & { version: 12 };
+
 /** Формат версии 11: до тем разговоров. */
-type SaveV11 = Omit<SaveData, 'version' | 'asked'> & { version: 11 };
+type SaveV11 = Omit<SaveV12, 'version' | 'asked'> & { version: 11 };
 
 /** Формат версии 10: до отметок о посещённых местах. */
 type SaveV10 = Omit<SaveV11, 'version' | 'visited'> & { version: 10 };
@@ -263,11 +270,16 @@ function migrateV10(save: SaveV10): SaveV11 {
 }
 
 /** В версии 12 появились темы разговоров; одноразовые вопросы и так закрыты решениями. */
-function migrateV11(save: SaveV11): SaveData {
-  return { ...save, version: SAVE_VERSION, asked: [] };
+function migrateV11(save: SaveV11): SaveV12 {
+  return { ...save, version: 12, asked: [] };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 12. */
+/** В версии 13 появились наряды; старым партиям их ещё не выдавали. */
+function migrateV12(save: SaveV12): SaveData {
+  return { ...save, version: SAVE_VERSION, duties: [] };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 13. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
   let save = raw as
@@ -281,6 +293,7 @@ export function migrate(raw: unknown): SaveData | null {
     | SaveV9
     | SaveV10
     | SaveV11
+    | SaveV12
     | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
@@ -296,6 +309,7 @@ export function migrate(raw: unknown): SaveData | null {
   if (save.version === 9) save = migrateV9(save);
   if (save.version === 10) save = migrateV10(save);
   if (save.version === 11) save = migrateV11(save);
+  if (save.version === 12) save = migrateV12(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 
@@ -315,7 +329,14 @@ function isValid(save: SaveData): boolean {
     Array.isArray(save.visited) &&
     save.visited.every((key) => typeof key === 'string') &&
     Array.isArray(save.asked) &&
-    save.asked.every((key) => typeof key === 'string')
+    save.asked.every((key) => typeof key === 'string') &&
+    Array.isArray(save.duties) &&
+    save.duties.every(
+      (duty) =>
+        duty.id in DUTIES &&
+        typeof duty.day === 'number' &&
+        ['active', 'done', 'missed'].includes(duty.status),
+    )
   );
 }
 
@@ -352,6 +373,7 @@ function toSession(save: SaveData): Session {
     spotId: null,
     visited: save.visited,
     asked: save.asked,
+    duties: save.duties,
     fight: null,
     notices: [],
   };
@@ -378,6 +400,7 @@ export function writeSave(
     daily: session.daily,
     visited: session.visited,
     asked: session.asked,
+    duties: session.duties,
     savedAt: now,
   };
   try {
