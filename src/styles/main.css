@@ -178,22 +178,31 @@ img {
   border-radius: 10px;
 }
 
-/*  ИТОГ ПРОВЕРКИ НАД ТЕКСТОМ СЦЕНЫ  */
-.check-result {
-  display: inline-block;
-  margin: 0 0 10px;
+/*  СООБЩЕНИЯ НАД ТЕКСТОМ СЦЕНЫ: итог проверки, добыча, опыт  */
+.notices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.notice {
+  margin: 0;
   padding: 2px 10px;
   font-size: 0.9rem;
   font-weight: 700;
   border-radius: 4px;
 }
-.check-result--success {
+.notice--success {
   color: #9fd08a;
   background: rgba(111, 154, 90, 0.18);
 }
-.check-result--fail {
+.notice--fail {
   color: var(--danger);
   background: rgba(208, 88, 76, 0.15);
+}
+.notice--info {
+  color: var(--accent-2);
+  background: rgba(217, 146, 59, 0.14);
 }
 .choice:hover,
 .choice:focus-visible {
@@ -266,6 +275,79 @@ img {
   justify-content: center;
   font-size: 0.85rem;
   text-shadow: 0 1px 2px #000;
+}
+
+/*  ПОЛОСА ОПЫТА  */
+.xp {
+  position: relative;
+  height: 16px;
+  margin-top: 6px;
+  background: #0a0c0f;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.xp__fill {
+  height: 100%;
+  background: linear-gradient(#b98a3e, #8a6224);
+  transition: width 0.3s;
+}
+.xp__text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  text-shadow: 0 1px 2px #000;
+}
+
+/*  СУМКА  */
+.bag {
+  margin-top: 16px;
+}
+.bag h4 {
+  margin: 0 0 6px;
+  font: 700 1.1rem var(--font-title);
+  color: var(--accent-2);
+}
+.bag ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bag__empty {
+  margin: 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--muted);
+}
+.bag__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 6px 10px;
+  font: 0.9rem var(--font-text);
+  color: var(--text);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.bag__item small {
+  color: var(--muted);
+}
+.bag__item:hover:not(:disabled),
+.bag__item:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.bag__item:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 /*  ОКНА ПОВЕРХ ИГРЫ: меню, создание героя, бой  */
@@ -537,6 +619,29 @@ img {
   margin: 0 0 12px;
 }
 
+/*  НОВЫЙ УРОВЕНЬ  */
+.level-up {
+  background: rgba(9, 11, 15, 0.9);
+}
+.level-up h1 {
+  margin: 0;
+  font-size: 2.6rem;
+  color: var(--accent-2);
+}
+.level-up__subtitle {
+  max-width: 520px;
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+.level-up__rewards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 10px;
+}
+.level-up__rewards .action {
+  padding: 14px 16px;
+}
+
 /*  ТЕЛЕФОН: панель героя сверху компактной полосой, бой в две колонки  */
 @media (max-width: 760px) {
   body {
@@ -564,7 +669,20 @@ img {
     align-items: center;
   }
   .hero-status__portrait {
-    grid-row: span 3;
+    grid-row: span 4;
+  }
+  .xp {
+    margin-top: 0;
+  }
+  .bag {
+    grid-column: 1 / -1;
+    margin-top: 6px;
+  }
+  .bag h4 {
+    display: none;
+  }
+  .level-up__rewards {
+    grid-template-columns: 1fr;
   }
   .hero-status__name {
     font-size: 1.3rem;

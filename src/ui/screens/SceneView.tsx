@@ -24,15 +24,14 @@ export function SceneView({ session }: { session: Session }) {
       </div>
 
       <div class="text">
-        {session.notice && (
-          <p
-            class={
-              'check-result ' +
-              (session.notice.success ? 'check-result--success' : 'check-result--fail')
-            }
-          >
-            {session.notice.text}
-          </p>
+        {session.notices.length > 0 && (
+          <div class="notices">
+            {session.notices.map((notice, i) => (
+              <p key={i} class={'notice notice--' + notice.tone}>
+                {notice.text}
+              </p>
+            ))}
+          </div>
         )}
         <h1>{scene.title}</h1>
         <p class="scene-text">{resolveText(scene.text, ctx)}</p>

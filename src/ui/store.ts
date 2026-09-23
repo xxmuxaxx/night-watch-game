@@ -1,12 +1,12 @@
 // Хранилище состояния игры для интерфейса: держит GameState, применяет переходы из движка
-// и выполняет побочные эффекты — автосохранение при входе в новую сцену и удаление
-// сохранения после смерти.
+// и выполняет побочные эффекты — автосохранение при каждом изменении партии вне боя
+// (новая сцена, предмет из сумки, награда за уровень) и удаление сохранения после смерти.
 import { createContext } from 'preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
 import * as engine from '@/game/engine';
 import type { NewHero } from '@/game/hero';
 import { deleteSave, readSave, writeSave, type SaveStorage } from '@/game/save';
-import type { Choice, FightAction, GameState, Rng } from '@/game/types';
+import type { Choice, FightAction, GameState, ItemId, LevelReward, Rng } from '@/game/types';
 
 export interface GameStore {
   getState(): GameState;
@@ -18,6 +18,8 @@ export interface GameStore {
   choose(choice: Choice): void;
   fightAction(action: FightAction): void;
   closeFight(): void;
+  applyItem(id: ItemId): void;
+  chooseLevelReward(reward: LevelReward): void;
 }
 
 export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): GameStore {
@@ -29,16 +31,11 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
     if (next === prev) return;
     state = next;
 
-    const prevSession = prev.session;
     const session = next.session;
     if (prev.screen === 'story' && next.screen === 'menu') {
       deleteSave(storage); // смерть
-    } else if (
-      session &&
-      next.screen === 'story' &&
-      (prev.screen !== 'story' || prevSession?.sceneId !== session.sceneId)
-    ) {
-      writeSave(storage, session); // новая игра или новая сцена
+    } else if (session && next.screen === 'story' && !session.fight) {
+      writeSave(storage, session); // бой не сохраняется: после перезагрузки он начнётся заново
     }
 
     listeners.forEach((listener) => listener());
@@ -60,6 +57,8 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
     choose: (choice) => update(engine.choose(state, choice, rng)),
     fightAction: (action) => update(engine.fightAction(state, action, rng)),
     closeFight: () => update(engine.closeFight(state)),
+    applyItem: (id) => update(engine.applyItem(state, id)),
+    chooseLevelReward: (reward) => update(engine.chooseLevelReward(state, reward)),
   };
 }
 

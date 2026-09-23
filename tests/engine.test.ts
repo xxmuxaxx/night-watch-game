@@ -29,17 +29,32 @@ function play(state: GameState, ...fragments: string[]): GameState {
   );
 }
 
+/** Выиграть текущий бой обычными ударами (враг промахивается) и закрыть окно итога. */
+function winFight(state: GameState): GameState {
+  let s = state;
+  while (s.session?.fight?.result === null) {
+    s = engine.fightAction(s, 'attack', sequence(0.99, 0.99, 0.99, 0.99, 0));
+  }
+  return engine.closeFight(s);
+}
+
+const texts = (state: GameState) => sessionOf(state).notices.map((n) => n.text);
+
 describe('новая игра', () => {
-  it('начинается с первой сцены без решений', () => {
+  it('начинается с первой сцены без решений, опыта и добычи', () => {
     const state = newGame();
     expect(state.screen).toBe('story');
-    expect(state.session).toMatchObject({ sceneId: 'st0', flags: {}, fight: null, notice: null });
+    expect(state.session).toMatchObject({ sceneId: 'st0', flags: {}, fight: null, notices: [] });
     expect(state.session?.hero).toMatchObject({
       name: 'Ивар',
       classId: 'warrior',
       hp: 10,
       maxHp: 10,
       weaponId: 'fists',
+      inventory: [],
+      xp: 0,
+      level: 1,
+      levelUps: 0,
     });
   });
 });
@@ -54,69 +69,120 @@ describe('choose', () => {
     expect(state).toEqual({ screen: 'menu', session: null });
   });
 
-  it('запоминает решения и лечит', () => {
-    let state = play(newGame(), 'Подойти', 'Ждать');
-    state = withSession(state, { sceneId: 'st6', hero: { ...sessionOf(state).hero, hp: 3 } });
+  it('запоминает решения, лечит и выдаёт добычу', () => {
+    let state = withSession(newGame(), { sceneId: 'st6' });
+    state = withSession(state, { hero: { ...sessionOf(state).hero, hp: 3 } });
     state = play(state, 'поесть');
     expect(state.session?.flags).toEqual({ ate: true });
-    expect(state.session?.hero.hp).toBe(8);
+    expect(state.session?.hero).toMatchObject({ hp: 8, inventory: ['bread'] });
+    expect(texts(state)).toEqual(['В сумке: Краюха хлеба']);
   });
 
   it('лечение не выше максимума', () => {
-    let state = newGame();
-    state = withSession(state, { sceneId: 'st6' });
+    const state = withSession(newGame(), { sceneId: 'st6' });
     expect(play(state, 'поесть').session?.hero.hp).toBe(10);
   });
 
   it('if / ifNot показывают варианты по решениям', () => {
-    let state = newGame();
-    state = withSession(state, { sceneId: 'st8' });
-    const texts = (s: GameState) => engine.availableChoices(sessionOf(s)).map((c) => c.text);
-    expect(texts(state)).toEqual(['Выбежать к воротам одному']);
+    let state = withSession(newGame(), { sceneId: 'st8' });
+    const choiceTexts = (s: GameState) => engine.availableChoices(sessionOf(s)).map((c) => c.text);
+    expect(choiceTexts(state)).toEqual(['Выбежать к воротам одному']);
     state = withSession(state, { flags: { vasyaFriend: true } });
-    expect(texts(state)).toEqual(['Выбежать вместе с Васей']);
+    expect(choiceTexts(state)).toEqual(['Выбежать вместе с Васей']);
   });
 
-  it('проверка: успех ведёт в next и запоминает check.set, итог виден в следующей сцене', () => {
+  it('проверка: успех ведёт в next, запоминает check.set и даёт опыт', () => {
     const state = play(newGame('rogue'), 'Подойти', 'Ждать');
     const success = engine.choose(state, pick(state, 'Поднырнуть'), constant(0.1));
-    expect(success.session).toMatchObject({
-      sceneId: 'st3',
-      flags: { trippedVasya: true },
-      notice: { success: true, text: 'Проверка: Ловкость — успех' },
-    });
-    // следующий переход убирает итог
-    expect(play(success, 'Направиться').session?.notice).toBeNull();
+    expect(success.session).toMatchObject({ sceneId: 'st3', flags: { trippedVasya: true } });
+    // сбить Васю с ног — опыт как за победу в бою
+    expect(success.session?.hero.xp).toBe(10);
+    expect(texts(success)).toEqual(['Проверка: Ловкость — успех', '+10 опыта']);
+    // следующий переход убирает сообщения
+    expect(play(success, 'Направиться').session?.notices).toEqual([]);
   });
 
-  it('проверка: провал ведёт в fail без check.set', () => {
+  it('проверка: провал ведёт в fail без check.set и без опыта', () => {
     const state = play(newGame(), 'Подойти', 'Ждать');
     const fail = engine.choose(state, pick(state, 'Поднырнуть'), constant(0.9));
-    expect(fail.session).toMatchObject({ sceneId: 'st2_1', flags: {}, notice: { success: false } });
+    expect(fail.session).toMatchObject({ sceneId: 'st2_1', flags: {}, hero: { xp: 0 } });
+    expect(sessionOf(fail).notices).toEqual([
+      { tone: 'fail', text: 'Проверка: Ловкость — провал' },
+    ]);
   });
 
-  it('сундук: set варианта запоминается всегда, второй попытки нет', () => {
-    let state = newGame();
-    state = withSession(state, { sceneId: 'st7' });
-    state = engine.choose(state, pick(state, 'сундук'), constant(0.99));
-    expect(state.session).toMatchObject({ sceneId: 'st7_3', flags: { triedChest: true } });
-    state = play(state, 'окно');
-    expect(() => pick(state, 'сундук')).toThrow();
+  it('сундук: при успехе нож в руки, при провале второй попытки нет', () => {
+    const inCell = withSession(newGame(), { sceneId: 'st7' });
+    const opened = engine.choose(inCell, pick(inCell, 'сундук'), constant(0.1));
+    expect(opened.session).toMatchObject({ sceneId: 'st7_2', hero: { weaponId: 'knife', xp: 5 } });
+    expect(texts(opened)).toContain('Получено оружие: Старый нож');
+
+    let failed = engine.choose(inCell, pick(inCell, 'сундук'), constant(0.99));
+    expect(failed.session).toMatchObject({ sceneId: 'st7_3', flags: { triedChest: true } });
+    expect(failed.session?.hero.weaponId).toBe('fists');
+    failed = play(failed, 'окно');
+    expect(() => pick(failed, 'сундук')).toThrow();
+  });
+});
+
+describe('опыт и уровни', () => {
+  it('новый уровень: награда на выбор, до выбора сюжет стоит', () => {
+    let state = withSession(newGame(), {
+      sceneId: 'st7',
+      hero: { ...sessionOf(newGame()).hero, xp: 15, hp: 4 },
+    });
+    state = engine.choose(state, pick(state, 'сундук'), constant(0.1)); // +5 → 20 опыта
+    expect(state.session?.hero).toMatchObject({ xp: 20, level: 2, levelUps: 1 });
+    expect(texts(state)).toContain('Новый уровень!');
+    expect(engine.isChoosingLevelReward(sessionOf(state))).toBe(true);
+    // пока награда не выбрана, варианты сцены не работают
+    expect(engine.choose(state, pick(state, 'Лечь спать'), constant(0))).toBe(state);
+
+    state = engine.chooseLevelReward(state, { stat: 'agility' });
+    expect(state.session?.hero).toMatchObject({
+      stats: { strength: 2, agility: 2, wits: 1 },
+      hp: 10,
+      levelUps: 0,
+    });
+    expect(engine.isChoosingLevelReward(sessionOf(state))).toBe(false);
+  });
+
+  it('награда здоровьем поднимает максимум и лечит полностью', () => {
+    const state = withSession(newGame(), {
+      hero: { ...sessionOf(newGame()).hero, hp: 2, levelUps: 1, level: 2 },
+    });
+    expect(engine.chooseLevelReward(state, { maxHp: 3 }).session?.hero).toMatchObject({
+      hp: 13,
+      maxHp: 13,
+    });
+  });
+});
+
+describe('предметы', () => {
+  it('вне боя: хлеб лечит и исчезает из сумки', () => {
+    let state = withSession(newGame(), {
+      hero: { ...sessionOf(newGame()).hero, hp: 5, inventory: ['bread', 'bread'] },
+    });
+    state = engine.applyItem(state, 'bread');
+    expect(state.session?.hero).toMatchObject({ hp: 8, inventory: ['bread'] });
+    expect(texts(state)).toEqual(['Вы используете: Краюха хлеба (+3 здоровья)']);
+  });
+
+  it('нельзя использовать предмет, которого нет', () => {
+    const state = newGame();
+    expect(engine.applyItem(state, 'bread')).toBe(state);
   });
 });
 
 describe('бой', () => {
-  it('победа: «Продолжить» ведёт в сцену после боя', () => {
+  it('победа: опыт и «Продолжить» ведёт в сцену после боя', () => {
     let state = play(newGame(), 'Подойти', 'Ждать', 'драке');
     expect(state.session?.fight?.enemy.name).toBe('Вася');
     // пока идёт бой, варианты сцены не выбираются
     expect(engine.choose(state, { text: 'x', next: 'st0' }, constant(0))).toBe(state);
-    while (state.session?.fight?.result === null) {
-      state = engine.fightAction(state, 'attack', sequence(0.99, 0.99, 0.99, 0.99, 0));
-    }
-    expect(state.session?.fight?.result).toBe('win');
-    state = engine.closeFight(state);
-    expect(state.session).toMatchObject({ sceneId: 'st3', fight: null });
+    state = winFight(state);
+    expect(state.session).toMatchObject({ sceneId: 'st3', fight: null, hero: { xp: 10 } });
+    expect(texts(state)).toEqual(['+10 опыта']);
   });
 
   it('поражение: «Продолжить» возвращает в меню', () => {

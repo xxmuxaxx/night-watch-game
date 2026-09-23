@@ -21,7 +21,7 @@ describe('rollCheck', () => {
   it('успех, когда бросок меньше шанса', () => {
     expect(rollCheck(testHero(), { stat: 'strength', difficulty: 2 }, constant(0.49))).toEqual({
       success: true,
-      text: 'Проверка: Сила — успех',
+      notice: { tone: 'success', text: 'Проверка: Сила — успех' },
     });
     expect(rollCheck(testHero(), { stat: 'strength', difficulty: 2 }, constant(0.5)).success).toBe(
       false,

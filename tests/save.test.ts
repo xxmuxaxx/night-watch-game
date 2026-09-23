@@ -10,7 +10,7 @@ function session(overrides: Partial<Session> = {}): Session {
     sceneId: 'st5',
     flags: { askedToLeave: true },
     fight: null,
-    notice: null,
+    notices: [],
     ...overrides,
   };
 }
@@ -49,7 +49,7 @@ describe('writeSave / readSave', () => {
   });
 });
 
-describe('миграция сохранений версии 2', () => {
+describe('миграция сохранений версий 2 и 3', () => {
   const v2 = {
     version: 2,
     stage: 'st7',
@@ -79,12 +79,49 @@ describe('миграция сохранений версии 2', () => {
         hp: 5,
         maxHp: 8,
         weaponId: 'fists',
+        inventory: [],
+        xp: 0,
+        level: 1,
+        levelUps: 0,
       },
       sceneId: 'st7',
       flags: { ate: true },
       fight: null,
-      notice: null,
+      notices: [],
     });
+  });
+
+  it('версия 3: герой получает пустую сумку, нулевой опыт и уровень 1', () => {
+    const storage = memoryStorage();
+    const hero = testHero('warrior');
+    const heroV3 = {
+      name: hero.name,
+      classId: hero.classId,
+      portrait: hero.portrait,
+      stats: hero.stats,
+      hp: hero.hp,
+      maxHp: hero.maxHp,
+      weaponId: hero.weaponId,
+    };
+    storage.setItem(
+      SAVE_KEY,
+      JSON.stringify({ version: 3, sceneId: 'st5', hero: heroV3, flags: {} }),
+    );
+    expect(readSave(storage)?.hero).toEqual(testHero('warrior'));
+  });
+
+  it('отбрасывает сохранение с неизвестным предметом', () => {
+    const storage = memoryStorage();
+    storage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 4,
+        sceneId: 'st5',
+        hero: { ...testHero(), inventory: ['нет-такого'] },
+        flags: {},
+      }),
+    );
+    expect(readSave(storage)).toBeNull();
   });
 
   it('загружает сохранение без решений', () => {
@@ -95,6 +132,15 @@ describe('миграция сохранений версии 2', () => {
 });
 
 describe('автосохранение в хранилище интерфейса', () => {
+  it('сохраняет использованный предмет, не дожидаясь новой сцены', () => {
+    const storage = memoryStorage();
+    writeSave(storage, session({ hero: testHero('rogue', { hp: 2, inventory: ['bread'] }) }));
+    const store = createGameStore(storage);
+    store.loadGame();
+    store.applyItem('bread');
+    expect(readSave(storage)?.hero).toMatchObject({ hp: 5, inventory: [] });
+  });
+
   it('сохраняет новую игру и каждую новую сцену, после смерти удаляет', () => {
     const storage = memoryStorage();
     const store = createGameStore(storage, () => 0.5);

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { heroClass } from '@/content/classes';
+import { item } from '@/content/items';
 import { canUseSpecial } from '@/game/combat';
+import { inventoryCounts } from '@/game/hero';
 import type { FightState, Hero } from '@/game/types';
 import { HpBar } from '../components/HpBar';
 import { turns } from '../format';
@@ -15,6 +17,7 @@ export function FightView({ hero, fight }: Props) {
   const store = useStore();
   const special = heroClass(hero.classId).special;
   const { enemy, result } = fight;
+  const bag = inventoryCounts(hero);
 
   const logRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -53,6 +56,22 @@ export function FightView({ hero, fight }: Props) {
                   {fight.cooldown > 0 ? 'через ' + turns(fight.cooldown) : special.description}
                 </small>
               </button>
+              {bag.map(({ id, count }, i) => (
+                <button
+                  key={id}
+                  class="action action--item"
+                  disabled={hero.hp >= hero.maxHp}
+                  title={
+                    hero.hp >= hero.maxHp ? 'Здоровье и так полное' : 'Вместо удара; враг ответит'
+                  }
+                  onClick={() => store.fightAction({ item: id })}
+                >
+                  {i === 0 && <span class="action__key">4</span>}
+                  {item(id).name}
+                  {count > 1 && ' ×' + count}
+                  <small>{item(id).description}</small>
+                </button>
+              ))}
             </div>
           ) : null}
           {fight.log.length > 0 && (

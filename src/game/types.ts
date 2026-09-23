@@ -1,10 +1,11 @@
-// Общие типы игры. Идентификаторы решений, классов и оружия задаёт контент (src/content),
-// поэтому опечатка в имени решения или класса — ошибка компиляции.
+// Общие типы игры. Идентификаторы решений, классов, оружия и предметов задаёт контент (src/content),
+// поэтому опечатка в имени решения или предмета — ошибка компиляции.
 import type { ClassId } from '@/content/classes';
 import type { FlagId } from '@/content/flags';
+import type { ItemId } from '@/content/items';
 import type { WeaponId } from '@/content/weapons';
 
-export type { ClassId, FlagId, WeaponId };
+export type { ClassId, FlagId, ItemId, WeaponId };
 
 /** Случайное число в [0, 1). В игре — Math.random, в тестах — заранее заданная последовательность. */
 export type Rng = () => number;
@@ -49,6 +50,14 @@ export interface Weapon {
   damage: Range;
 }
 
+export interface Item {
+  name: string;
+  /** Короткое пояснение для сумки, например «+3 здоровья». */
+  description: string;
+  /** Сколько здоровья восстанавливает (не выше максимума). */
+  heal: number;
+}
+
 export interface Hero {
   name: string;
   classId: ClassId;
@@ -58,7 +67,16 @@ export interface Hero {
   hp: number;
   maxHp: number;
   weaponId: WeaponId;
+  /** Предметы в сумке; одинаковые повторяются. */
+  inventory: ItemId[];
+  xp: number;
+  level: number;
+  /** Сколько повышений уровня ещё не выбрано (награду игрок выбирает сам). */
+  levelUps: number;
 }
+
+/** Награда за новый уровень. */
+export type LevelReward = { stat: StatId } | { maxHp: number };
 
 // --- Сюжет ---
 
@@ -82,6 +100,14 @@ export interface EnemyDef {
   damage?: Range;
   /** Шанс замахнуться вместо удара; следующий удар двойной. По умолчанию 0. */
   windup?: number;
+  /** Опыт за победу. По умолчанию FIGHT_XP из src/content/progression.ts. */
+  xp?: number;
+}
+
+/** Что герой получает: оружие берётся в руки сразу, предметы кладутся в сумку. */
+export interface Loot {
+  weapon?: WeaponId;
+  items?: ItemId[];
 }
 
 export interface StatCheck {
@@ -89,6 +115,10 @@ export interface StatCheck {
   difficulty: number;
   /** Решения, которые запоминаются только при успехе. */
   set?: Flags;
+  /** Добыча только при успехе. */
+  give?: Loot;
+  /** Опыт за успех. По умолчанию CHECK_XP из src/content/progression.ts. */
+  xp?: number;
 }
 
 interface ChoiceBase {
@@ -101,6 +131,8 @@ interface ChoiceBase {
   ifNot?: FlagId;
   /** Восстановить до N здоровья (не выше максимума). */
   heal?: number;
+  /** Добыча при выборе. */
+  give?: Loot;
 }
 
 /** Перейти в сцену. */
@@ -108,7 +140,7 @@ export interface GoChoice extends ChoiceBase {
   next: SceneId;
 }
 
-/** Бой; победа — переход в next, поражение — конец игры. */
+/** Бой; победа — опыт и переход в next, поражение — конец игры. */
 export interface FightChoice extends ChoiceBase {
   fight: EnemyDef;
   next: SceneId;
@@ -142,7 +174,8 @@ export interface Scene {
 
 // --- Бой ---
 
-export type FightAction = 'attack' | 'defend' | 'special';
+/** Действие в бою: удар, защита, приём класса или предмет из сумки. */
+export type FightAction = 'attack' | 'defend' | 'special' | { item: ItemId };
 
 export interface Enemy {
   name: string;
@@ -151,6 +184,7 @@ export interface Enemy {
   maxHp: number;
   damage: Range;
   windup: number;
+  xp: number;
   /** Замахнулся: следующий удар двойной. */
   windingUp: boolean;
 }
@@ -167,8 +201,9 @@ export interface FightState {
 
 // --- Состояние игры ---
 
-export interface CheckNotice {
-  success: boolean;
+/** Короткое сообщение над текстом сцены: итог проверки, добыча, опыт. */
+export interface Notice {
+  tone: 'success' | 'fail' | 'info';
   text: string;
 }
 
@@ -178,8 +213,8 @@ export interface Session {
   sceneId: SceneId;
   flags: Flags;
   fight: FightState | null;
-  /** Итог последней проверки; показывается в сцене сразу после неё. */
-  notice: CheckNotice | null;
+  /** Сообщения о последнем выборе; видны только в сцене сразу после него. */
+  notices: Notice[];
 }
 
 export type Screen = 'menu' | 'createHero' | 'story';

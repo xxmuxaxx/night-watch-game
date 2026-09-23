@@ -1,14 +1,21 @@
 // Переходы состояния игры. Все функции чистые: получают состояние и возвращают новое.
 // Побочные эффекты (сохранение, отрисовка) — в src/ui/store.ts.
+import { item } from '@/content/items';
+import { CHECK_XP } from '@/content/progression';
 import { SCENES, START_SCENE } from '@/content/story';
 import { rollCheck } from './checks';
 import { playRound, startFight } from './combat';
-import { createHero, heal, type NewHero } from './hero';
+import { consumeItem, createHero, giveLoot, hasItem, heal, type NewHero } from './hero';
+import { addXp, applyLevelReward } from './progression';
 import type {
   Choice,
   FightAction,
   FlagId,
   GameState,
+  Hero,
+  ItemId,
+  LevelReward,
+  Notice,
   Rng,
   Scene,
   SceneId,
@@ -54,6 +61,11 @@ export function isDeathScene(scene: Scene): boolean {
   return scene.choices.some((choice) => 'gameOver' in choice);
 }
 
+/** Нужно выбрать награду за новый уровень (окно поверх сцены; не во время боя). */
+export function isChoosingLevelReward(session: Session): boolean {
+  return session.hero.levelUps > 0 && !session.fight;
+}
+
 // --- Экраны ---
 
 export function openHeroCreation(state: GameState): GameState {
@@ -66,49 +78,86 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
     sceneId: START_SCENE,
     flags: {},
     fight: null,
-    notice: null,
+    notices: [],
   };
   return { ...state, screen: 'story', session };
 }
 
 export function resumeSession(state: GameState, session: Session): GameState {
-  return { ...state, screen: 'story', session: { ...session, fight: null, notice: null } };
+  return { ...state, screen: 'story', session: { ...session, fight: null, notices: [] } };
 }
 
 export function gameOver(): GameState {
   return { screen: 'menu', session: null };
 }
 
-// --- Сюжет ---
+// --- Опыт ---
 
-function goTo(session: Session, sceneId: SceneId): Session {
-  return { ...session, sceneId, notice: null };
+/** Начислить опыт и добавить сообщения «+N опыта» и «Новый уровень!». */
+function gainXp(hero: Hero, amount: number, notices: Notice[]): Hero {
+  if (amount <= 0) return hero;
+  const next = addXp(hero, amount);
+  notices.push({ tone: 'info', text: '+' + amount + ' опыта' });
+  if (next.level > hero.level) notices.push({ tone: 'success', text: 'Новый уровень!' });
+  return next;
 }
+
+// --- Сюжет ---
 
 /** Выбрать вариант ответа в текущей сцене. */
 export function choose(state: GameState, choice: Choice, rng: Rng): GameState {
   const current = state.session;
-  if (!current || current.fight) return state;
+  if (!current || current.fight || isChoosingLevelReward(current)) return state;
 
-  let session: Session = { ...current, flags: { ...current.flags, ...choice.set } };
-  if (choice.heal) session = { ...session, hero: heal(session.hero, choice.heal) };
+  const notices: Notice[] = [];
+  const flags = { ...current.flags, ...choice.set };
+  let hero = current.hero;
+  if (choice.heal) hero = heal(hero, choice.heal);
+  const loot = giveLoot(hero, choice.give);
+  hero = loot.hero;
+  notices.push(...loot.notices);
 
   if ('check' in choice) {
-    const notice = rollCheck(session.hero, choice.check, rng);
-    if (notice.success) session = { ...session, flags: { ...session.flags, ...choice.check.set } };
-    session = goTo(session, notice.success ? choice.next : choice.fail);
-    return { ...state, session: { ...session, notice } };
+    const { success, notice } = rollCheck(hero, choice.check, rng);
+    notices.unshift(notice);
+    if (success) {
+      Object.assign(flags, choice.check.set);
+      const checkLoot = giveLoot(hero, choice.check.give);
+      hero = gainXp(checkLoot.hero, choice.check.xp ?? CHECK_XP, notices);
+      notices.push(...checkLoot.notices);
+    }
+    const sceneId = success ? choice.next : choice.fail;
+    return { ...state, session: { ...current, hero, flags, sceneId, notices } };
   }
   if ('fight' in choice) {
-    return { ...state, session: { ...session, fight: startFight(choice.fight, choice.next) } };
+    const fight = startFight(choice.fight, choice.next);
+    return { ...state, session: { ...current, hero, flags, fight, notices: [] } };
   }
   if ('gameOver' in choice) {
     return gameOver();
   }
   if ('next' in choice) {
-    return { ...state, session: goTo(session, choice.next) };
+    return { ...state, session: { ...current, hero, flags, sceneId: choice.next, notices } };
   }
-  return { ...state, session };
+  return { ...state, session: { ...current, hero, flags } };
+}
+
+/** Использовать предмет из сумки вне боя. */
+export function applyItem(state: GameState, id: ItemId): GameState {
+  const session = state.session;
+  if (!session || session.fight || !hasItem(session.hero, id)) return state;
+  const hero = consumeItem(session.hero, id);
+  const notices: Notice[] = [
+    { tone: 'info', text: 'Вы используете: ' + item(id).name + ' (' + item(id).description + ')' },
+  ];
+  return { ...state, session: { ...session, hero, notices } };
+}
+
+/** Выбрать награду за новый уровень. */
+export function chooseLevelReward(state: GameState, reward: LevelReward): GameState {
+  const session = state.session;
+  if (!session || !isChoosingLevelReward(session)) return state;
+  return { ...state, session: { ...session, hero: applyLevelReward(session.hero, reward) } };
 }
 
 // --- Бой ---
@@ -120,10 +169,13 @@ export function fightAction(state: GameState, action: FightAction, rng: Rng): Ga
   return { ...state, session: { ...session, hero, fight } };
 }
 
-/** Закрыть окно итога боя: победа ведёт дальше по сюжету, поражение — конец игры. */
+/** Закрыть окно итога боя: победа даёт опыт и ведёт дальше по сюжету, поражение — конец игры. */
 export function closeFight(state: GameState): GameState {
   const session = state.session;
-  if (!session?.fight?.result) return state;
-  if (session.fight.result === 'lose') return gameOver();
-  return { ...state, session: goTo({ ...session, fight: null }, session.fight.winScene) };
+  const fight = session?.fight;
+  if (!session || !fight?.result) return state;
+  if (fight.result === 'lose') return gameOver();
+  const notices: Notice[] = [];
+  const hero = gainXp(session.hero, fight.enemy.xp, notices);
+  return { ...state, session: { ...session, hero, fight: null, sceneId: fight.winScene, notices } };
 }

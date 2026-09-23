@@ -20,35 +20,41 @@ npx vitest run -t "подлый удар"       # tests whose name matches
 npm run format       # apply Prettier
 ```
 
-TypeScript is pinned to 6.0 because typescript-eslint doesn't support TypeScript 7 yet.
+TypeScript is pinned to 6.0 because typescript-eslint doesn't support TypeScript 7 yet. If the dev server starts failing to resolve `@/…` imports after running tests alongside it, restart `npm run dev`.
+
+Functions whose names start with `use` are treated as hooks by the react-hooks lint rules, so name non-hook helpers otherwise (`consumeItem`, `applyItem`).
 
 ## Architecture
 
 Three layers, each depending only on the ones before it:
 
-- **`src/content/`: data.** The story (`chapters/*.ts`, merged in `story.ts` with `START_SCENE`), hero classes, weapons, stat names, portraits and the registry of decision flags (`flags.ts`). Ids for flags, classes and weapons are derived from these registries (`keyof typeof …`), so a typo in a flag or class id is a compile error. A new flag must be added to `FLAGS` before use.
-- **`src/game/`: pure logic, no DOM.** `types.ts` holds all shared types. `engine.ts` holds state transitions (`choose`, `fightAction`, `closeFight`, `startNewGame`, …) that take a `GameState` and return a new one without mutating it. `combat.ts` (`playRound`), `checks.ts` and `hero.ts` do the same for their parts, and `save.ts` holds the versioned save format. Anything random takes an `Rng` (`() => number`) parameter instead of calling `Math.random`, which is how tests pin outcomes.
-- **`src/ui/`: Preact.** `store.ts` wraps the engine: it holds the `GameState`, applies transitions and performs side effects (autosave when entering a new scene or starting a game, deleting the save when the game returns to the menu after death). Components read state with `useGameState()` and call store methods; they never mutate state. `App.tsx` renders the scene and hero panel with overlays for the menu, hero creation and the fight. `useKeyboard.ts` maps 1–9 to choices and 1/2/3, Enter and Space to fight actions.
+- **`src/content/`: data.** The story (`chapters/*.ts`, merged in `story.ts` with `START_SCENE`), hero classes, weapons, items, stat names, portraits, progression (`progression.ts`: XP rewards, level thresholds, level-up rewards) and the registry of decision flags (`flags.ts`). Ids for flags, classes, weapons and items are derived from these registries (`keyof typeof …`), so a typo in a flag or class id is a compile error. A new flag must be added to `FLAGS` before use.
+- **`src/game/`: pure logic, no DOM.** `types.ts` holds all shared types. `engine.ts` holds state transitions (`choose`, `fightAction`, `closeFight`, `startNewGame`, …) that take a `GameState` and return a new one without mutating it. `combat.ts` (`playRound`), `checks.ts`, `hero.ts` (loot, items) and `progression.ts` (XP, levels) do the same for their parts, and `save.ts` holds the versioned save format. Anything random takes an `Rng` (`() => number`) parameter instead of calling `Math.random`, which is how tests pin outcomes.
+- **`src/ui/`: Preact.** `store.ts` wraps the engine: it holds the `GameState`, applies transitions and performs side effects: it autosaves after every change while in the story and not in a fight (a fight isn't saved; reloading restarts it from the scene before), and deletes the save when the game returns to the menu after death. Components read state with `useGameState()` and call store methods; they never mutate state. `App.tsx` renders the scene and hero panel with overlays for the menu, hero creation, the fight and the level-up reward. `useKeyboard.ts` maps 1–9 to choices, 1–4 to level-up rewards, and 1/2/3/4, Enter and Space to fight actions (4 is the first bag item).
 
 ### Scenes
 
 A scene is `{ image, actor?, title, text, choices }`. `text` and choice `text` are a string or a function of `{ hero, flag }`; `\n` renders as a line break. Choices are a union discriminated by which key is present (engine checks with `in`):
 
 - `{ next }`: go to a scene.
-- `{ fight: EnemyDef, next }`: fight; winning goes to `next`, losing is game over. `EnemyDef` has `hp` (default 10), `damage` (default 0–2) and `windup` (the chance the enemy winds up instead of striking; the next strike is doubled).
-- `{ check: { stat, difficulty, set? }, next, fail }`: a stat check. The chance is 50% + 15% per point above `difficulty`, clamped to 5–95%, and is shown on the button. `check.set` flags are recorded only on success. The result is shown above the next scene's text.
+- `{ fight: EnemyDef, next }`: fight; winning goes to `next`, losing is game over. `EnemyDef` has `hp` (default 10), `damage` (default 0–2), `xp` (default `FIGHT_XP`, 10, granted when the win is closed) and `windup` (the chance the enemy winds up instead of striking; the next strike is doubled).
+- `{ check: { stat, difficulty, set?, give?, xp? }, next, fail }`: a stat check. The chance is 50% + 15% per point above `difficulty`, clamped to 5–95%, and is shown on the button. `check.set`, `check.give` and `check.xp` (default `CHECK_XP`, 5) apply only on success. Results, loot and XP gains are `session.notices`, shown above the next scene's text and cleared by the next choice.
 - `{ gameOver: true }`: game over. A scene containing one is a death scene and is never saved.
 - No action: the choice does nothing (for example, the end of written content).
 
-Any choice may also have `set` (flags recorded on pick), `if` / `ifNot` (show only when a flag is or isn't set) and `heal: N` (restore up to N HP, capped at max). Scene ids are plain strings unique across chapters; `tests/story.test.ts` checks that every link target exists, every scene is reachable, every image file exists in `public/` and every flag used in `if` / `ifNot` is set somewhere.
+Any choice may also have `set` (flags recorded on pick), `if` / `ifNot` (show only when a flag is or isn't set) `heal: N` (restore up to N HP, capped at max) and `give: { weapon?, items? }` (a weapon is equipped at once, items go to the bag). Scene ids are plain strings unique across chapters; `tests/story.test.ts` checks that every link target exists, every scene is reachable, every image file exists in `public/` and every flag used in `if` / `ifNot` is set somewhere.
 
 ### Combat
 
-Each round the player attacks, defends (halves incoming damage, doubles dodge) or uses the class special (`HeroClass.special`: a `damage` multiplier, `stun` so the enemy skips its answer and loses its wind-up, `crit` for a guaranteed crit, and a `cooldown`). Hero damage is strength plus a weapon roll, doubled on a crit. Hero HP carries over between fights; only `heal` choices restore it.
+Each round the player attacks, uses a bag item (`{ item }`: heals, the enemy still answers), defends (halves incoming damage, doubles dodge) or uses the class special (`HeroClass.special`: a `damage` multiplier, `stun` so the enemy skips its answer and loses its wind-up, `crit` for a guaranteed crit, and a `cooldown`). Hero damage is strength plus a weapon roll, doubled on a crit. Hero HP carries over between fights; `heal` choices, items and level-ups restore it.
+
+### Progression
+
+XP comes from fights and successful checks; `addXp` raises `level` by the `LEVEL_XP` thresholds and adds one `levelUps` per level gained. While `levelUps > 0` (and not fighting) the story is paused behind the level-up overlay: `chooseLevelReward` applies +1 to a stat or +3 max HP from `LEVEL_REWARDS` and fully heals.
 
 ### Saves
 
-`localStorage` key `nightwatch-save`, format version 3: `{ version, sceneId, hero, flags }`. `migrate()` converts version 2 saves (the pre-TypeScript game: `stage`, `class: 'Warrior'`, `src`, `hp`/`currentHp`) into the current format; saves with an unknown scene, class or weapon are ignored. When the save format changes, bump `SAVE_VERSION` and add a migration step instead of breaking old saves.
+`localStorage` key `nightwatch-save`, format version 4: `{ version, sceneId, hero, flags }`. `migrate()` upgrades step by step: version 2 (the pre-TypeScript game: `stage`, `class: 'Warrior'`, `src`, `hp`/`currentHp`) → 3 → 4 (adds `inventory`, `xp`, `level`, `levelUps`). Saves with an unknown scene, class, weapon or item are ignored. When the save format changes, bump `SAVE_VERSION` and add a migration step instead of breaking old saves.
 
 ## Assets and design
 

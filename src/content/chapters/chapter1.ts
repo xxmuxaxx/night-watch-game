@@ -15,7 +15,7 @@ const OPEN_CHEST: Choice = {
   text: 'Открыть заржавевший сундук',
   ifNot: 'triedChest',
   set: { triedChest: true },
-  check: { stat: 'strength', difficulty: 1, set: { foundKnife: true } },
+  check: { stat: 'strength', difficulty: 1, set: { foundKnife: true }, give: { weapon: 'knife' } },
   next: 'st7_2',
   fail: 'st7_3',
 };
@@ -53,7 +53,8 @@ export const chapter1: Record<string, Scene> = {
       { text: 'Приготовиться к драке', fight: VASYA, next: 'st3' },
       {
         text: 'Поднырнуть под его руку и сбить с ног',
-        check: { stat: 'agility', difficulty: 2, set: { trippedVasya: true } },
+        // сбить Васю с ног — тоже победа, опыт как за бой
+        check: { stat: 'agility', difficulty: 2, set: { trippedVasya: true }, xp: 10 },
         next: 'st3',
         fail: 'st2_1',
       },
@@ -133,7 +134,13 @@ export const chapter1: Record<string, Scene> = {
         ? '\nУходя, он задерживает на вас настороженный взгляд, будто прикидывает, не придётся ли этой ночью ловить вас у ворот.'
         : ''),
     choices: [
-      { text: 'Сесть у очага и поесть', heal: 5, set: { ate: true }, next: 'st6_1' },
+      {
+        text: 'Сесть у очага и поесть',
+        heal: 5,
+        set: { ate: true },
+        give: { items: ['bread'] },
+        next: 'st6_1',
+      },
       { text: 'Отказаться от еды и попросить показать, где спать', next: 'st7' },
     ],
   },
@@ -141,7 +148,7 @@ export const chapter1: Record<string, Scene> = {
     image: 'img/scene-hall.jpg',
     actor: 'img/portrait-vasya.jpg',
     title: 'Старый знакомый',
-    text: 'Горячая похлёбка и тепло очага возвращают силы.\nНапротив с грохотом опускается миска. Это Вася: губа распухла, но злобы в глазах, кажется, нет.\n— Слышь… без обид, ладно? Тут все новенькие через это проходят. Я третью неделю здесь.',
+    text: 'Горячая похлёбка и тепло очага возвращают силы. Краюху хлеба вы прячете за пазуху: пригодится.\nНапротив с грохотом опускается миска. Это Вася: губа распухла, но злобы в глазах, кажется, нет.\n— Слышь… без обид, ладно? Тут все новенькие через это проходят. Я третью неделю здесь.',
     choices: [
       { text: 'Пожать ему руку', set: { vasyaFriend: true }, next: 'st6_2' },
       { text: 'Молча доесть и уйти', next: 'st7' },

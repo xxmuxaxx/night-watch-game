@@ -161,6 +161,40 @@ describe('playRound', () => {
     expect(playRound(hero, fight, 'attack', constant(0)).fight).toBe(fight);
   });
 
+  it('предмет вместо удара: лечит, уходит из сумки, враг отвечает', () => {
+    const hero = testHero('warrior', { hp: 4, inventory: ['bread'] });
+    const { hero: after, fight } = playRound(
+      hero,
+      startFight({ ...DUMMY, windup: 0 }, 'next'),
+      { item: 'bread' },
+      sequence(0.99, 0.99, 0),
+    );
+    expect(after.inventory).toEqual([]);
+    expect(after.hp).toBe(4 + 3 - 2);
+    expect(fight.enemy.hp).toBe(30);
+    expect(fight.log[0]).toBe('Вы используете: Краюха хлеба (+3 здоровья)');
+  });
+
+  it('предмета нет в сумке — раунд не играется', () => {
+    const fight = startFight(DUMMY, 'next');
+    expect(playRound(testHero(), fight, { item: 'bread' }, constant(0)).fight).toBe(fight);
+  });
+
+  it('оружие влияет на урон: нож 1–3 вместо 0–2', () => {
+    const { fight } = playRound(
+      testHero('warrior', { weaponId: 'knife' }),
+      startFight(DUMMY, 'next'),
+      'attack',
+      sequence(0.99, 0.99, 0.99, 0.99, 0),
+    );
+    expect(fight.enemy.hp).toBe(30 - (2 + 3));
+  });
+
+  it('опыт за врага: по умолчанию 10, можно задать свой', () => {
+    expect(startFight(DUMMY, 'next').enemy.xp).toBe(10);
+    expect(startFight({ ...DUMMY, xp: 25 }, 'next').enemy.xp).toBe(25);
+  });
+
   it('поражение, когда здоровье падает до нуля и ниже', () => {
     const { fight } = playRound(
       testHero('warrior', { hp: 1 }),

@@ -1,11 +1,15 @@
 // Пошаговый бой. Раунд: действие героя, затем ответ врага.
 //   attack  — обычный удар: сила + бросок оружия, удвоение при точном ударе (crit класса);
 //   defend  — урон врага вдвое меньше, шанс уворота вдвое выше;
-//   special — приём класса, после него ждать cooldown ходов.
+//   special — приём класса, после него ждать cooldown ходов;
+//   { item } — предмет из сумки вместо удара.
 // Враг с шансом windup замахивается вместо удара, и следующий его удар двойной;
 // защита его ополовинивает, оглушение (stun) сбивает.
 import { heroClass } from '@/content/classes';
+import { item } from '@/content/items';
+import { FIGHT_XP } from '@/content/progression';
 import { weapon } from '@/content/weapons';
+import { consumeItem, hasItem } from './hero';
 import { chance, randomInt } from './random';
 import type { Enemy, EnemyDef, FightAction, FightState, Hero, Rng, SceneId } from './types';
 
@@ -18,6 +22,7 @@ export function createEnemy(def: EnemyDef): Enemy {
     maxHp: hp,
     damage: def.damage ?? { min: 0, max: 2 },
     windup: def.windup ?? 0,
+    xp: def.xp ?? FIGHT_XP,
     windingUp: false,
   };
 }
@@ -44,17 +49,25 @@ export function playRound(
 ): RoundState {
   if (fight.result !== null) return { hero, fight };
   if (action === 'special' && !canUseSpecial(fight)) return { hero, fight };
+  if (typeof action === 'object' && !hasItem(hero, action.item)) return { hero, fight };
 
   const cls = heroClass(hero.classId);
   const special = cls.special;
   const enemy = { ...fight.enemy };
   const log = [...fight.log];
+  let current = hero;
   let heroHp = hero.hp;
   let cooldown = fight.cooldown;
   let stun = false;
 
   // Ход героя
-  if (action === 'defend') {
+  if (typeof action === 'object') {
+    current = consumeItem(hero, action.item);
+    heroHp = current.hp;
+    log.push(
+      'Вы используете: ' + item(action.item).name + ' (' + item(action.item).description + ')',
+    );
+  } else if (action === 'defend') {
     log.push('Вы встаёте в защиту');
   } else {
     let damage = hero.stats.strength + randomInt(rng, weapon(hero.weaponId).damage);
@@ -122,7 +135,7 @@ export function playRound(
 
   if (cooldown > 0) cooldown--;
   return {
-    hero: { ...hero, hp: heroHp },
+    hero: { ...current, hp: heroHp },
     fight: { ...fight, enemy, cooldown, log, result: heroHp <= 0 ? 'lose' : null },
   };
 }
