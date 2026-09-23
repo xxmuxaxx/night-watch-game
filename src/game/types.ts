@@ -370,6 +370,8 @@ export interface FightState {
   result: 'win' | 'lose' | null;
   /** Куда перейти после победы. */
   winScene: SceneId;
+  /** Партия перед боем: после поражения можно вернуться к ней и попробовать снова. */
+  retry: Session | null;
 }
 
 // --- Состояние игры ---
@@ -392,6 +394,8 @@ export interface Session {
   events: EventId[];
   flags: Flags;
   relations: Relations;
+  /** Режим «Одна жизнь»: смерть стирает сохранение, попробовать бой снова нельзя. */
+  oneLife: boolean;
   fight: FightState | null;
   /** Сообщения о последнем выборе; видны только в сцене сразу после него. */
   notices: Notice[];

@@ -48,7 +48,7 @@ export function App() {
       )}
       {state.screen === 'menu' && <MainMenu />}
       {state.screen === 'createHero' && <CreateHero />}
-      {inStory && session.fight && <FightView hero={session.hero} fight={session.fight} />}
+      {inStory && session.fight && <FightView session={{ ...session, fight: session.fight }} />}
       {inStory && isChoosingLevelReward(session) && <LevelUp hero={session.hero} />}
       {showJournal && (
         <Journal

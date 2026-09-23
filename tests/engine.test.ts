@@ -204,4 +204,34 @@ describe('бой', () => {
     expect(state.session?.fight?.result).toBe('lose');
     expect(engine.closeFight(state)).toEqual({ screen: 'menu', session: null });
   });
+
+  it('поражение: можно попробовать снова — сцена перед боем, здоровье как до боя', () => {
+    const before = play(newGame(), 'Подойти', 'Ждать');
+    let state = play(before, 'драке');
+    state = withSession(state, { hero: { ...sessionOf(state).hero, hp: 1 } });
+    state = engine.fightAction(state, 'defend', sequence(0.99, 0.99, 0.99));
+    expect(engine.canRetryFight(sessionOf(state))).toBe(true);
+    const retried = engine.retryFight(state);
+    expect(retried.session).toMatchObject({
+      sceneId: 'st2',
+      fight: null,
+      time: sessionOf(before).time,
+      hero: { hp: 10 },
+    });
+    expect(texts(retried)).toEqual(['Вы собираетесь с силами. Ещё одна попытка.']);
+  });
+
+  it('в режиме «Одна жизнь» второй попытки нет', () => {
+    let state = engine.startNewGame(engine.initialState, {
+      name: 'Ивар',
+      classId: 'warrior',
+      portrait: 'img/hero-1.jpg',
+      oneLife: true,
+    });
+    state = play(state, 'Подойти', 'Ждать', 'драке');
+    state = withSession(state, { hero: { ...sessionOf(state).hero, hp: 1 } });
+    state = engine.fightAction(state, 'defend', sequence(0.99, 0.99, 0.99));
+    expect(engine.canRetryFight(sessionOf(state))).toBe(false);
+    expect(engine.retryFight(state)).toBe(state);
+  });
 });

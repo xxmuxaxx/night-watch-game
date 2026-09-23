@@ -23,7 +23,7 @@ import type {
 } from './types';
 
 export const SAVE_KEY = 'nightwatch-save';
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -38,10 +38,14 @@ interface SaveData {
   hero: Hero;
   flags: Flags;
   relations: Relations;
+  oneLife: boolean;
 }
 
+/** Формат версии 7: до режима «Одна жизнь». */
+type SaveV7 = Omit<SaveData, 'version' | 'oneLife'> & { version: 7 };
+
 /** Формат версии 6: до отношений с персонажами. */
-type SaveV6 = Omit<SaveData, 'version' | 'relations'> & { version: 6 };
+type SaveV6 = Omit<SaveV7, 'version' | 'relations'> & { version: 6 };
 
 /** Формат версии 5: до журнала (решения joined). */
 type SaveV5 = Omit<SaveV6, 'version'> & { version: 5 };
@@ -182,7 +186,7 @@ function migrateV5(save: SaveV5): SaveV6 {
 }
 
 /** В версии 7 появились отношения: восстанавливаем их по решениям и событиям главы 1. */
-function migrateV6(save: SaveV6): SaveData {
+function migrateV6(save: SaveV6): SaveV7 {
   const flag = (id: keyof Flags) => save.flags[id] === true;
   const fired = (id: EventId) => save.events.includes(id);
   const torvin =
@@ -194,13 +198,18 @@ function migrateV6(save: SaveV6): SaveData {
   const relations: Relations = {};
   if (torvin !== 0) relations.torvin = torvin;
   if (vasya !== 0) relations.vasya = vasya;
-  return { ...save, version: SAVE_VERSION, relations };
+  return { ...save, version: 7, relations };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 7. */
+/** В версии 8 появился режим «Одна жизнь»; старые партии играются в обычном режиме. */
+function migrateV7(save: SaveV7): SaveData {
+  return { ...save, version: SAVE_VERSION, oneLife: false };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 8. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
-  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveData;
+  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveV7 | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
     if (!v3) return null;
@@ -210,6 +219,7 @@ export function migrate(raw: unknown): SaveData | null {
   if (save.version === 4) save = migrateV4(save);
   if (save.version === 5) save = migrateV5(save);
   if (save.version === 6) save = migrateV6(save);
+  if (save.version === 7) save = migrateV7(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 
@@ -240,6 +250,7 @@ export function readSave(storage: SaveStorage): Session | null {
       events: save.events,
       flags: save.flags,
       relations: save.relations,
+      oneLife: save.oneLife,
       fight: null,
       notices: [],
     };
@@ -260,6 +271,7 @@ export function writeSave(storage: SaveStorage, session: Session): void {
     hero: session.hero,
     flags: session.flags,
     relations: session.relations,
+    oneLife: session.oneLife,
   };
   try {
     storage.setItem(SAVE_KEY, JSON.stringify(save));

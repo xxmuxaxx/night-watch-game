@@ -14,6 +14,7 @@ function session(overrides: Partial<Session> = {}): Session {
     events: [],
     flags: { askedToLeave: true },
     relations: { torvin: -1 },
+    oneLife: false,
     fight: null,
     notices: [],
     ...overrides,
@@ -97,6 +98,8 @@ describe('миграция старых сохранений', () => {
       flags: { ate: true, knowsCell: true, joined: true },
       // v7: отношения восстанавливаются по решениям — ужинал вовремя, но не помирился с Васей
       relations: { torvin: 1, vasya: -1 },
+      // v8: старые партии — в обычном режиме
+      oneLife: false,
       fight: null,
       notices: [],
     });
@@ -201,7 +204,7 @@ describe('автосохранение в хранилище интерфейс�
     expect(readSave(storage)?.hero).toMatchObject({ hp: 5, inventory: [] });
   });
 
-  it('сохраняет новую игру и каждую новую сцену, после смерти удаляет', () => {
+  it('сохраняет новую игру и каждую новую сцену; после смерти остаётся последний выбор', () => {
     const storage = memoryStorage();
     const store = createGameStore(storage, () => 0.5);
     expect(store.hasSave()).toBe(false);
@@ -213,8 +216,25 @@ describe('автосохранение в хранилище интерфейс�
     store.choose({ text: 'Подойти к воротам', next: 'st1' });
     expect(readSave(storage)?.sceneId).toBe('st1');
 
+    // сцена смерти не сохраняется: загрузка вернёт к выбору перед ней
+    store.choose({ text: 'Попытаться убежать', next: 'st1_1' });
     store.choose({ text: 'Конец игры', gameOver: true });
     expect(store.getState().screen).toBe('menu');
+    expect(readSave(storage)?.sceneId).toBe('st1');
+  });
+
+  it('в режиме «Одна жизнь» смерть стирает сохранение', () => {
+    const storage = memoryStorage();
+    const store = createGameStore(storage, () => 0.5);
+    store.openHeroCreation();
+    store.startNewGame({
+      name: 'Ивар',
+      classId: 'warrior',
+      portrait: 'img/hero-1.jpg',
+      oneLife: true,
+    });
+    expect(readSave(storage)?.oneLife).toBe(true);
+    store.choose({ text: 'Конец игры', gameOver: true });
     expect(store.hasSave()).toBe(false);
   });
 

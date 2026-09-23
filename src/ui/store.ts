@@ -1,6 +1,7 @@
 // Хранилище состояния игры для интерфейса: держит GameState, применяет переходы из движка
 // и выполняет побочные эффекты — автосохранение при каждом изменении партии вне боя
-// (новая сцена, предмет из сумки, награда за уровень) и удаление сохранения после смерти.
+// (новая сцена, предмет из сумки, награда за уровень) и удаление сохранения после смерти
+// в режиме «Одна жизнь».
 import { createContext } from 'preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
 import * as engine from '@/game/engine';
@@ -18,6 +19,7 @@ export interface GameStore {
   choose(choice: Choice): void;
   fightAction(action: FightAction): void;
   closeFight(): void;
+  retryFight(): void;
   applyItem(id: ItemId): void;
   chooseLevelReward(reward: LevelReward): void;
   /** Применить произвольный переход (панель отладки); сохранение работает как обычно. */
@@ -36,7 +38,9 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
 
     const session = next.session;
     if (prev.screen === 'story' && next.screen === 'menu') {
-      deleteSave(storage); // смерть
+      // смерть: в режиме «Одна жизнь» сохранение стирается, иначе в нём остаётся последний выбор
+      // перед гибелью (сцены смерти и бои не сохраняются) — «Загрузить игру» вернёт туда
+      if (prev.session?.oneLife) deleteSave(storage);
     } else if (session && next.screen === 'story' && !session.fight) {
       writeSave(storage, session); // бой не сохраняется: после перезагрузки он начнётся заново
     }
@@ -60,6 +64,7 @@ export function createGameStore(storage: SaveStorage, rng: Rng = Math.random): G
     choose: (choice) => update(engine.choose(state, choice, rng)),
     fightAction: (action) => update(engine.fightAction(state, action, rng)),
     closeFight: () => update(engine.closeFight(state)),
+    retryFight: () => update(engine.retryFight(state)),
     applyItem: (id) => update(engine.applyItem(state, id)),
     chooseLevelReward: (reward) => update(engine.chooseLevelReward(state, reward)),
     apply: (transition) => update(transition(state)),

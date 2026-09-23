@@ -2,19 +2,22 @@ import { useEffect, useRef } from 'preact/hooks';
 import { heroClass } from '@/content/classes';
 import { item } from '@/content/items';
 import { canUseSpecial } from '@/game/combat';
+import { canRetryFight } from '@/game/engine';
 import { inventoryCounts } from '@/game/hero';
-import type { FightState, Hero } from '@/game/types';
+import type { FightState, Session } from '@/game/types';
 import { HpBar } from '../components/HpBar';
 import { Picture } from '../components/Picture';
 import { percent, turns } from '../format';
 import { useStore } from '../store';
 
 interface Props {
-  hero: Hero;
-  fight: FightState;
+  /** Партия с идущим боем. */
+  session: Session & { fight: FightState };
 }
 
-export function FightView({ hero, fight }: Props) {
+export function FightView({ session }: Props) {
+  const { hero } = session;
+  const fight = session.fight;
   const store = useStore();
   const special = heroClass(hero.classId).special;
   const { enemy, result } = fight;
@@ -95,11 +98,22 @@ export function FightView({ hero, fight }: Props) {
             </div>
           )}
           {result !== null && (
-            <div>
+            <div class="fight-outcome">
               <p class="fight-result">{result === 'win' ? 'Вы победили' : 'Вы проиграли'}</p>
-              <button class="button" onClick={() => store.closeFight()}>
-                Продолжить
-              </button>
+              {canRetryFight(session) ? (
+                <>
+                  <button class="button" onClick={() => store.retryFight()}>
+                    Попробовать снова
+                  </button>
+                  <button class="button button--secondary" onClick={() => store.closeFight()}>
+                    Сдаться
+                  </button>
+                </>
+              ) : (
+                <button class="button" onClick={() => store.closeFight()}>
+                  Продолжить
+                </button>
+              )}
             </div>
           )}
         </div>

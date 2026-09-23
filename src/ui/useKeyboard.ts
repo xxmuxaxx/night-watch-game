@@ -1,7 +1,7 @@
 import { useEffect } from 'preact/hooks';
 import { LEVEL_REWARDS } from '@/content/progression';
 import { canUseSpecial } from '@/game/combat';
-import { availableChoices, isChoosingLevelReward } from '@/game/engine';
+import { availableChoices, canRetryFight, isChoosingLevelReward } from '@/game/engine';
 import type { FightAction } from '@/game/types';
 import type { GameStore } from './store';
 
@@ -24,7 +24,7 @@ export interface JournalControl {
  * Клавиатура: J открывает и закрывает журнал (пока он открыт, Esc закрывает, остальное не работает);
  * в сцене 1–9 выбирают вариант ответа; при новом уровне 1–4 — награду;
  * в бою 1/Enter/пробел — удар, 2 — защита, 3 — приём, 4 — первый предмет из сумки;
- * после боя Enter/пробел/1 — «Продолжить». В меню и при вводе имени клавиши не перехватываются.
+ * после боя Enter/пробел/1 — «Продолжить» (после поражения — «Попробовать снова», 2 — «Сдаться»). В меню и при вводе имени клавиши не перехватываются.
  */
 export function useKeyboard(store: GameStore, journal: JournalControl) {
   useEffect(() => {
@@ -48,7 +48,13 @@ export function useKeyboard(store: GameStore, journal: JournalControl) {
         const fight = session.fight;
         const hero = session.hero;
         if (fight.result !== null) {
-          if (key === 'attack') store.closeFight();
+          // после поражения Enter — «Попробовать снова», 2 — «Сдаться»
+          if (canRetryFight(session)) {
+            if (key === 'attack') store.retryFight();
+            if (key === 'defend') store.closeFight();
+          } else if (key === 'attack') {
+            store.closeFight();
+          }
           return;
         }
         let action: FightAction | null = key === 'item' ? null : key;

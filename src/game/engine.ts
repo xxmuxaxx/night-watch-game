@@ -62,6 +62,7 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
     events: [],
     flags: {},
     relations: {},
+    oneLife: newHero.oneLife ?? false,
     fight: null,
     notices: [],
   };
@@ -148,7 +149,8 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
     return { ...state, session: enterScene(session, success ? choice.next : choice.fail) };
   }
   if ('fight' in choice) {
-    const fight = startFight(choice.fight, choice.next);
+    // перед боем запоминаем партию как была до выбора: после поражения можно попробовать снова
+    const fight = { ...startFight(choice.fight, choice.next), retry: current };
     return { ...state, session: { ...session, fight, notices: [] } };
   }
   if ('gameOver' in choice) return gameOver();
@@ -197,6 +199,20 @@ export function fightAction(state: GameState, action: FightAction, rng: Rng): Ga
   if (!session?.fight) return state;
   const { hero, fight } = playRound(session.hero, session.fight, action, rng);
   return { ...state, session: { ...session, hero, fight } };
+}
+
+/** Можно ли попробовать проигранный бой снова (не в режиме «Одна жизнь»). */
+export function canRetryFight(session: Session): boolean {
+  return session.fight?.result === 'lose' && session.fight.retry !== null && !session.oneLife;
+}
+
+/** Попробовать снова: вернуться к сцене перед боем с тем здоровьем, что было до него. */
+export function retryFight(state: GameState): GameState {
+  const session = state.session;
+  const retry = session?.fight?.retry;
+  if (!session || !retry || !canRetryFight(session)) return state;
+  const notices: Notice[] = [{ tone: 'info', text: 'Вы собираетесь с силами. Ещё одна попытка.' }];
+  return { ...state, session: { ...retry, fight: null, notices } };
 }
 
 /** Закрыть окно итога боя: победа даёт опыт и ведёт дальше по сюжету, поражение — конец игры. */

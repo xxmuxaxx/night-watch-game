@@ -559,6 +559,28 @@ img {
   border-color: var(--accent);
   box-shadow: 0 0 14px rgba(217, 146, 59, 0.35);
 }
+.one-life {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 520px;
+  text-align: left;
+  color: var(--muted);
+  cursor: pointer;
+}
+.one-life input {
+  margin-top: 5px;
+  accent-color: var(--accent);
+}
+.one-life b {
+  color: var(--text);
+}
+.fight-outcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
 .error {
   margin: 0;
   color: var(--danger);

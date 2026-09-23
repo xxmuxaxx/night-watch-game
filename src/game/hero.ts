@@ -7,6 +7,8 @@ export interface NewHero {
   name: string;
   classId: ClassId;
   portrait: string;
+  /** Режим «Одна жизнь» (см. Session.oneLife). */
+  oneLife?: boolean;
 }
 
 export function createHero({ name, classId, portrait }: NewHero): Hero {

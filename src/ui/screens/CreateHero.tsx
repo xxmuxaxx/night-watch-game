@@ -22,6 +22,7 @@ export function CreateHero() {
   const [portrait, setPortrait] = useState(HERO_PORTRAITS[0] ?? '');
   const [classId, setClassId] = useState<ClassId>(CLASS_IDS[0] ?? 'warrior');
   const [nameError, setNameError] = useState(false);
+  const [oneLife, setOneLife] = useState(false);
 
   function start() {
     const trimmed = name.trim();
@@ -29,7 +30,7 @@ export function CreateHero() {
       setNameError(true);
       return;
     }
-    store.startNewGame({ name: trimmed, classId, portrait });
+    store.startNewGame({ name: trimmed, classId, portrait, oneLife });
   }
 
   return (
@@ -87,6 +88,17 @@ export function CreateHero() {
             );
           })}
         </div>
+
+        <label class="one-life">
+          <input
+            type="checkbox"
+            checked={oneLife}
+            onChange={(e) => setOneLife(e.currentTarget.checked)}
+          />
+          <span>
+            <b>Одна жизнь.</b> Смерть стирает сохранение, проигранный бой нельзя начать заново.
+          </span>
+        </label>
 
         {nameError && <p class="error">Введите имя героя!</p>}
         <button class="button" onClick={start}>
