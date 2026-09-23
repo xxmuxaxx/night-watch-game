@@ -27,7 +27,7 @@ export const people: Record<string, SceneText> = {
   cook_supper: {
     title: 'Supper',
     text: ({ time }) =>
-      '“Supper?” Ulf snorts. “' + (SUPPERS[time.day % SUPPERS.length] ?? '') + '”',
+      '“Supper?” Ulf snorts. “' + (SUPPERS[(time.day - 1) % SUPPERS.length] ?? '') + '”',
     choices: ['I see'],
   },
   cook_cat: {

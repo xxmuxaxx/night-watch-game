@@ -160,15 +160,26 @@ describe('события', () => {
     expect(sessionOf(play(state, 'Подождать')).sceneId).toBeNull();
   });
 
-  it('сон в келье лечит и прерывается тревогой в час ночи', () => {
-    let state = withSession(roaming('cell', 1, 21, 30), {
+  it('первую ночь герой спит до утра: тревога — на вторую, после целого второго дня', () => {
+    const state = withSession(roaming('cell', 1, 22), {
+      events: ['dinner'],
+      flags: { knowsCell: true },
+    });
+    expect(sessionOf(play(state, 'Лечь спать'))).toMatchObject({
+      sceneId: null,
+      time: atTime(2, 6),
+    });
+  });
+
+  it('сон в келье лечит и прерывается тревогой в час второй ночи', () => {
+    let state = withSession(roaming('cell', 2, 21, 30), {
       events: ['dinner'],
       flags: { knowsCell: true },
       hero: { ...sessionOf(newGame()).hero, hp: 3 },
     });
     state = play(state, 'Лечь спать');
     const session = sessionOf(state);
-    expect(session).toMatchObject({ sceneId: 'st8', time: atTime(2, 1) });
+    expect(session).toMatchObject({ sceneId: 'st8', time: atTime(3, 1) });
     expect(session.hero.hp).toBe(3 + 3); // 21:30 → 01:00: три полных часа
     expect(noticeTexts(session.notices)).toEqual([
       'Вы проспали 3 ч и проснулись (+3 здоровья)',
@@ -179,15 +190,15 @@ describe('события', () => {
   });
 
   it('событие начинается ровно в свой час, даже если ждать начали не с ровного времени', () => {
-    const state = withSession(roaming('cell', 1, 20, 55), {
+    const state = withSession(roaming('cell', 2, 20, 55), {
       events: ['dinner'],
       flags: { knowsCell: true },
     });
-    expect(sessionOf(play(state, 'Лечь спать')).time).toBe(atTime(2, 1));
+    expect(sessionOf(play(state, 'Лечь спать')).time).toBe(atTime(3, 1));
   });
 
   it('тревога застаёт бодрствующего героя во дворе — текст другой', () => {
-    const state = withSession(roaming('courtyard', 2, 0, 50), {
+    const state = withSession(roaming('courtyard', 3, 0, 50), {
       events: ['dinner'],
       flags: { knowsCell: true },
     });
@@ -472,7 +483,7 @@ describe('карта крепости', () => {
   });
 
   it('событие по дороге прерывает путь', () => {
-    const state = withSession(roaming('cell', 2, 0, 55), {
+    const state = withSession(roaming('cell', 3, 0, 55), {
       events: ['dinner'],
       flags: { knowsCell: true },
     });
@@ -482,7 +493,7 @@ describe('карта крепости', () => {
     expect(session).toMatchObject({
       locationId: 'courtyard',
       sceneId: 'st8',
-      time: atTime(2, 1, 5),
+      time: atTime(3, 1, 5),
     });
   });
 });

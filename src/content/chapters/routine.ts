@@ -187,7 +187,7 @@ export const routine: Record<string, Scene> = {
       'Часовые молча подвигаются, пуская вас к огню. Угли потрескивают, по рукам разливается тепло.\n' +
       (flag('sawLights') && time.day === 2
         ? 'Один из часовых, заметив, как вы смотрите на лес, негромко говорит: «Не гляди туда подолгу. Кто глядит — того и видят».'
-        : (BRAZIER_RUMORS[time.day % BRAZIER_RUMORS.length] ?? '')),
+        : (BRAZIER_RUMORS[(time.day - 1) % BRAZIER_RUMORS.length] ?? '')),
     choices: [{ text: 'Пойти дальше', leave: true }],
   },
 };

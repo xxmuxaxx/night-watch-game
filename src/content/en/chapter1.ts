@@ -253,7 +253,7 @@ export const chapter1: Record<string, SceneText> = {
           ? 'Again you see the figure in the dark cloak by the dying light. The alarm was raised for a reason.'
           : flag('sawLights')
             ? 'You remember the lights going out by the pass and understand: the alarm was raised for a reason.'
-            : 'It seems the night Torvin spoke of has come sooner than you thought.') +
+            : 'It seems the night Torvin spoke of has come after all.') +
         (flag('torvinWarned')
           ? '\nTorvin’s words ring in your ears: “Not everything that walks in that forest is human.”'
           : '') +

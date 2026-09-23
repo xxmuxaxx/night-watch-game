@@ -16,7 +16,7 @@ const MIRKO_PLACE: Image = ({ location }) =>
       ? 'img/scene-barracks.jpg'
       : 'img/scene-drill.jpg';
 
-/** Что на ужин: каждый день своё. */
+/** Что на ужин: каждый день своё, с первого (в первый вечер — похлёбка, как на ужине). */
 const SUPPERS = [
   'Похлёбка с репой. Вчера была похлёбка с репой, и завтра будет. Кто недоволен — ешь снег.',
   'Каша с салом. Сала мало, каши много. Радуйся.',
@@ -86,7 +86,7 @@ export const people: Record<string, Scene> = {
     actor: COOK,
     title: 'Ужин',
     text: ({ time }) =>
-      '— На ужин? — Ульф хмыкает. — ' + (SUPPERS[time.day % SUPPERS.length] ?? ''),
+      '— На ужин? — Ульф хмыкает. — ' + (SUPPERS[(time.day - 1) % SUPPERS.length] ?? ''),
     choices: [{ text: 'Понятно', next: 'cook_talk' }],
   },
   cook_cat: {

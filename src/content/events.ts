@@ -6,7 +6,7 @@ export const EVENTS = {
   // Глава 1
   dinner: { scene: 'st6', location: 'hall', hours: [18, 21] },
   lateForDinner: { scene: 'torvin_late', hours: [21, 6], ifNot: 'knowsCell' },
-  alarm: { scene: 'st8', hours: [1, 6], fromDay: 2 },
+  alarm: { scene: 'st8', hours: [1, 6], fromDay: 3 },
   // Мелкие происшествия (src/content/chapters/incidents.ts): случаются не всегда, а с вероятностью
   // chance при каждой проверке — по приходе в место и на каждом шаге ожидания
   brawl: {

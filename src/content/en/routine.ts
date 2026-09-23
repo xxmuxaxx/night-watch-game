@@ -88,7 +88,7 @@ export const routine: Record<string, SceneText> = {
       'The sentries silently make room for you by the fire. The coals crackle, and warmth spreads through your hands.\n' +
       (flag('sawLights') && time.day === 2
         ? 'One of the sentries, noticing how you look at the forest, says quietly: “Don’t stare out there too long. Whoever looks gets seen.”'
-        : (BRAZIER_RUMORS[time.day % BRAZIER_RUMORS.length] ?? '')),
+        : (BRAZIER_RUMORS[(time.day - 1) % BRAZIER_RUMORS.length] ?? '')),
     choices: ['Move on'],
   },
 };
