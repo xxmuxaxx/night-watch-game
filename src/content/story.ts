@@ -4,9 +4,11 @@
 import { atTime } from '@/game/time';
 import type { LocationId, Scene, SceneId } from '@/game/types';
 import { chapter1 } from './chapters/chapter1';
+import { routine } from './chapters/routine';
 
 export const SCENES: Record<SceneId, Scene> = {
   ...chapter1,
+  ...routine,
 };
 
 /** Начало игры: первая сцена пролога, 16:00 первого дня, перед воротами крепости. */

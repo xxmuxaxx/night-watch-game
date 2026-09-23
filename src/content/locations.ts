@@ -1,6 +1,7 @@
 // Локации крепости. Выходы с `if` открываются по решениям (мягкое открытие мест);
 // пока решение не принято, выход виден закрытым с подсказкой `locked`.
 import type { Choice, Location } from '@/game/types';
+import { ROUTINE } from './chapters/routine';
 
 /** Все места. Список задан явно: выходы ссылаются на места, и вывести тип из LOCATIONS нельзя. */
 export type LocationId = 'gate' | 'courtyard' | 'hall' | 'cell';
@@ -48,6 +49,7 @@ export const LOCATIONS: Record<LocationId, Location> = {
         locked: 'Торвин обещал показать, где спать, после ужина',
       },
     ],
+    actions: ROUTINE.courtyard,
   },
   hall: {
     name: 'Трапезная',
@@ -59,6 +61,7 @@ export const LOCATIONS: Record<LocationId, Location> = {
           ? 'Зал полон: стучат ложки, у очага спорят о чём-то старшие.'
           : 'Длинные столы пусты. На кухне гремит котлами повар, в очаге тлеют угли.',
     exits: [{ to: 'courtyard', minutes: 5 }],
+    actions: ROUTINE.hall,
   },
   cell: {
     name: 'Келья',

@@ -3,7 +3,7 @@
 import { EVENTS, type EventId } from '@/content/events';
 import { location, LOCATIONS } from '@/content/locations';
 import { NPCS, type NpcId } from '@/content/npcs';
-import { getScene, isAvailable, textContext } from './context';
+import { getScene, isAvailable, textContext, withDaily } from './context';
 import { heal } from './hero';
 import { changeRelations } from './relations';
 import { inHours, nextMorning, toGameTime } from './time';
@@ -32,7 +32,9 @@ export function roamChoices(session: Session): Choice[] {
   const talks = npcsHere(session)
     .map((id): Choice => NPCS[id].talk)
     .filter((choice) => isAvailable(choice, ctx));
-  const actions = (place.actions ?? []).filter((choice) => isAvailable(choice, ctx));
+  const actions = (place.actions ?? [])
+    .filter((choice) => isAvailable(choice, ctx))
+    .map((choice) => withDaily(choice, session));
   const exits = place.exits.map((exit): Choice => {
     const open = !exit.if || ctx.flag(exit.if);
     const choice: Choice = {

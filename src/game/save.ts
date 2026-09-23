@@ -23,7 +23,7 @@ import type {
 } from './types';
 
 export const SAVE_KEY = 'nightwatch-save';
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -39,10 +39,14 @@ interface SaveData {
   flags: Flags;
   relations: Relations;
   oneLife: boolean;
+  daily: Record<string, number>;
 }
 
+/** Формат версии 8: до занятий раз в день. */
+type SaveV8 = Omit<SaveData, 'version' | 'daily'> & { version: 8 };
+
 /** Формат версии 7: до режима «Одна жизнь». */
-type SaveV7 = Omit<SaveData, 'version' | 'oneLife'> & { version: 7 };
+type SaveV7 = Omit<SaveV8, 'version' | 'oneLife'> & { version: 7 };
 
 /** Формат версии 6: до отношений с персонажами. */
 type SaveV6 = Omit<SaveV7, 'version' | 'relations'> & { version: 6 };
@@ -202,14 +206,19 @@ function migrateV6(save: SaveV6): SaveV7 {
 }
 
 /** В версии 8 появился режим «Одна жизнь»; старые партии играются в обычном режиме. */
-function migrateV7(save: SaveV7): SaveData {
-  return { ...save, version: SAVE_VERSION, oneLife: false };
+function migrateV7(save: SaveV7): SaveV8 {
+  return { ...save, version: 8, oneLife: false };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 8. */
+/** В версии 9 появились занятия раз в день; старые партии их ещё не делали. */
+function migrateV8(save: SaveV8): SaveData {
+  return { ...save, version: SAVE_VERSION, daily: {} };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 9. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
-  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveV7 | SaveData;
+  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveV7 | SaveV8 | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
     if (!v3) return null;
@@ -220,6 +229,7 @@ export function migrate(raw: unknown): SaveData | null {
   if (save.version === 5) save = migrateV5(save);
   if (save.version === 6) save = migrateV6(save);
   if (save.version === 7) save = migrateV7(save);
+  if (save.version === 8) save = migrateV8(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 
@@ -251,6 +261,7 @@ export function readSave(storage: SaveStorage): Session | null {
       flags: save.flags,
       relations: save.relations,
       oneLife: save.oneLife,
+      daily: save.daily,
       fight: null,
       notices: [],
     };
@@ -272,6 +283,7 @@ export function writeSave(storage: SaveStorage, session: Session): void {
     flags: session.flags,
     relations: session.relations,
     oneLife: session.oneLife,
+    daily: session.daily,
   };
   try {
     storage.setItem(SAVE_KEY, JSON.stringify(save));

@@ -15,6 +15,7 @@ function session(overrides: Partial<Session> = {}): Session {
     flags: { askedToLeave: true },
     relations: { torvin: -1 },
     oneLife: false,
+    daily: {},
     fight: null,
     notices: [],
     ...overrides,
@@ -100,6 +101,7 @@ describe('миграция старых сохранений', () => {
       relations: { torvin: 1, vasya: -1 },
       // v8: старые партии — в обычном режиме
       oneLife: false,
+      daily: {},
       fight: null,
       notices: [],
     });

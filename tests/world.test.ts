@@ -177,3 +177,38 @@ describe('события', () => {
     expect(text).toContain('Над крепостью раздаётся протяжный звук рога');
   });
 });
+
+describe('распорядок дня', () => {
+  it('тренировка: 2 часа, опыт и сцена; второй раз за день — закрыто, назавтра снова можно', () => {
+    let state = roaming('courtyard', 1, 10);
+    state = play(state, 'Тренироваться');
+    expect(sessionOf(state)).toMatchObject({
+      sceneId: 'routine_training',
+      time: atTime(1, 12),
+      hero: { xp: 5 },
+    });
+    expect(sessionOf(state).notices.map((n) => n.text)).toContain('+5 опыта');
+
+    state = play(state, 'Перевести дух');
+    expect(pick(state, 'Тренироваться').disabled).toBe('Сегодня вы это уже делали');
+    expect(engine.choose(state, pick(state, 'Тренироваться'), constant(0))).toBe(state);
+
+    const tomorrow = withSession(state, { time: atTime(2, 10) });
+    expect(pick(tomorrow, 'Тренироваться').disabled).toBeUndefined();
+  });
+
+  it('занятия — только в свои часы', () => {
+    expect(choiceTexts(roaming('courtyard', 1, 20)).join()).not.toContain('Тренироваться');
+    expect(choiceTexts(roaming('courtyard', 1, 20)).join()).toContain('жаровни');
+    expect(choiceTexts(roaming('hall', 1, 12)).join()).toContain('на кухне');
+  });
+
+  it('кухня даёт хлеб, жаровня лечит', () => {
+    const kitchen = play(roaming('hall', 1, 12), 'на кухне');
+    expect(sessionOf(kitchen).hero.inventory).toEqual(['bread']);
+    const cold = withSession(roaming('courtyard', 1, 20), {
+      hero: { ...sessionOf(newGame()).hero, hp: 5 },
+    });
+    expect(sessionOf(play(cold, 'жаровни')).hero.hp).toBe(7);
+  });
+});

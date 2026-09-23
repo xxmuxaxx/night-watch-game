@@ -77,6 +77,12 @@ export function passHours(state: GameState, hours: number): GameState {
   return { ...state, session: passTime(session, until).session };
 }
 
+/** Забыть занятия раз в день, чтобы их можно было повторить сегодня. */
+export function resetDaily(state: GameState): GameState {
+  if (!state.session) return state;
+  return { ...state, session: { ...state.session, daily: {} } };
+}
+
 /** Забыть случившиеся события, чтобы они сработали снова. */
 export function resetEvents(state: GameState): GameState {
   if (!state.session) return state;

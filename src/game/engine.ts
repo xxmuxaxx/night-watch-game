@@ -5,11 +5,12 @@ import { CHECK_XP } from '@/content/progression';
 import { START_LOCATION, START_SCENE, START_TIME } from '@/content/story';
 import { rollCheck } from './checks';
 import { playRound, startFight } from './combat';
-import { getScene, isAvailable, textContext } from './context';
+import { getScene, isAvailable, textContext, withDaily } from './context';
 import { consumeItem, createHero, giveLoot, hasItem, heal, type NewHero } from './hero';
 import { journalNotices } from './journal';
 import { addXp, applyLevelReward } from './progression';
 import { changeRelations } from './relations';
+import { toGameTime } from './time';
 import type {
   Choice,
   FightAction,
@@ -39,7 +40,9 @@ export const initialState: GameState = { screen: 'menu', session: null };
 export function availableChoices(session: Session): Choice[] {
   if (session.sceneId === null) return roamChoices(session);
   const ctx = textContext(session);
-  return getScene(session.sceneId).choices.filter((choice) => isAvailable(choice, ctx));
+  return getScene(session.sceneId)
+    .choices.filter((choice) => isAvailable(choice, ctx))
+    .map((choice) => withDaily(choice, session));
 }
 
 /** Нужно выбрать награду за новый уровень (окно поверх сцены; не во время боя). */
@@ -63,6 +66,7 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
     flags: {},
     relations: {},
     oneLife: newHero.oneLife ?? false,
+    daily: {},
     fight: null,
     notices: [],
   };
@@ -121,6 +125,10 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
   notices.push(...loot.notices);
   const relations = changeRelations(current.relations, choice.relation);
   notices.push(...relations.notices);
+  if (choice.xp) hero = gainXp(hero, choice.xp, notices);
+  const daily = choice.daily
+    ? { ...current.daily, [choice.daily]: toGameTime(current.time).day }
+    : current.daily;
 
   // Общие последствия любого выбора: решения, отношения, лечение, добыча, потраченное время
   let session: Session = {
@@ -128,6 +136,7 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
     hero,
     flags: { ...current.flags, ...choice.set },
     relations: relations.relations,
+    daily,
     time: current.time + (choice.minutes ?? 0),
     notices,
   };
