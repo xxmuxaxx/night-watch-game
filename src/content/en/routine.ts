@@ -13,6 +13,13 @@ export const ROUTINE: Record<RoutineId, string> = {
   ash: 'Scoop up ash from the hearth (in a fight — into the enemy’s eyes)',
 };
 
+/** Байки у жаровни: в том же порядке, что по-русски. */
+const BRAZIER_RUMORS = [
+  'Someone tells a tale about a bear that once wandered right up to the gate and left with the cook’s cauldron.',
+  'The sentries argue in low voices whether last spring a laden sledge was really found at the pass, with no horses and no driver.',
+  'An old sentry grumbles that Captain the cat eats better than the recruits, and nobody argues.',
+];
+
 export const routine: Record<string, SceneText> = {
   spar_recruit_win: {
     title: 'Practice bout',
@@ -77,11 +84,11 @@ export const routine: Record<string, SceneText> = {
   },
   routine_brazier: {
     title: 'By the brazier',
-    text: ({ flag }) =>
+    text: ({ flag, time }) =>
       'The sentries silently make room for you by the fire. The coals crackle, and warmth spreads through your hands.\n' +
-      (flag('sawLights')
+      (flag('sawLights') && time.day === 2
         ? 'One of the sentries, noticing how you look at the forest, says quietly: “Don’t stare out there too long. Whoever looks gets seen.”'
-        : 'Someone tells a tale about a bear that once wandered right up to the gate and left with the cook’s cauldron.'),
+        : (BRAZIER_RUMORS[time.day % BRAZIER_RUMORS.length] ?? '')),
     choices: ['Move on'],
   },
 };

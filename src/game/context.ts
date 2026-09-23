@@ -90,6 +90,7 @@ export function isAvailable(choice: Choice, ctx: TextContext): boolean {
     (!choice.ifRelation || meetsRelation(choice.ifRelation, ctx)) &&
     (!choice.duty || ctx.duty === choice.duty) &&
     (!choice.needs || ctx.hero.inventory.includes(choice.needs)) &&
+    (!choice.pay || ctx.hero.inventory.includes(choice.pay)) &&
     (!choice.hours || choice.showClosed === true || inHours(ctx.time, choice.hours))
   );
 }

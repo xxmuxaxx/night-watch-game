@@ -207,6 +207,14 @@ A scrawny ginger cat is running away with a stolen sausage in its mouth: a long 
 A glowing red-hot iron bar is flying through the air, just slipped out of a pair of blacksmith's tongs, trailing sparks, about to land in a heap of oily rags on the floor. A broad-shouldered blacksmith with a singed reddish-grey beard and a heavy leather apron lunges after it with open tongs, his face tense. A dark smithy lit by the orange glow of the forge, a water tub nearby, an anvil, tools on the walls, sparks and smoke everywhere, a sense of sudden danger.
 ```
 
+### Кости в казарме — `scene-dice.jpg` (16:9)
+
+Вечерняя игра в кости на хлеб, точка «Игра в кости» в казарме.
+
+```
+Recruits gamble with dice at night in a long dark wooden barracks. Several young men in shabby padded jackets crouch around an upturned crate between rows of bunks, lit by a single candle stuck on the crate. Two bone dice tumble across the wood. The banker, an older man with a crooked leg stretched out and a sly grin, sits behind a small pile of bread crusts. Faces lit from below, deep shadows, smoke.
+```
+
 ### Жаровня у ворот — `scene-brazier.jpg` (16:9)
 
 Вечер у жаровни, спор часовых, точка «Жаровня у ворот».

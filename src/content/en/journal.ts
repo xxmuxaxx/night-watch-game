@@ -60,6 +60,17 @@ export const JOURNAL: Record<JournalId, JournalText> = {
     ],
     hint: 'Get it done before night, or Torvin will ask',
   },
+  cookKey: {
+    title: 'The pantry key',
+    notes: [
+      'Ulf the cook lost the pantry key: he hung it on the nail by the hearth, and in the morning the nail was empty. He promised not to forget it if I find it.',
+      'The key turned up in the ash under the hearth grate — knocked off the nail, it seems.',
+    ],
+    hint: ({ flag }) =>
+      flag('foundKey')
+        ? 'Take the key to Ulf in the mess hall kitchen, 6:00 to 21:00'
+        : 'The key hung by the hearth in the mess hall — maybe it fell?',
+  },
   missing: {
     title: 'The missing recruits',
     notes: [
@@ -71,6 +82,8 @@ export const JOURNAL: Record<JournalId, JournalText> = {
       'The sentries by the brazier let it slip: last winter lights were seen at the pass too, and then too two from the patrol never came back.',
       'I showed the note to Torvin. His face went grey, and he told me to get rid of it.',
       'Halvar the smith: the day before the patrol, Erik brought in a shuttered lantern to be fixed — the kind used for signals. He never picked it up.',
+      'Ulf the cook: the day before the patrol Erik begged hardtack for three for three days. Nobody takes that much for one night.',
+      'Mirko: Martin was always writing letters to someone, “to those who are waiting.” And messengers don’t leave here in winter.',
       'Torvin admitted it: he saw them off as far as the old fir at the fork and told them to be back by dawn. He says they “ran” because it’s easier for everyone that way.',
       'I asked Torvin whether he really saw that patrol off. He admitted it through gritted teeth and told me to find something to do.',
     ],

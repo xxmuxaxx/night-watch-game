@@ -90,6 +90,13 @@ export const ROUTINE = {
 
 export type RoutineId = keyof typeof ROUTINE;
 
+/** Байки у жаровни: каждый вечер своя. */
+const BRAZIER_RUMORS = [
+  'Кто-то рассказывает байку про медведя, который однажды забрёл к самым воротам и ушёл с поварским котлом.',
+  'Часовые вполголоса спорят, правда ли прошлой весной на перевале нашли сани с грузом, но без лошадей и без возницы.',
+  'Старый часовой ворчит, что кот Сотник ест лучше новобранцев, и никто с ним не спорит.',
+];
+
 export const routine: Record<string, Scene> = {
   routine_training: {
     image: 'img/scene-drill.jpg',
@@ -176,11 +183,11 @@ export const routine: Record<string, Scene> = {
   routine_brazier: {
     image: 'img/scene-brazier.jpg',
     title: 'У жаровни',
-    text: ({ flag }) =>
+    text: ({ flag, time }) =>
       'Часовые молча подвигаются, пуская вас к огню. Угли потрескивают, по рукам разливается тепло.\n' +
-      (flag('sawLights')
+      (flag('sawLights') && time.day === 2
         ? 'Один из часовых, заметив, как вы смотрите на лес, негромко говорит: «Не гляди туда подолгу. Кто глядит — того и видят».'
-        : 'Кто-то рассказывает байку про медведя, который однажды забрёл к самым воротам и ушёл с поварским котлом.'),
+        : (BRAZIER_RUMORS[time.day % BRAZIER_RUMORS.length] ?? '')),
     choices: [{ text: 'Пойти дальше', leave: true }],
   },
 };

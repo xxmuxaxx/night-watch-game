@@ -30,6 +30,7 @@ const messages: MessageFormats = {
   gotWeapon: (m, n) => 'Получено оружие: ' + n.weapon(m.weapon),
   gotArmor: (m, n) => 'Получена защита: ' + n.armor(m.armor),
   gotItem: (m, n) => 'В сумке: ' + n.item(m.item),
+  gaveItem: (m, n) => 'Отдано: ' + n.item(m.item),
   journal: (m, n) => {
     const title = '«' + n.journal(m.entry) + '»';
     switch (m.change) {

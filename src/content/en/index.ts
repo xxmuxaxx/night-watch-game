@@ -3,6 +3,7 @@
 import { chapter1 } from './chapter1';
 import { duties } from './duties';
 import { incidents } from './incidents';
+import { people } from './people';
 import { places } from './places';
 import { routine, ROUTINE } from './routine';
 import { talks } from './talks';
@@ -18,6 +19,7 @@ const scenes: Record<string, SceneText> = {
   ...talks,
   ...duties,
   ...incidents,
+  ...people,
 };
 
 export const EN = {

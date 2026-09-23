@@ -26,6 +26,7 @@ const messages: MessageFormats = {
   gotWeapon: (m, n) => 'New weapon: ' + n.weapon(m.weapon),
   gotArmor: (m, n) => 'New armor: ' + n.armor(m.armor),
   gotItem: (m, n) => 'In your bag: ' + n.item(m.item),
+  gaveItem: (m, n) => 'Handed over: ' + n.item(m.item),
   journal: (m, n) => {
     const title = '“' + n.journal(m.entry) + '”';
     switch (m.change) {

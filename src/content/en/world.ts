@@ -54,6 +54,7 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
         actions: [
           { text: 'Climb the wall', disabled: 'Only the lookouts are allowed up there' },
           SNEAK,
+          'Treat the sentry to a swig of spirits',
         ],
       },
     },
@@ -102,6 +103,7 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
       hearth: {
         name: 'Hearth',
         text: 'A big hearth at the far end of the hall. Under the grate lies a thick layer of ash.',
+        actions: [ROUTINE.ash, 'Search the ash for the pantry key'],
       },
     },
   },
@@ -128,6 +130,11 @@ export const LOCATIONS: Record<LocationId, LocationText> = {
             ? 'This must be where the two who never came back from the pass slept.'
             : 'As if the owners moved out in a hurry — or someone took their things.'),
         actions: ['Search the bunks'],
+      },
+      dice: {
+        name: 'A game of dice',
+        text: 'On an upturned crate between the bunks, dice are being thrown. Lame Jorgen runs the game, and the pile of bread crusts by his elbow keeps growing.',
+        actions: ['Play for a crust of bread'],
       },
     },
   },
@@ -222,5 +229,18 @@ export const NPCS: Record<NpcId, NpcText> = {
     talk: 'Talk to the smith',
     about:
       'The smith. His hands are covered in old burns, his beard singed. He says little but notices everything — and seems to know more than he says.',
+  },
+  cook: {
+    name: 'Ulf',
+    talk: 'Talk to the cook',
+    about: ({ flag }) =>
+      'The cook. Red from the heat and always angry, but he won’t grudge you bread.' +
+      (flag('returnedKey') ? ' I found his pantry key — now he is almost kind to me.' : ''),
+  },
+  mirko: {
+    name: 'Mirko',
+    talk: ({ flag }) => (flag('metMirko') ? 'Talk to Mirko' : 'Talk to the lanky recruit'),
+    about:
+      'A lanky, freckled recruit from a farmstead in the valley. Given to the watch for his father’s debt, and seems almost glad of it: they feed you here.',
   },
 };

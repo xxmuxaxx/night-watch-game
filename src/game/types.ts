@@ -173,6 +173,7 @@ export type Message =
   | { id: 'gotWeapon'; weapon: WeaponId }
   | { id: 'gotArmor'; armor: ArmorId }
   | { id: 'gotItem'; item: ItemId }
+  | { id: 'gaveItem'; item: ItemId }
   | { id: 'journal'; entry: JournalId; change: 'goal' | 'lead' | 'note' | 'done' }
   | { id: 'relation'; npc: NpcId; better: boolean }
   | { id: 'slept'; hours: number; woke: boolean; healed: number }
@@ -295,6 +296,8 @@ interface ChoiceBase {
   duty?: DutyId;
   /** Показывать, только если этот предмет есть в сумке (он не тратится). */
   needs?: ItemId;
+  /** Отдать предмет: вариант виден, только если он есть в сумке, и забирает его (ставка, угощение). */
+  pay?: ItemId;
 }
 
 /** Перейти в сцену. */

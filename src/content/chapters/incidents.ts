@@ -39,6 +39,7 @@ export const incidents: Record<string, Scene> = {
   incident_cat: {
     // повар уже в кадре — без портрета
     image: 'img/scene-cat.jpg',
+    set: { sawCat: true },
     title: 'Держи вора!',
     text: 'Из кухни с грохотом вылетает рыжий кот с колбасой в зубах. Следом — повар с половником:\n— Держи ворюгу!',
     choices: [

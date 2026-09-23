@@ -56,6 +56,16 @@ export function hasItem(hero: Hero, id: ItemId): boolean {
   return hero.inventory.includes(id);
 }
 
+/** Убрать один такой предмет из сумки, ничего с ним не делая (отдать, проиграть). */
+export function removeItem(hero: Hero, id: ItemId): Hero {
+  const index = hero.inventory.indexOf(id);
+  if (index < 0) return hero;
+  return {
+    ...hero,
+    inventory: [...hero.inventory.slice(0, index), ...hero.inventory.slice(index + 1)],
+  };
+}
+
 /** Использовать предмет из сумки: лечит, точит оружие. Если его нет, герой не меняется. */
 export function consumeItem(hero: Hero, id: ItemId): Hero {
   const index = hero.inventory.indexOf(id);

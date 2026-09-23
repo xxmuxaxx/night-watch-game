@@ -12,6 +12,7 @@ import {
   hasItem,
   heal,
   itemBlocked,
+  removeItem,
   type NewHero,
 } from './hero';
 import { finishDuty, settleDuties, takeDuty } from './duties';
@@ -149,6 +150,10 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
 
   const notices: Notice[] = [];
   let hero = current.hero;
+  if (choice.pay) {
+    hero = removeItem(hero, choice.pay);
+    notices.push({ tone: 'info', message: { id: 'gaveItem', item: choice.pay } });
+  }
   if (choice.heal) hero = heal(hero, choice.heal);
   const loot = giveLoot(hero, choice.give);
   hero = loot.hero;

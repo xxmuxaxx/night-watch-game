@@ -42,6 +42,36 @@ export const NPCS = {
     about:
       'Кузнец. Руки в старых ожогах, борода опалена. Говорит мало, но замечает всё — и, кажется, знает больше, чем говорит.',
   },
+  cook: {
+    name: 'Ульф',
+    portrait: 'img/portrait-cook.jpg',
+    schedule: [{ location: 'hall', hours: [6, 21] }],
+    talk: { text: 'Поговорить с поваром', next: 'cook_talk' },
+    known: { if: 'metCook' },
+    about: ({ flag }) =>
+      'Повар. Красный от жара и вечно злой, но хлебом не обидит.' +
+      (flag('returnedKey')
+        ? ' Я нашёл ему ключ от кладовой — теперь он со мной почти ласков.'
+        : ''),
+  },
+  mirko: {
+    name: 'Мирко',
+    portrait: 'img/portrait-recruit.jpg',
+    schedule: [
+      { location: 'courtyard', hours: [8, 17] },
+      { location: 'hall', hours: [18, 21] },
+      { location: 'barracks', hours: [21, 23] },
+    ],
+    // до знакомства имени не знаешь
+    talk: {
+      text: ({ flag }) =>
+        flag('metMirko') ? 'Поговорить с Мирко' : 'Поговорить с долговязым новобранцем',
+      next: 'mirko_talk',
+    },
+    known: { if: 'metMirko' },
+    about:
+      'Долговязый веснушчатый новобранец с хутора в долине. Отдан в стражу за отцовский долг и, кажется, этому даже рад: здесь кормят.',
+  },
 } as const satisfies Record<string, Npc>;
 
 export type NpcId = keyof typeof NPCS;
