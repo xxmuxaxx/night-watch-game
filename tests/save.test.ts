@@ -13,6 +13,7 @@ function session(overrides: Partial<Session> = {}): Session {
     time: atTime(1, 16, 30),
     events: [],
     flags: { askedToLeave: true },
+    relations: { torvin: -1 },
     fight: null,
     notices: [],
     ...overrides,
@@ -94,6 +95,8 @@ describe('миграция старых сохранений', () => {
       time: atTime(1, 21, 30),
       events: ['dinner'],
       flags: { ate: true, knowsCell: true, joined: true },
+      // v7: отношения восстанавливаются по решениям — ужинал вовремя, но не помирился с Васей
+      relations: { torvin: 1, vasya: -1 },
       fight: null,
       notices: [],
     });
@@ -162,6 +165,23 @@ describe('миграция старых сохранений', () => {
     expect(readSave(storage)?.flags).toEqual({ ate: true, joined: true });
     storage.setItem(SAVE_KEY, JSON.stringify(v5('st4')));
     expect(readSave(storage)?.flags).toEqual({ ate: true });
+  });
+
+  it('версия 6: отношения восстанавливаются по решениям и событиям', () => {
+    const storage = memoryStorage();
+    storage.setItem(
+      SAVE_KEY,
+      JSON.stringify({
+        version: 6,
+        sceneId: null,
+        locationId: 'cell',
+        time: atTime(1, 22),
+        events: ['dinner'],
+        hero: testHero(),
+        flags: { joined: true, askedToLeave: true, ate: true, vasyaFriend: true },
+      }),
+    );
+    expect(readSave(storage)?.relations).toEqual({ vasya: 2 });
   });
 
   it('загружает сохранение без решений', () => {

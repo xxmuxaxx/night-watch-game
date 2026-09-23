@@ -1,13 +1,18 @@
 import { useEffect, useRef } from 'preact/hooks';
 import type { JournalView } from '@/game/journal';
+import type { PersonView } from '@/game/relations';
 
 interface Props {
   entries: JournalView[];
+  people: PersonView[];
   onClose: () => void;
 }
 
-/** Журнал поверх игры: сначала текущие цели, затем выполненные, затем зацепки. Закрывается J или Esc. */
-export function Journal({ entries, onClose }: Props) {
+/**
+ * Журнал поверх игры: текущие и выполненные цели, зацепки и знакомые люди с их отношением к герою.
+ * Закрывается J или Esc.
+ */
+export function Journal({ entries, people, onClose }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => closeRef.current?.focus(), []);
 
@@ -46,8 +51,37 @@ export function Journal({ entries, onClose }: Props) {
             <Entry key={entry.id} entry={entry} />
           ))}
         </section>
+
+        {people.length > 0 && (
+          <section>
+            <h2>Люди</h2>
+            {people.map((person) => (
+              <Person key={person.id} person={person} />
+            ))}
+          </section>
+        )}
       </div>
     </div>
+  );
+}
+
+/** Тон отношения для цвета метки: хорошее, плохое или никакое. */
+function tone(value: number): string {
+  return value > 0 ? 'good' : value < 0 ? 'bad' : 'neutral';
+}
+
+function Person({ person }: { person: PersonView }) {
+  return (
+    <article class="journal-person">
+      <img class="journal-person__portrait" src={person.portrait} alt="" />
+      <div>
+        <h3>
+          {person.name}{' '}
+          <span class={'attitude attitude--' + tone(person.value)}>{person.attitude}</span>
+        </h3>
+        <p>{person.about}</p>
+      </div>
+    </article>
   );
 }
 

@@ -9,6 +9,7 @@ import { getScene, isAvailable, textContext } from './context';
 import { consumeItem, createHero, giveLoot, hasItem, heal, type NewHero } from './hero';
 import { journalNotices } from './journal';
 import { addXp, applyLevelReward } from './progression';
+import { changeRelations } from './relations';
 import type {
   Choice,
   FightAction,
@@ -52,6 +53,7 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
     time: START_TIME,
     events: [],
     flags: {},
+    relations: {},
     fight: null,
     notices: [],
   };
@@ -108,12 +110,15 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
   const loot = giveLoot(hero, choice.give);
   hero = loot.hero;
   notices.push(...loot.notices);
+  const relations = changeRelations(current.relations, choice.relation);
+  notices.push(...relations.notices);
 
-  // Общие последствия любого выбора: решения, лечение, добыча, потраченное время
+  // Общие последствия любого выбора: решения, отношения, лечение, добыча, потраченное время
   let session: Session = {
     ...current,
     hero,
     flags: { ...current.flags, ...choice.set },
+    relations: relations.relations,
     time: current.time + (choice.minutes ?? 0),
     notices,
   };
@@ -123,12 +128,14 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
     notices.unshift(notice);
     if (success) {
       const checkLoot = giveLoot(session.hero, choice.check.give);
+      const checkRelations = changeRelations(session.relations, choice.check.relation);
       session = {
         ...session,
         flags: { ...session.flags, ...choice.check.set },
+        relations: checkRelations.relations,
         hero: gainXp(checkLoot.hero, choice.check.xp ?? CHECK_XP, notices),
       };
-      notices.push(...checkLoot.notices);
+      notices.push(...checkLoot.notices, ...checkRelations.notices);
     }
     return { ...state, session: enterScene(session, success ? choice.next : choice.fail) };
   }
@@ -141,11 +148,17 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
   if ('move' in choice) return { ...state, session: moveTo(session, choice.move) };
   if ('wait' in choice) {
     const result = wait(session, choice.wait);
-    return { ...state, session: { ...result.session, notices: [...notices, ...result.notices] } };
+    return {
+      ...state,
+      session: { ...result.session, notices: [...result.session.notices, ...result.notices] },
+    };
   }
   if ('sleep' in choice) {
     const result = sleep(session);
-    return { ...state, session: { ...result.session, notices: [...notices, ...result.notices] } };
+    return {
+      ...state,
+      session: { ...result.session, notices: [...result.session.notices, ...result.notices] },
+    };
   }
   if ('next' in choice) return { ...state, session: enterScene(session, choice.next) };
   return { ...state, session: { ...session, notices: current.notices } };

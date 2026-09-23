@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { isChoosingLevelReward } from '@/game/engine';
 import { activeGoals, journal } from '@/game/journal';
+import { people } from '@/game/relations';
 import { HeroPanel } from './components/HeroPanel';
 import { DebugPanel } from './debug/DebugPanel';
 import { CreateHero } from './screens/CreateHero';
@@ -49,7 +50,13 @@ export function App() {
       {state.screen === 'createHero' && <CreateHero />}
       {inStory && session.fight && <FightView hero={session.hero} fight={session.fight} />}
       {inStory && isChoosingLevelReward(session) && <LevelUp hero={session.hero} />}
-      {showJournal && <Journal entries={journal(session)} onClose={() => setJournalOpen(false)} />}
+      {showJournal && (
+        <Journal
+          entries={journal(session)}
+          people={people(session)}
+          onClose={() => setJournalOpen(false)}
+        />
+      )}
       {import.meta.env.DEV && <DebugPanel state={state} />}
     </div>
   );

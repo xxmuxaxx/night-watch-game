@@ -1,8 +1,8 @@
 // Журнал целей и зацепок. Он не хранится, а строится по решениям и событиям партии;
 // сообщения «новая цель», «цель выполнена» получаются сравнением журнала до и после выбора.
 import { JOURNAL, type JournalId } from '@/content/journal';
-import { resolveText, textContext } from './context';
-import type { Condition, JournalEntry, Notice, Session } from './types';
+import { meetsCondition, resolveText, textContext } from './context';
+import type { JournalEntry, Notice, Session } from './types';
 
 const JOURNAL_IDS = Object.keys(JOURNAL) as JournalId[];
 
@@ -17,28 +17,20 @@ export interface JournalView {
   hint: string | null;
 }
 
-export function meets(condition: Condition, session: Session): boolean {
-  return (
-    (!condition.if || session.flags[condition.if] === true) &&
-    (!condition.ifNot || session.flags[condition.ifNot] !== true) &&
-    (!condition.event || session.events.includes(condition.event))
-  );
-}
-
 /** Все открытые записи в порядке журнала. */
 export function journal(session: Session): JournalView[] {
   const ctx = textContext(session);
   return JOURNAL_IDS.flatMap((id): JournalView[] => {
     const entry: JournalEntry = JOURNAL[id];
-    if (!meets(entry, session)) return [];
-    const done = entry.done !== undefined && meets(entry.done, session);
+    if (!meetsCondition(entry, session)) return [];
+    const done = entry.done !== undefined && meetsCondition(entry.done, session);
     return [
       {
         id,
         kind: entry.kind,
         title: entry.title,
         notes: entry.notes
-          .filter((note) => meets(note, session))
+          .filter((note) => meetsCondition(note, session))
           .map((note) => resolveText(note.text, ctx)),
         done,
         hint: entry.hint && !done ? resolveText(entry.hint, ctx) : null,

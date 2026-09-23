@@ -81,10 +81,12 @@ describe('локации', () => {
     expect(sessionOf(moved)).toMatchObject({ locationId: 'cell', time: atTime(1, 17, 10) });
   });
 
-  it('Торвин по расписанию: днём во дворе, вечером в трапезной, ночью нигде', () => {
-    expect(npcsHere(sessionOf(roaming('courtyard', 1, 12)))).toEqual(['torvin']);
+  it('персонажи по расписанию: днём во дворе, вечером в трапезной, ночью нигде', () => {
+    expect(npcsHere(sessionOf(roaming('courtyard', 1, 12)))).toEqual(['torvin', 'vasya']);
+    expect(npcsHere(sessionOf(roaming('courtyard', 1, 17)))).toEqual(['torvin']);
     expect(npcsHere(sessionOf(roaming('courtyard', 1, 19)))).toEqual([]);
-    expect(npcsHere(sessionOf(roaming('hall', 1, 19)))).toEqual(['torvin']);
+    expect(npcsHere(sessionOf(roaming('hall', 1, 19)))).toEqual(['torvin', 'vasya']);
+    expect(npcsHere(sessionOf(roaming('hall', 1, 21)))).toEqual(['torvin']);
     expect(npcsHere(sessionOf(roaming('hall', 1, 23)))).toEqual([]);
   });
 

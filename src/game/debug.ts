@@ -1,7 +1,8 @@
 // Переходы для панели отладки (только в режиме разработки). Как и движок — чистые функции,
 // но без игровых правил: прыгают в любую сцену и меняют героя напрямую.
 import { startNewGame } from './engine';
-import type { ClassId, FlagId, Flags, GameState, Hero, LocationId, SceneId } from './types';
+import { changeRelations } from './relations';
+import type { ClassId, FlagId, Flags, GameState, Hero, LocationId, NpcId, SceneId } from './types';
 import { enterScene, passTime } from './world';
 
 /** Сразу начать игру, минуя меню и создание героя. */
@@ -26,6 +27,13 @@ export function toggleFlag(state: GameState, id: FlagId): GameState {
     ? Object.fromEntries(Object.entries(current).filter(([key]) => key !== id))
     : { ...current, [id]: true };
   return { ...state, session: { ...state.session, flags } };
+}
+
+/** Изменить отношение персонажа (в пределах, без сообщений). */
+export function changeRelation(state: GameState, id: NpcId, delta: number): GameState {
+  if (!state.session) return state;
+  const { relations } = changeRelations(state.session.relations, { [id]: delta });
+  return { ...state, session: { ...state.session, relations } };
 }
 
 export function updateHero(state: GameState, change: (hero: Hero) => Hero): GameState {

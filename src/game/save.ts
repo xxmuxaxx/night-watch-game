@@ -4,6 +4,7 @@ import { HERO_CLASSES } from '@/content/classes';
 import { EVENTS } from '@/content/events';
 import { ITEMS } from '@/content/items';
 import { LOCATIONS } from '@/content/locations';
+import { NPCS } from '@/content/npcs';
 import { START_TIME } from '@/content/story';
 import { WEAPONS } from '@/content/weapons';
 import { getScene, hasScene, isDeathScene } from './context';
@@ -13,6 +14,7 @@ import type {
   EventId,
   Flags,
   Hero,
+  Relations,
   ItemId,
   LocationId,
   SceneId,
@@ -21,7 +23,7 @@ import type {
 } from './types';
 
 export const SAVE_KEY = 'nightwatch-save';
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -35,10 +37,14 @@ interface SaveData {
   events: EventId[];
   hero: Hero;
   flags: Flags;
+  relations: Relations;
 }
 
+/** Формат версии 6: до отношений с персонажами. */
+type SaveV6 = Omit<SaveData, 'version' | 'relations'> & { version: 6 };
+
 /** Формат версии 5: до журнала (решения joined). */
-type SaveV5 = Omit<SaveData, 'version'> & { version: 5 };
+type SaveV5 = Omit<SaveV6, 'version'> & { version: 5 };
 
 /** Формат версии 4: до локаций, времени и событий. */
 interface SaveV4 {
@@ -166,19 +172,35 @@ function migrateV4(save: SaveV4): SaveV5 {
 const PROLOGUE_SCENES: readonly SceneId[] = ['st0', 'st1', 'st1_1', 'st2', 'st2_1', 'st3', 'st4'];
 
 /** В версии 6 появился журнал: его первая цель выполняется решением joined (сцена st5). */
-function migrateV5(save: SaveV5): SaveData {
+function migrateV5(save: SaveV5): SaveV6 {
   const joined = save.sceneId === null || !PROLOGUE_SCENES.includes(save.sceneId);
   return {
     ...save,
-    version: SAVE_VERSION,
+    version: 6,
     flags: joined ? { ...save.flags, joined: true } : save.flags,
   };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 6. */
+/** В версии 7 появились отношения: восстанавливаем их по решениям и событиям главы 1. */
+function migrateV6(save: SaveV6): SaveData {
+  const flag = (id: keyof Flags) => save.flags[id] === true;
+  const fired = (id: EventId) => save.events.includes(id);
+  const torvin =
+    (fired('dinner') ? 1 : 0) - (fired('lateForDinner') ? 1 : 0) - (flag('askedToLeave') ? 1 : 0);
+  // поел, но не помирился и ужин уже позади — значит, молча ушёл от Васи
+  const leftVasya = flag('ate') && !flag('vasyaFriend') && save.sceneId !== 'st6_1';
+  const vasya =
+    (flag('trippedVasya') ? -1 : 0) + (flag('vasyaFriend') ? 2 : 0) - (leftVasya ? 1 : 0);
+  const relations: Relations = {};
+  if (torvin !== 0) relations.torvin = torvin;
+  if (vasya !== 0) relations.vasya = vasya;
+  return { ...save, version: SAVE_VERSION, relations };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 7. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
-  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveData;
+  let save = raw as SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
     if (!v3) return null;
@@ -187,6 +209,7 @@ export function migrate(raw: unknown): SaveData | null {
   if (save.version === 3) save = migrateV3(save);
   if (save.version === 4) save = migrateV4(save);
   if (save.version === 5) save = migrateV5(save);
+  if (save.version === 6) save = migrateV6(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 
@@ -196,6 +219,9 @@ function isValid(save: SaveData): boolean {
     save.locationId in LOCATIONS &&
     typeof save.time === 'number' &&
     save.events.every((id) => id in EVENTS) &&
+    Object.entries(save.relations).every(
+      ([id, value]) => id in NPCS && typeof value === 'number',
+    ) &&
     isClassId(save.hero.classId) &&
     isWeaponId(save.hero.weaponId) &&
     save.hero.inventory.every(isItemId)
@@ -213,6 +239,7 @@ export function readSave(storage: SaveStorage): Session | null {
       time: save.time,
       events: save.events,
       flags: save.flags,
+      relations: save.relations,
       fight: null,
       notices: [],
     };
@@ -232,6 +259,7 @@ export function writeSave(storage: SaveStorage, session: Session): void {
     events: session.events,
     hero: session.hero,
     flags: session.flags,
+    relations: session.relations,
   };
   try {
     storage.setItem(SAVE_KEY, JSON.stringify(save));

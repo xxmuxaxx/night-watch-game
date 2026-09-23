@@ -5,12 +5,14 @@ import { CLASS_IDS, HERO_CLASSES } from '@/content/classes';
 import { FLAGS, type FlagId } from '@/content/flags';
 import { ITEMS, type ItemId } from '@/content/items';
 import { LOCATIONS, type LocationId } from '@/content/locations';
+import { NPCS, type NpcId } from '@/content/npcs';
 import { STAT_IDS, STAT_NAMES } from '@/content/stats';
 import { SCENES } from '@/content/story';
 import { WEAPONS, type WeaponId } from '@/content/weapons';
 import * as debug from '@/game/debug';
 import { heal } from '@/game/hero';
 import { addXp } from '@/game/progression';
+import { attitude, relationOf } from '@/game/relations';
 import { formatTime } from '@/game/time';
 import type { GameState, StatId } from '@/game/types';
 import { useStore } from '../store';
@@ -20,6 +22,7 @@ const FLAG_IDS = Object.keys(FLAGS) as FlagId[];
 const ITEM_IDS = Object.keys(ITEMS) as ItemId[];
 const WEAPON_IDS = Object.keys(WEAPONS) as WeaponId[];
 const LOCATION_IDS = Object.keys(LOCATIONS) as LocationId[];
+const NPC_IDS = Object.keys(NPCS) as NpcId[];
 
 export function DebugPanel({ state }: { state: GameState }) {
   const store = useStore();
@@ -186,6 +189,26 @@ export function DebugPanel({ state }: { state: GameState }) {
                 </button>
               ))}
             </div>
+          </section>
+
+          <section>
+            <h5>Отношения</h5>
+            {NPC_IDS.map((id) => {
+              const value = relationOf(session.relations, id);
+              return (
+                <div class="debug-row" key={id}>
+                  <span>
+                    {NPCS[id].name}: {value} ({attitude(value)})
+                  </span>
+                  <button onClick={() => store.apply((s) => debug.changeRelation(s, id, -1))}>
+                    −
+                  </button>
+                  <button onClick={() => store.apply((s) => debug.changeRelation(s, id, 1))}>
+                    +
+                  </button>
+                </div>
+              );
+            })}
           </section>
 
           <section>

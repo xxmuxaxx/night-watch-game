@@ -102,12 +102,24 @@ export type Hours = readonly [number, number];
 export type SceneId = string;
 export type Flags = Partial<Record<FlagId, true>>;
 
+/** Отношение персонажей к герою: от RELATION_MIN до RELATION_MAX, по умолчанию 0. */
+export type Relations = Partial<Record<NpcId, number>>;
+
+/** Условие по отношению персонажа: не меньше min и не больше max (что указано). */
+export interface RelationCondition {
+  npc: NpcId;
+  min?: number;
+  max?: number;
+}
+
 export interface TextContext {
   hero: Hero;
   flag: (id: FlagId) => boolean;
   time: GameTime;
   /** Где сейчас герой. */
   location: LocationId;
+  /** Отношение персонажа к герою (0, если оно не менялось). */
+  relation: (id: NpcId) => number;
 }
 
 /** Текст сцены или варианта: строка или функция от героя и решений. `\n` — новая строка. */
@@ -141,6 +153,8 @@ export interface StatCheck {
   give?: Loot;
   /** Опыт за успех. По умолчанию CHECK_XP из src/content/progression.ts. */
   xp?: number;
+  /** Изменение отношений только при успехе. */
+  relation?: Relations;
 }
 
 interface ChoiceBase {
@@ -151,6 +165,10 @@ interface ChoiceBase {
   if?: FlagId;
   /** Показывать, только если решение не принято. */
   ifNot?: FlagId;
+  /** Показывать, только если отношение персонажа в заданных пределах. */
+  ifRelation?: RelationCondition;
+  /** Изменить отношения при выборе, например { vasya: 1 }. */
+  relation?: Relations;
   /** Восстановить до N здоровья (не выше максимума). */
   heal?: number;
   /** Добыча при выборе. */
@@ -231,6 +249,8 @@ export interface Scene {
   location?: LocationId;
   /** Решения, которые запоминаются при входе в сцену. */
   set?: Flags;
+  /** Изменение отношений при входе в сцену. */
+  relation?: Relations;
 }
 
 // --- Мир ---
@@ -266,8 +286,12 @@ export interface Npc {
   name: string;
   portrait: string;
   schedule: readonly NpcShift[];
-  /** Разговор: вариант, который появляется в локации, когда персонаж там. */
+  /** Разговор: вариант, который появляется в локации, когда персонаж там (с учётом его if / ifNot). */
   talk: GoChoice;
+  /** Когда персонаж появляется в разделе «Люди» журнала. */
+  known: Condition;
+  /** Кто это — для журнала, от лица героя. */
+  about: Text;
 }
 
 /**
@@ -359,6 +383,7 @@ export interface Session {
   /** Уже случившиеся события. */
   events: EventId[];
   flags: Flags;
+  relations: Relations;
   fight: FightState | null;
   /** Сообщения о последнем выборе; видны только в сцене сразу после него. */
   notices: Notice[];

@@ -2,6 +2,8 @@
 // После пролога герой свободно ходит по двору, трапезной и келье; ужин и тревога — события
 // (src/content/events.ts), разговор с Торвином — по его расписанию (src/content/npcs.ts),
 // окно и сундук — действия в келье (src/content/locations.ts). Решения — в src/content/flags.ts.
+// Отношения: Торвин ценит послушание (ужин вовремя +1, опоздание −1, «не хочу служить» −1),
+// Вася — уважение (подсечка −1, рукопожатие +2, извинение +1, молча уйти −1).
 import type { EnemyDef, Scene } from '@/game/types';
 
 const VASYA: EnemyDef = {
@@ -48,7 +50,14 @@ export const chapter1: Record<string, Scene> = {
         text: 'Поднырнуть под его руку и сбить с ног',
         minutes: 2,
         // сбить Васю с ног — тоже победа, опыт как за бой
-        check: { stat: 'agility', difficulty: 2, set: { trippedVasya: true }, xp: 10 },
+        check: {
+          stat: 'agility',
+          difficulty: 2,
+          set: { trippedVasya: true },
+          // победа без драки унизительна: Вася запомнит
+          relation: { vasya: -1 },
+          xp: 10,
+        },
         next: 'st3',
         fail: 'st2_1',
       },
@@ -99,6 +108,7 @@ export const chapter1: Record<string, Scene> = {
         text: 'А если я не хочу служить?',
         minutes: 5,
         set: { askedToLeave: true },
+        relation: { torvin: -1 },
         next: 'st5_2',
       },
       { text: 'Куда мне идти?', next: 'st5_3' },
@@ -108,16 +118,42 @@ export const chapter1: Record<string, Scene> = {
     image: 'img/scene-courtyard.jpg',
     actor: 'img/portrait-mentor.jpg',
     title: 'Торвин',
-    text: ({ hero }) => '— Что-то ещё, ' + hero.name + '?',
+    text: ({ hero, relation }) =>
+      relation('torvin') >= 1
+        ? 'Торвин улыбается: — Что-то ещё, ' + hero.name + '?'
+        : relation('torvin') <= -1
+          ? 'Торвин смотрит на вас без улыбки: — Чего тебе?'
+          : '— Что-то ещё, ' + hero.name + '?',
     choices: [
       { text: 'Что это за место?', minutes: 5, next: 'st5_1' },
       {
         text: 'А если я не хочу служить?',
+        ifNot: 'askedToLeave',
         minutes: 5,
         set: { askedToLeave: true },
+        relation: { torvin: -1 },
         next: 'st5_2',
       },
       { text: 'Где мне поесть и поспать?', ifNot: 'knowsCell', next: 'st5_3' },
+      // Торвин отвечает честно, только если симпатизирует герою
+      {
+        text: 'Рассказать про огни в лесу',
+        if: 'sawLights',
+        ifNot: 'toldTorvinLights',
+        ifRelation: { npc: 'torvin', min: 1 },
+        minutes: 10,
+        set: { toldTorvinLights: true },
+        next: 'torvin_lights_trust',
+      },
+      {
+        text: 'Рассказать про огни в лесу',
+        if: 'sawLights',
+        ifNot: 'toldTorvinLights',
+        ifRelation: { npc: 'torvin', max: 0 },
+        minutes: 5,
+        set: { toldTorvinLights: true },
+        next: 'torvin_lights_cold',
+      },
       { text: 'Ничего, я пойду', leave: true },
     ],
   },
@@ -142,21 +178,74 @@ export const chapter1: Record<string, Scene> = {
     text: '— Ужин в трапезной, как стемнеет, — Торвин кивает на длинное здание с дымящей трубой. — Приходи, а после ужина покажу, где будешь спать. Пока осмотрись, только к стене не суйся: наверх пускают дозорных.',
     choices: [{ text: 'Осмотреться', leave: 'courtyard' }],
   },
+  torvin_lights_trust: {
+    image: 'img/scene-hall.jpg',
+    actor: 'img/portrait-mentor.jpg',
+    set: { torvinWarned: true },
+    title: 'Не всё, что ходит по лесу',
+    text: 'Улыбка сходит с лица Торвина. Он оглядывается и понижает голос.\n— Видел, значит. Не всё, что ходит по тому лесу, — люди. И не все люди там — враги. Больше никому об этом не рассказывай, особенно старшим. Понял?',
+    choices: [{ text: 'Понял', next: 'torvin_talk' }],
+  },
+  torvin_lights_cold: {
+    image: 'img/scene-hall.jpg',
+    actor: 'img/portrait-mentor.jpg',
+    title: 'Мерещится',
+    text: '— Огни? — Торвин пожимает плечами. — Мерещится с непривычки: снег, луна, усталость. Иди-ка ты спать, новобранец.\nОн отворачивается слишком поспешно.',
+    choices: [{ text: 'Ладно', next: 'torvin_talk' }],
+  },
   torvin_late: {
     image: 'img/scene-courtyard.jpg',
     actor: 'img/portrait-mentor.jpg',
+    relation: { torvin: -1 },
     title: 'Торвин нашёл вас',
     text: '— Вот ты где, — Торвин качает головой. — Ужин прозевал, повар уже всё убрал. Ладно, пошли, покажу, где будешь спать. Утром не проспи.',
     choices: [{ text: 'Пойти за Торвином', minutes: 10, next: 'st7' }],
+  },
+
+  // --- Вася: разговор по его расписанию ---
+  vasya_talk: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-vasya.jpg',
+    title: 'Вася',
+    text: ({ relation }) =>
+      relation('vasya') >= 1
+        ? '— О, новенький! — Вася машет вам рукой. — Держись поближе, тут главное — не отставать.'
+        : relation('vasya') <= -1
+          ? 'Вася демонстративно отворачивается и потирает распухшую губу.\n— Чего надо?'
+          : 'Вася косится на вас исподлобья, потирая распухшую губу.\n— Ну?',
+    choices: [
+      {
+        text: 'Извиниться за драку у ворот',
+        ifNot: 'apologizedVasya',
+        minutes: 5,
+        set: { apologizedVasya: true },
+        relation: { vasya: 1 },
+        next: 'vasya_sorry',
+      },
+      { text: 'Ничего, бывай', leave: true },
+    ],
+  },
+  vasya_sorry: {
+    image: 'img/scene-courtyard.jpg',
+    actor: 'img/portrait-vasya.jpg',
+    title: 'Без обид',
+    text: ({ flag }) =>
+      'Вася удивлённо моргает, потом хмыкает.\n— Да ладно, сам полез. ' +
+      (flag('trippedVasya')
+        ? 'Только подсечку ту покажешь потом, лады? Я так и не понял, как ты это сделал.'
+        : 'Рука у тебя тяжёлая, скажу я тебе.'),
+    choices: [{ text: 'Лады', next: 'vasya_talk' }],
   },
 
   // --- Вечер: ужин в трапезной (событие dinner) ---
   st6: {
     image: 'img/scene-hall.jpg',
     location: 'hall',
+    // пришёл на ужин вовремя
+    relation: { torvin: 1 },
     title: 'Трапезная',
     text: ({ flag }) =>
-      'В длинном зале с низким закопчённым потолком уже ужинают. Вдоль стен стоят грубые столы, в дальнем конце трещит очаг. Пахнет дымом, мокрой шерстью и похлёбкой.\nТорвин замечает вас от дальнего стола: — Поешь, пока не остыло. Потом покажу, где будешь спать.' +
+      'В длинном зале с низким закопчённым потолком уже ужинают. Вдоль стен стоят грубые столы, в дальнем конце трещит очаг. Пахнет дымом, мокрой шерстью и похлёбкой.\nТорвин замечает вас от дальнего стола и одобрительно кивает: — Вовремя. Поешь, пока не остыло. Потом покажу, где будешь спать.' +
       (flag('askedToLeave')
         ? '\nОн задерживает на вас настороженный взгляд, будто прикидывает, не придётся ли этой ночью ловить вас у ворот.'
         : ''),
@@ -182,8 +271,14 @@ export const chapter1: Record<string, Scene> = {
     title: 'Старый знакомый',
     text: 'Горячая похлёбка и тепло очага возвращают силы. Краюху хлеба вы прячете за пазуху: пригодится.\nНапротив с грохотом опускается миска. Это Вася: губа распухла, но злобы в глазах, кажется, нет.\n— Слышь… без обид, ладно? Тут все новенькие через это проходят. Я третью неделю здесь.',
     choices: [
-      { text: 'Пожать ему руку', minutes: 15, set: { vasyaFriend: true }, next: 'st6_2' },
-      { text: 'Молча доесть и уйти', minutes: 10, next: 'st7' },
+      {
+        text: 'Пожать ему руку',
+        minutes: 15,
+        set: { vasyaFriend: true },
+        relation: { vasya: 2 },
+        next: 'st6_2',
+      },
+      { text: 'Молча доесть и уйти', minutes: 10, relation: { vasya: -1 }, next: 'st7' },
     ],
   },
   st6_2: {
@@ -287,6 +382,9 @@ export const chapter1: Record<string, Scene> = {
           : flag('sawLights')
             ? 'Вы вспоминаете огни, гаснущие у перевала, и понимаете: тревога поднялась не просто так.'
             : 'Похоже, ночь, о которой говорил Торвин, наступила раньше, чем вы думали.') +
+        (flag('torvinWarned')
+          ? '\nВ ушах звучат слова Торвина: «Не всё, что ходит по тому лесу, — люди».'
+          : '') +
         (flag('foundKnife') ? '\nВы нащупываете за поясом старый нож. С ним как-то спокойнее.' : '')
       );
     },

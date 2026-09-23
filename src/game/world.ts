@@ -5,6 +5,7 @@ import { location, LOCATIONS } from '@/content/locations';
 import { NPCS, type NpcId } from '@/content/npcs';
 import { getScene, isAvailable, textContext } from './context';
 import { heal } from './hero';
+import { changeRelations } from './relations';
 import { inHours, nextMorning, toGameTime } from './time';
 import type { Choice, LocationId, Notice, SceneId, Session, StoryEvent } from './types';
 
@@ -28,7 +29,9 @@ export function npcsHere(session: Session): NpcId[] {
 export function roamChoices(session: Session): Choice[] {
   const place = location(session.locationId);
   const ctx = textContext(session);
-  const talks = npcsHere(session).map((id): Choice => NPCS[id].talk);
+  const talks = npcsHere(session)
+    .map((id): Choice => NPCS[id].talk)
+    .filter((choice) => isAvailable(choice, ctx));
   const actions = (place.actions ?? []).filter((choice) => isAvailable(choice, ctx));
   const exits = place.exits.map((exit): Choice => {
     const open = !exit.if || ctx.flag(exit.if);
@@ -63,14 +66,17 @@ export function dueEvent(session: Session): EventId | null {
   );
 }
 
-/** Войти в сцену: сцена может перенести героя (location) и запомнить решения (set). */
+/** Войти в сцену: сцена может перенести героя (location), запомнить решения (set) и изменить отношения. */
 export function enterScene(session: Session, sceneId: SceneId): Session {
   const scene = getScene(sceneId);
+  const relations = changeRelations(session.relations, scene.relation);
   return {
     ...session,
     sceneId,
     locationId: scene.location ?? session.locationId,
     flags: { ...session.flags, ...scene.set },
+    relations: relations.relations,
+    notices: [...session.notices, ...relations.notices],
   };
 }
 
