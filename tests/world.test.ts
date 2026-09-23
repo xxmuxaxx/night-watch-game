@@ -3,7 +3,7 @@ import * as engine from '@/game/engine';
 import { atTime } from '@/game/time';
 import type { Choice, GameState, LocationId } from '@/game/types';
 import { fortressMap, route } from '@/game/map';
-import { npcsHere, roamGroups } from '@/game/world';
+import { isNew, npcsHere, roamGroups } from '@/game/world';
 import { constant, sessionOf, withSession, noticeTexts, ru } from './helpers';
 
 function newGame(): GameState {
@@ -262,6 +262,55 @@ describe('точки интереса', () => {
       sceneId: 'window_day',
       spotId: null,
     });
+  });
+});
+
+describe('темы разговоров', () => {
+  it('неспрошенные темы помечены; спрошенная запоминается, а ответ ведёт обратно к вопросам', () => {
+    const state = roaming('courtyard', 1, 10);
+    expect(isNew(sessionOf(state), pick(state, 'Поговорить с Торвином'))).toBe(true);
+    const talk = play(state, 'Поговорить с Торвином');
+    expect(isNew(sessionOf(talk), pick(talk, 'Давно ты здесь'))).toBe(true);
+    const answer = play(talk, 'Давно ты здесь');
+    expect(sessionOf(answer)).toMatchObject({ sceneId: 'torvin_self', asked: ['torvin.self'] });
+    const back = play(answer, 'Понятно');
+    expect(sessionOf(back).sceneId).toBe('torvin_talk');
+    expect(isNew(sessionOf(back), pick(back, 'Давно ты здесь'))).toBe(false);
+    expect(isNew(sessionOf(back), pick(back, 'Что это за место'))).toBe(true);
+    // повторный вопрос не дублирует тему
+    expect(sessionOf(play(back, 'Давно ты здесь')).asked).toEqual(['torvin.self']);
+  });
+
+  it('когда спрашивать не о чем, разговор не помечен; находка открывает новую тему', () => {
+    const asked = ['torvin.place', 'torvin.duties', 'torvin.self', 'torvin.vasya', 'torvin.leave'];
+    const state = withSession(roaming('courtyard', 1, 10), {
+      asked: [...asked, 'torvin.bed'],
+    });
+    expect(isNew(sessionOf(state), pick(state, 'Поговорить с Торвином'))).toBe(false);
+    const found = withSession(state, { flags: { readBoard: true } });
+    expect(isNew(sessionOf(found), pick(found, 'Поговорить с Торвином'))).toBe(true);
+  });
+
+  it('допытываться у Торвина можно раз; без симпатии он злится', () => {
+    const state = play(
+      withSession(roaming('courtyard', 1, 10), { flags: { talkedStanley: true } }),
+      'Поговорить с Торвином',
+    );
+    const pressed = play(state, 'Стенли говорит');
+    expect(sessionOf(pressed)).toMatchObject({
+      sceneId: 'torvin_escort_cold',
+      relations: { torvin: -1 },
+      flags: { talkedStanley: true, pressedTorvin: true },
+    });
+    expect(choiceTexts(play(pressed, 'Ладно')).some((t) => t.includes('Стенли'))).toBe(false);
+  });
+
+  it('обиженный Вася говорить не хочет', () => {
+    const state = withSession(roaming('courtyard', 1, 10), {
+      relations: { vasya: -1 },
+      flags: { apologizedVasya: true },
+    });
+    expect(choiceTexts(play(state, 'Поговорить с Васей'))).toEqual(['Ничего, бывай']);
   });
 });
 

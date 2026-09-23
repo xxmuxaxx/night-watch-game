@@ -41,6 +41,7 @@ export const JOURNAL: Record<JournalId, JournalText> = {
       'I told Torvin about the lights. He grew grim and told me to keep quiet: “Not everything that walks in that forest is human. And not every human out there is an enemy.”',
       'Torvin brushed it off: I was seeing things, not used to it yet. But he turned away a little too quickly.',
       'At night I sneaked onto the wall and saw a lantern flash three times on the corner tower, and the forest answered. Someone in the fortress is giving signals.',
+      'I told Torvin about the signal from the corner tower. He told me to forget it: “You weren’t there.”',
     ],
     hint: ({ flag }) =>
       flag('toldTorvinLights') || !flag('sawLights')
@@ -54,7 +55,11 @@ export const JOURNAL: Record<JournalId, JournalText> = {
       'On the duty board by the gate: a week ago, a patrol to the pass — Erik and Martin. Both names are crossed out, and someone else added: “ran.”',
       'Stanley at the gate said the gate is opened at night only for a patrol, on an elder’s word. Torvin himself saw that patrol off, and nobody ever let them back in.',
       'Under a board of their bunk in the barracks lay a scrap of paper: the wall, the corner tower, the forest, and a note, “third watch — three flashes.”',
+      'Vasya recognized the handwriting: Martin wrote the note.',
+      'I showed the note to Torvin. His face went grey, and he told me to get rid of it.',
       'Halvar the smith: the day before the patrol, Erik brought in a shuttered lantern to be fixed — the kind used for signals. He never picked it up.',
+      'Torvin admitted it: he saw them off as far as the old fir at the fork and told them to be back by dawn. He says they “ran” because it’s easier for everyone that way.',
+      'I asked Torvin whether he really saw that patrol off. He admitted it through gritted teeth and told me to find something to do.',
     ],
     hint: ({ flag }) =>
       !flag('readBoard')

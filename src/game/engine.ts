@@ -86,6 +86,7 @@ export function startNewGame(state: GameState, newHero: NewHero): GameState {
     daily: {},
     spotId: null,
     visited: [],
+    asked: [],
     fight: null,
     notices: [],
   };
@@ -160,6 +161,10 @@ function applyChoice(state: GameState, choice: Choice, rng: Rng): GameState {
     flags: { ...current.flags, ...choice.set },
     relations: relations.relations,
     daily,
+    asked:
+      choice.topic && !current.asked.includes(choice.topic)
+        ? [...current.asked, choice.topic]
+        : current.asked,
     time: current.time + (choice.minutes ?? 0),
     notices,
   };

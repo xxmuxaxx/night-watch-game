@@ -58,6 +58,7 @@ export const places: Record<string, Scene> = {
     choices: [
       {
         text: 'Попросить инструмент, чтобы вскрыть сундук в келье',
+        topic: 'smith.chisel',
         if: 'chestStuck',
         ifNot: 'gotChisel',
         set: { metSmith: true },
@@ -66,11 +67,42 @@ export const places: Record<string, Scene> = {
       },
       {
         text: 'Спросить про фонарь со шторкой на верстаке',
+        topic: 'smith.lantern',
         if: 'sawLantern',
         ifNot: 'smithTold',
         set: { metSmith: true, smithTold: true },
         minutes: 10,
         next: 'smith_lantern',
+      },
+      // ответы на темы — в talks.ts
+      {
+        text: 'Давно куёшь для стражи?',
+        topic: 'smith.self',
+        set: { metSmith: true },
+        minutes: 5,
+        next: 'smith_self',
+      },
+      {
+        text: 'Что посоветуешь из оружия?',
+        topic: 'smith.weapons',
+        set: { metSmith: true },
+        minutes: 5,
+        next: 'smith_weapons',
+      },
+      {
+        text: 'Каким был Эрик?',
+        topic: 'smith.erik',
+        if: 'smithTold',
+        minutes: 5,
+        next: 'smith_erik',
+      },
+      {
+        text: 'Показать записку из казармы',
+        topic: 'smith.note',
+        if: 'foundNote',
+        set: { metSmith: true },
+        minutes: 5,
+        next: 'smith_note',
       },
       { text: 'Ничего, пойду', set: { metSmith: true }, leave: true },
     ],

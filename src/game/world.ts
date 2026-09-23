@@ -108,6 +108,29 @@ export function roamChoices(session: Session): Choice[] {
   return roamGroups(session).flatMap((group) => group.choices);
 }
 
+/** Есть ли в разговоре с персонажем тема, о которой герой ещё не спрашивал и может спросить сейчас. */
+export function hasNewTopics(session: Session, id: NpcId): boolean {
+  const ctx = textContext(session);
+  return getScene(NPCS[id].talk.next).choices.some(
+    (choice) =>
+      choice.topic !== undefined &&
+      !session.asked.includes(choice.topic) &&
+      isAvailable(choice, ctx),
+  );
+}
+
+/**
+ * Помечать ли вариант «новое»: точка интереса, у которой герой не был, тема, о которой не
+ * спрашивал, и разговор с персонажем, у которого есть такая тема.
+ */
+export function isNew(session: Session, choice: Choice): boolean {
+  if ('look' in choice) return !session.visited.includes(spotKey(session.locationId, choice.look));
+  if (choice.topic !== undefined) return !session.asked.includes(choice.topic);
+  if (session.sceneId !== null || !('next' in choice)) return false;
+  const npc = NPC_IDS.find((id) => NPCS[id].talk.next === choice.next);
+  return npc !== undefined && hasNewTopics(session, npc);
+}
+
 /** Отметить, что герой здесь побывал (место или «место.точка»). */
 function visit(session: Session, key: string): Session {
   return session.visited.includes(key)

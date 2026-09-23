@@ -10,7 +10,7 @@ import { LOCATIONS } from '@/content/locations';
 import type { Image, Scene } from '@/game/types';
 
 /** Картинка места, где сейчас герой: для разговоров, которые бывают и во дворе, и в трапезной. */
-const HERE: Image = (ctx) => {
+export const HERE: Image = (ctx) => {
   const image = LOCATIONS[ctx.location].image;
   return typeof image === 'function' ? image(ctx) : image;
 };
@@ -160,20 +160,31 @@ export const chapter1: Record<string, Scene> = {
         : relation('torvin') <= -1
           ? 'Торвин смотрит на вас без улыбки: — Чего тебе?'
           : '— Что-то ещё, ' + hero.name + '?',
+    // ответы на новые темы — в talks.ts
     choices: [
-      { text: 'Что это за место?', minutes: 5, next: 'st5_1' },
+      { text: 'Что это за место?', topic: 'torvin.place', minutes: 5, next: 'st5_1' },
+      {
+        text: 'Чем тут заняты новобранцы?',
+        topic: 'torvin.duties',
+        minutes: 5,
+        next: 'torvin_duties',
+      },
+      { text: 'Давно ты здесь?', topic: 'torvin.self', minutes: 5, next: 'torvin_self' },
+      { text: 'Что скажешь про Васю?', topic: 'torvin.vasya', minutes: 5, next: 'torvin_vasya' },
       {
         text: 'А если я не хочу служить?',
+        topic: 'torvin.leave',
         ifNot: 'askedToLeave',
         minutes: 5,
         set: { askedToLeave: true },
         relation: { torvin: -1 },
         next: 'st5_2',
       },
-      { text: 'Где мне поесть и поспать?', ifNot: 'knowsCell', next: 'st5_3' },
+      { text: 'Где мне поесть и поспать?', topic: 'torvin.bed', ifNot: 'knowsCell', next: 'st5_3' },
       // симпатия Торвина — стёганка
       {
         text: 'Говорят, ночами на стене холодно. Не найдётся чего-нибудь тёплого?',
+        topic: 'torvin.jacket',
         ifNot: 'gotJacket',
         ifRelation: { npc: 'torvin', min: 1 },
         minutes: 10,
@@ -184,6 +195,7 @@ export const chapter1: Record<string, Scene> = {
       // Торвин отвечает честно, только если симпатизирует герою
       {
         text: 'Рассказать про огни в лесу',
+        topic: 'torvin.lights',
         if: 'sawLights',
         ifNot: 'toldTorvinLights',
         ifRelation: { npc: 'torvin', min: 1 },
@@ -193,12 +205,69 @@ export const chapter1: Record<string, Scene> = {
       },
       {
         text: 'Рассказать про огни в лесу',
+        topic: 'torvin.lights',
         if: 'sawLights',
         ifNot: 'toldTorvinLights',
         ifRelation: { npc: 'torvin', max: 0 },
         minutes: 5,
         set: { toldTorvinLights: true },
         next: 'torvin_lights_cold',
+      },
+      // о пропавших можно узнать с доски нарядов или от Васи
+      {
+        text: 'Спросить про Эрика и Мартина',
+        topic: 'torvin.missing',
+        if: 'readBoard',
+        minutes: 5,
+        next: 'torvin_missing',
+      },
+      {
+        text: 'Спросить про Эрика и Мартина',
+        topic: 'torvin.missing',
+        if: 'vasyaFriend',
+        ifNot: 'readBoard',
+        minutes: 5,
+        next: 'torvin_missing',
+      },
+      // допытываться можно раз; без симпатии Торвин злится
+      {
+        text: 'Стенли говорит, ты сам провожал их до перевала',
+        topic: 'torvin.escort',
+        if: 'talkedStanley',
+        ifNot: 'pressedTorvin',
+        ifRelation: { npc: 'torvin', min: 1 },
+        minutes: 10,
+        set: { pressedTorvin: true, torvinEscort: true },
+        next: 'torvin_escort_trust',
+      },
+      {
+        text: 'Стенли говорит, ты сам провожал их до перевала',
+        topic: 'torvin.escort',
+        if: 'talkedStanley',
+        ifNot: 'pressedTorvin',
+        ifRelation: { npc: 'torvin', max: 0 },
+        minutes: 5,
+        set: { pressedTorvin: true },
+        relation: { torvin: -1 },
+        next: 'torvin_escort_cold',
+      },
+      {
+        text: 'Показать записку из казармы',
+        topic: 'torvin.note',
+        if: 'foundNote',
+        ifNot: 'shownTorvinNote',
+        minutes: 5,
+        set: { shownTorvinNote: true },
+        next: 'torvin_note',
+      },
+      {
+        text: 'Рассказать про огонь на угловой башне',
+        topic: 'torvin.signal',
+        if: 'sawSignal',
+        ifNot: 'toldTorvinSignal',
+        minutes: 5,
+        set: { toldTorvinSignal: true },
+        next: 'torvin_signal',
       },
       { text: 'Ничего, я пойду', leave: true },
     ],
@@ -266,14 +335,55 @@ export const chapter1: Record<string, Scene> = {
         : relation('vasya') <= -1
           ? 'Вася демонстративно отворачивается и потирает распухшую губу.\n— Чего надо?'
           : 'Вася косится на вас исподлобья, потирая распухшую губу.\n— Ну?',
+    // ответы на темы — в talks.ts; пока Вася в обиде, говорить с ним не о чем
     choices: [
       {
         text: 'Извиниться за драку у ворот',
+        topic: 'vasya.sorry',
         ifNot: 'apologizedVasya',
         minutes: 5,
         set: { apologizedVasya: true },
         relation: { vasya: 1 },
         next: 'vasya_sorry',
+      },
+      {
+        text: 'Откуда ты?',
+        topic: 'vasya.self',
+        ifRelation: { npc: 'vasya', min: 0 },
+        minutes: 5,
+        next: 'vasya_self',
+      },
+      {
+        text: 'Как тут выжить новенькому?',
+        topic: 'vasya.tips',
+        ifRelation: { npc: 'vasya', min: 0 },
+        minutes: 5,
+        next: 'vasya_tips',
+      },
+      {
+        text: 'Расскажи про Эрика и Мартина',
+        topic: 'vasya.missing',
+        if: 'vasyaFriend',
+        minutes: 10,
+        next: 'vasya_missing',
+      },
+      {
+        text: 'Что за человек этот Хальвар?',
+        topic: 'vasya.smith',
+        if: 'metSmith',
+        ifRelation: { npc: 'vasya', min: 0 },
+        minutes: 5,
+        next: 'vasya_smith',
+      },
+      // записку Вася разберёт, только если доверяет герою
+      {
+        text: 'Показать записку из казармы',
+        topic: 'vasya.note',
+        if: 'foundNote',
+        ifRelation: { npc: 'vasya', min: 1 },
+        minutes: 5,
+        set: { noteByMartin: true },
+        next: 'vasya_note',
       },
       { text: 'Ничего, бывай', leave: true },
     ],

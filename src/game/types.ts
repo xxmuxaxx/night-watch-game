@@ -262,6 +262,11 @@ interface ChoiceBase {
   daily?: string;
   /** Опыт за выбор. */
   xp?: number;
+  /**
+   * Тема разговора («torvin.place»): при выборе запоминается в session.asked. Пока тема не
+   * спрошена, вариант помечен «новое», а разговор с персонажем в месте — тоже.
+   */
+  topic?: string;
 }
 
 /** Перейти в сцену. */
@@ -527,6 +532,8 @@ export interface Session {
   spotId: SpotId | null;
   /** Где герой уже побывал: места (LocationId) и точки («место.точка»); остальное помечено новым. */
   visited: string[];
+  /** Темы разговоров (topic), о которых герой уже спрашивал. */
+  asked: string[];
   fight: FightState | null;
   /** Сообщения о последнем выборе; видны только в сцене сразу после него. */
   notices: Notice[];

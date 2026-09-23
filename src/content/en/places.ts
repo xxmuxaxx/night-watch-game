@@ -42,6 +42,10 @@ export const places: Record<string, SceneText> = {
     choices: [
       'Ask for a tool to open the chest in your cell',
       'Ask about the shuttered lantern on the workbench',
+      'Have you been smithing for the watch long?',
+      'What weapon would you advise?',
+      'What was Erik like?',
+      'Show him the note from the barracks',
       'Nothing, I’ll be going',
     ],
   },

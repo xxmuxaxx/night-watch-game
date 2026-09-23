@@ -6,10 +6,11 @@ import { checkChance } from '@/game/checks';
 import { availableChoices, getScene, resolveImage, textContext } from '@/game/engine';
 import type { Choice, Session, TextContext } from '@/game/types';
 import { peopleAt } from '@/game/map';
-import { currentSpot, npcsHere, roamGroups, spotKey, type RoamGroup } from '@/game/world';
+import { currentSpot, isNew, npcsHere, roamGroups, type RoamGroup } from '@/game/world';
 import { Picture } from '../components/Picture';
 import { useI18n } from '../i18n';
 import { useStore } from '../store';
+import { choiceKey } from '../useKeyboard';
 
 /**
  * Экран истории: сцена (картинка, собеседник, текст, варианты) или, когда сцены нет,
@@ -72,9 +73,15 @@ export function SceneView({ session }: { session: Session }) {
         {scene ? (
           <ChoiceList session={session} ctx={ctx} choices={availableChoices(session)} />
         ) : (
-          roamGroups(session).map((group) => (
+          roamGroups(session).map((group, i, groups) => (
             <ChoiceGroup key={group.kind} group={group}>
-              <ChoiceList session={session} ctx={ctx} choices={group.choices} />
+              <ChoiceList
+                session={session}
+                ctx={ctx}
+                choices={group.choices}
+                // номера сквозные через все группы — как клавиши
+                start={groups.slice(0, i).reduce((sum, g) => sum + g.choices.length, 0)}
+              />
             </ChoiceGroup>
           ))
         )}
@@ -98,9 +105,11 @@ interface ListProps {
   session: Session;
   ctx: TextContext;
   choices: Choice[];
+  /** Номер первого варианта списка среди всех вариантов экрана (с нуля). */
+  start?: number;
 }
 
-function ChoiceList({ session, ctx, choices }: ListProps) {
+function ChoiceList({ session, ctx, choices, start = 0 }: ListProps) {
   const store = useStore();
   const { t, name, label } = useI18n();
   return (
@@ -112,6 +121,9 @@ function ChoiceList({ session, ctx, choices }: ListProps) {
             disabled={choice.disabled !== undefined}
             onClick={() => store.choose(choice)}
           >
+            <span class="choice__key" aria-hidden="true">
+              {choiceKey(start + i)}
+            </span>
             {'check' in choice && (
               <span class="check-tag">
                 {name(STAT_NAMES[choice.check.stat])}{' '}
@@ -120,10 +132,7 @@ function ChoiceList({ session, ctx, choices }: ListProps) {
             )}
             <span>
               {label(choice.text, ctx)}
-              {'look' in choice &&
-                !session.visited.includes(spotKey(session.locationId, choice.look)) && (
-                  <span class="new-tag">{t.scene.new}</span>
-                )}
+              {isNew(session, choice) && <span class="new-tag">{t.scene.new}</span>}
               {choice.disabled && (
                 <small class="choice__locked">{label(choice.disabled, ctx)}</small>
               )}

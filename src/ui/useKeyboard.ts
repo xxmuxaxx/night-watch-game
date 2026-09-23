@@ -24,6 +24,14 @@ const PANEL_KEYS: Record<string, 'journal' | 'chronicle' | 'map'> = {
 
 export type Panel = 'journal' | 'chronicle' | 'map' | 'settings' | 'load';
 
+/** Клавиши вариантов по порядку: 1–9, затем 0 для десятого; дальше — только мышью. */
+const CHOICE_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+
+/** Клавиша варианта с этим номером (с нуля) или null, если клавиши нет. */
+export function choiceKey(index: number): string | null {
+  return CHOICE_KEYS[index] ?? null;
+}
+
 /** Окна поверх игры: какое открыто и как открыть или закрыть. */
 export interface PanelControl {
   panel: Panel | null;
@@ -34,7 +42,8 @@ export interface PanelControl {
 /**
  * Клавиатура: J открывает и закрывает журнал, H — летопись, M — карту, Esc закрывает открытое окно или открывает настройки
  * (пока окно открыто, остальные клавиши не работают);
- * в сцене 1–9 выбирают вариант ответа, Backspace отходит от точки интереса; при новом уровне 1–4 — награду;
+ * в сцене 1–9 и 0 выбирают вариант ответа, Backspace отходит от точки интереса или прощается
+ * в разговоре (последний вариант, если он заканчивает сцену); при новом уровне 1–4 — награду;
  * в бою 1/Enter/пробел — удар, 2 — защита, 3 — приём, 4 — первый предмет из сумки;
  * после боя Enter/пробел/1 — «Продолжить» (после поражения — «Попробовать снова», 2 — «Сдаться»). В меню и при вводе имени клавиши не перехватываются.
  */
@@ -103,13 +112,20 @@ export function useKeyboard(store: GameStore, panels: PanelControl) {
       }
       if (panels.panel) return;
 
-      if (e.key === 'Backspace' && session.sceneId === null && session.spotId !== null) {
-        e.preventDefault();
-        store.choose({ text: { id: 'back' }, back: true });
+      const choices = availableChoices(session);
+      if (e.key === 'Backspace') {
+        const last = choices.at(-1);
+        if (session.sceneId === null && session.spotId !== null) {
+          e.preventDefault();
+          store.choose({ text: { id: 'back' }, back: true });
+        } else if (session.sceneId !== null && last && 'leave' in last) {
+          e.preventDefault();
+          store.choose(last);
+        }
         return;
       }
 
-      const choice = availableChoices(session)[n - 1];
+      const choice = choices[CHOICE_KEYS.indexOf(e.key)];
       if (choice) {
         e.preventDefault();
         store.choose(choice);

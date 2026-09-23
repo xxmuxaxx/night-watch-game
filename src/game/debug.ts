@@ -90,10 +90,10 @@ export function resetDaily(state: GameState): GameState {
   return { ...state, session: { ...state.session, daily: {} } };
 }
 
-/** Забыть, где герой побывал: места и точки интереса снова помечены новыми. */
+/** Забыть, где герой побывал и о чём спрашивал: места, точки и темы снова помечены новыми. */
 export function resetVisited(state: GameState): GameState {
   if (!state.session) return state;
-  return { ...state, session: { ...state.session, visited: [] } };
+  return { ...state, session: { ...state.session, visited: [], asked: [] } };
 }
 
 /** Забыть случившиеся события, чтобы они сработали снова. */

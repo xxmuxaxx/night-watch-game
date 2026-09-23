@@ -18,6 +18,7 @@ function session(overrides: Partial<Session> = {}): Session {
     daily: {},
     spotId: null,
     visited: ['courtyard', 'courtyard.drill'],
+    asked: ['torvin.place'],
     fight: null,
     notices: [],
     ...overrides,
@@ -114,6 +115,8 @@ describe('миграция старых сохранений', () => {
       // v11: из посещённых известно только текущее место
       spotId: null,
       visited: ['cell'],
+      // v12: ни о чём ещё не спрашивал
+      asked: [],
       fight: null,
       notices: [],
     });
@@ -128,6 +131,17 @@ describe('миграция старых сохранений', () => {
     delete saved['notices'];
     storage.setItem(SAVE_KEY, JSON.stringify(saved));
     expect(readSave(storage)?.visited).toEqual(['courtyard']);
+  });
+
+  it('версия 11: о темах разговоров герой ещё не спрашивал', () => {
+    const storage = memoryStorage();
+    const saved = { ...session(), version: 11 } as Record<string, unknown>;
+    delete saved['asked'];
+    delete saved['spotId'];
+    delete saved['fight'];
+    delete saved['notices'];
+    storage.setItem(SAVE_KEY, JSON.stringify(saved));
+    expect(readSave(storage)?.asked).toEqual([]);
   });
 
   it('версия 3: герой получает пустую сумку, нулевой опыт и уровень 1', () => {

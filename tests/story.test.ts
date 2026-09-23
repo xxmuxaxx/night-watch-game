@@ -160,6 +160,17 @@ describe('сюжет', () => {
     expect(required.filter((flag) => !setFlags.has(flag))).toEqual([]);
   });
 
+  it('темы разговоров стоят в разговоре своего персонажа: «vasya.tips» — в разговоре с Васей', () => {
+    const talkOf = new Map<string, string>(
+      Object.entries(NPCS).map(([id, npc]) => [npc.talk.next, id]),
+    );
+    const misplaced = choices
+      .filter(({ choice }) => choice.topic !== undefined)
+      .filter(({ where, choice }) => !choice.topic?.startsWith(talkOf.get(where) + '.'))
+      .map(({ where, choice }) => where + ': ' + choice.topic);
+    expect(misplaced).toEqual([]);
+  });
+
   it('выходы из локаций ведут в существующие места и взаимны', () => {
     const oneWay = Object.entries(LOCATIONS).flatMap(([id, place]) =>
       place.exits

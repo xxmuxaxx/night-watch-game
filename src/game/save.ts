@@ -42,7 +42,7 @@ export interface SavedGame {
   /** Время записи, мс с 1970 года; у старых сохранений его нет. */
   savedAt: number | null;
 }
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 /** Хранилище с интерфейсом localStorage — в тестах подменяется. */
 export type SaveStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -61,12 +61,17 @@ interface SaveData {
   daily: Record<string, number>;
   /** Где герой побывал (места и точки интереса). */
   visited: string[];
+  /** О чём герой уже спрашивал (темы разговоров). */
+  asked: string[];
   /** Когда записано; необязательное поле, читается и без него. */
   savedAt?: number;
 }
 
+/** Формат версии 11: до тем разговоров. */
+type SaveV11 = Omit<SaveData, 'version' | 'asked'> & { version: 11 };
+
 /** Формат версии 10: до отметок о посещённых местах. */
-type SaveV10 = Omit<SaveData, 'version' | 'visited'> & { version: 10 };
+type SaveV10 = Omit<SaveV11, 'version' | 'visited'> & { version: 10 };
 
 /** Герой до версии 10: без защиты. */
 type HeroV9 = Omit<Hero, 'armorId'>;
@@ -253,15 +258,30 @@ function migrateV9(save: SaveV9): SaveV10 {
 }
 
 /** В версии 11 появились отметки о посещённых местах: хотя бы текущее место герой видел. */
-function migrateV10(save: SaveV10): SaveData {
-  return { ...save, version: SAVE_VERSION, visited: [save.locationId] };
+function migrateV10(save: SaveV10): SaveV11 {
+  return { ...save, version: 11, visited: [save.locationId] };
 }
 
-/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 11. */
+/** В версии 12 появились темы разговоров; одноразовые вопросы и так закрыты решениями. */
+function migrateV11(save: SaveV11): SaveData {
+  return { ...save, version: SAVE_VERSION, asked: [] };
+}
+
+/** Перевести сохранение любой известной версии в текущий формат: шаг за шагом, 2 → … → 12. */
 export function migrate(raw: unknown): SaveData | null {
   if (!raw || typeof raw !== 'object' || !('version' in raw)) return null;
   let save = raw as
-    SaveV2 | SaveV3 | SaveV4 | SaveV5 | SaveV6 | SaveV7 | SaveV8 | SaveV9 | SaveV10 | SaveData;
+    | SaveV2
+    | SaveV3
+    | SaveV4
+    | SaveV5
+    | SaveV6
+    | SaveV7
+    | SaveV8
+    | SaveV9
+    | SaveV10
+    | SaveV11
+    | SaveData;
   if (save.version === 2) {
     const v3 = migrateV2(save);
     if (!v3) return null;
@@ -275,6 +295,7 @@ export function migrate(raw: unknown): SaveData | null {
   if (save.version === 8) save = migrateV8(save);
   if (save.version === 9) save = migrateV9(save);
   if (save.version === 10) save = migrateV10(save);
+  if (save.version === 11) save = migrateV11(save);
   return save.version === SAVE_VERSION ? save : null;
 }
 
@@ -292,7 +313,9 @@ function isValid(save: SaveData): boolean {
     save.hero.armorId in ARMORS &&
     save.hero.inventory.every(isItemId) &&
     Array.isArray(save.visited) &&
-    save.visited.every((key) => typeof key === 'string')
+    save.visited.every((key) => typeof key === 'string') &&
+    Array.isArray(save.asked) &&
+    save.asked.every((key) => typeof key === 'string')
   );
 }
 
@@ -328,6 +351,7 @@ function toSession(save: SaveData): Session {
     daily: save.daily,
     spotId: null,
     visited: save.visited,
+    asked: save.asked,
     fight: null,
     notices: [],
   };
@@ -353,6 +377,7 @@ export function writeSave(
     oneLife: session.oneLife,
     daily: session.daily,
     visited: session.visited,
+    asked: session.asked,
     savedAt: now,
   };
   try {

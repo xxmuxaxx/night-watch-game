@@ -151,10 +151,8 @@ img {
   list-style: none;
   margin: 16px 0 0;
   padding: 0;
-  counter-reset: choice;
 }
 .select li {
-  counter-increment: choice;
   margin-bottom: 8px;
 }
 .choice {
@@ -174,8 +172,10 @@ img {
     background 0.15s,
     border-color 0.15s;
 }
-.choice::before {
-  content: counter(choice);
+/* клавиша варианта: 1–9, 0; у вариантов дальше десятого клавиши нет, место остаётся */
+.choice__key {
+  flex-shrink: 0;
+  min-width: 0.7em;
   color: var(--accent);
   font-weight: 700;
 }

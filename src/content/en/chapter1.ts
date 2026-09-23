@@ -81,11 +81,20 @@ export const chapter1: Record<string, SceneText> = {
           : '“Anything else, ' + hero.name + '?”',
     choices: [
       'What is this place?',
+      'What do the recruits do here?',
+      'Have you been here long?',
+      'What do you make of Vasya?',
       'And if I don’t want to serve?',
       'Where do I eat and sleep?',
       'They say the nights on the wall are cold. Could you spare something warm?',
       'Tell him about the lights in the forest',
       'Tell him about the lights in the forest',
+      'Ask about Erik and Martin',
+      'Ask about Erik and Martin',
+      'Stanley says you saw them off to the pass yourself',
+      'Stanley says you saw them off to the pass yourself',
+      'Show him the note from the barracks',
+      'Tell him about the light on the corner tower',
       'Nothing, I’ll be going',
     ],
   },
@@ -134,7 +143,15 @@ export const chapter1: Record<string, SceneText> = {
         : relation('vasya') <= -1
           ? 'Vasya pointedly turns away, rubbing his swollen lip.\n“What do you want?”'
           : 'Vasya eyes you sullenly, rubbing his swollen lip.\n“Well?”',
-    choices: ['Apologize for the fight at the gate', 'Nothing, see you'],
+    choices: [
+      'Apologize for the fight at the gate',
+      'Where are you from?',
+      'How does a new boy survive here?',
+      'Tell me about Erik and Martin',
+      'What sort of man is this Halvar?',
+      'Show him the note from the barracks',
+      'Nothing, see you',
+    ],
   },
   vasya_sorry: {
     title: 'No hard feelings',
